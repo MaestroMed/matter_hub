@@ -23,6 +23,7 @@ from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 
 from action_log import ensure_db
 
@@ -118,6 +119,7 @@ def index():
     <label>until <input id="until" placeholder="" size="26"/></label>
     <label>limit <input id="limit" type="number" value="100" min="1" max="2000"/></label>
     <button onclick="loadEvents()">Refresh</button>
+    <button onclick="startStream()">Live</button>
   </div>
 
   <div class="layout">
@@ -154,6 +156,36 @@ async function api(url){
   return await r.json();
 }
 
+// SSE: live updates
+let es = null;
+function startStream(){
+  if(es) es.close();
+  const kind = document.getElementById('kind').value;
+  const status = document.getElementById('status').value;
+  const q = document.getElementById('q').value;
+  const since = document.getElementById('since').value;
+  const until = document.getElementById('until').value;
+  const limit = document.getElementById('limit').value;
+  const sort = document.getElementById('sort').value;
+
+  const params = new URLSearchParams();
+  if(kind) params.set('kind', kind);
+  if(status) params.set('status', status);
+  if(q) params.set('q', q);
+  if(since) params.set('since', since);
+  if(until) params.set('until', until);
+  params.set('limit', limit || '100');
+  params.set('sort', sort || 'desc');
+
+  es = new EventSource('/api/stream?' + params.toString());
+  es.onmessage = (ev) => {
+    try{
+      const rows = JSON.parse(ev.data);
+      renderRows(rows);
+    } catch(e){}
+  };
+}
+
 function pill(status){
   const cls = status || '';
   return `<span class="pill ${cls}">${status}</span>`;
@@ -175,6 +207,42 @@ function countsFrom(rows){
   const c = {ok:0,warn:0,error:0,running:0};
   for(const r of rows){ if(c[r.status] !== undefined) c[r.status]++; }
   return c;
+}
+
+function renderRows(rows){
+  const c = countsFrom(rows);
+  document.getElementById('counts').innerHTML = `${pill('ok')} ${c.ok} &nbsp; ${pill('warn')} ${c.warn} &nbsp; ${pill('error')} ${c.error} &nbsp; ${pill('running')} ${c.running}`;
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  for(const e of rows){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${e.id}</td>
+      <td>${e.ts_start}</td>
+      <td>${pill(e.status)}</td>
+      <td>${e.kind}</td>
+      <td>${(e.seconds ?? 0).toFixed(2)}</td>
+      <td>${e.message ?? ''}</td>
+    `;
+    tr.style.cursor = 'pointer';
+    tr.onclick = async () => {
+      const full = await api('/api/events/' + e.id);
+      const logLink = full.log_path ? `<a href="/api/log/${full.id}" target="_blank">open log</a>` : '';
+      document.getElementById('details').innerHTML = `
+        <div style="margin-bottom:8px;"><b>#${full.id}</b></div>
+        <div class="meta">${full.ts_start} → ${full.ts_end ?? ''}</div>
+        <div style="margin-top:6px;"><b>kind</b>: ${full.kind} • <b>status</b>: ${pill(full.status)} • <b>seconds</b>: ${(full.seconds ?? 0).toFixed(2)}</div>
+        <div><b>tags</b>: ${(full.tags||[]).join(', ')}</div>
+        <div><b>message</b>: ${full.message ?? ''}</div>
+        <div><b>log</b>: ${logLink}</div>
+        <h3>params</h3><pre>${JSON.stringify(full.params||{}, null, 2)}</pre>
+        <h3>extra</h3><pre>${JSON.stringify(full.extra||{}, null, 2)}</pre>
+        <h3>error</h3><pre>${full.error ?? ''}</pre>
+      `;
+    };
+    tbody.appendChild(tr);
+  }
 }
 
 async function loadEvents(){
@@ -199,45 +267,16 @@ async function loadEvents(){
   const rows = await api('/api/events?' + params.toString());
   const t1 = performance.now();
 
-  const c = countsFrom(rows);
   document.getElementById('meta').textContent = `${rows.length} events • ${(t1-t0).toFixed(0)}ms`;
-  document.getElementById('counts').innerHTML = `${pill('ok')} ${c.ok} &nbsp; ${pill('warn')} ${c.warn} &nbsp; ${pill('error')} ${c.error} &nbsp; ${pill('running')} ${c.running}`;
-
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
-  for(const e of rows){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${e.id}</td>
-      <td>${e.ts_start}</td>
-      <td>${pill(e.status)}</td>
-      <td>${e.kind}</td>
-      <td>${(e.seconds ?? 0).toFixed(2)}</td>
-      <td>${e.message ?? ''}</td>
-    `;
-    tr.style.cursor = 'pointer';
-    tr.onclick = async () => {
-      const full = await api('/api/events/' + e.id);
-      document.getElementById('details').innerHTML = `
-        <div style="margin-bottom:8px;"><b>#${full.id}</b></div>
-        <div class="meta">${full.ts_start} → ${full.ts_end ?? ''}</div>
-        <div style="margin-top:6px;"><b>kind</b>: ${full.kind} • <b>status</b>: ${pill(full.status)} • <b>seconds</b>: ${(full.seconds ?? 0).toFixed(2)}</div>
-        <div><b>tags</b>: ${(full.tags||[]).join(', ')}</div>
-        <div><b>message</b>: ${full.message ?? ''}</div>
-        <h3>params</h3><pre>${JSON.stringify(full.params||{}, null, 2)}</pre>
-        <h3>extra</h3><pre>${JSON.stringify(full.extra||{}, null, 2)}</pre>
-        <h3>error</h3><pre>${full.error ?? ''}</pre>
-      `;
-    };
-    tbody.appendChild(tr);
-  }
+  renderRows(rows);
 }
 
 loadEvents();
+startStream();
 setInterval(() => {
   const auto = document.getElementById('autorefresh').checked;
   if(auto) loadEvents();
-}, 5000);
+}, 8000);
 </script>
 </body>
 </html>"""
@@ -308,7 +347,7 @@ def api_events(
 def api_event(event_id: int):
     con = _connect()
     r = con.execute(
-        'SELECT id, ts_start, ts_end, kind, status, seconds, message, tags, params_json, extra_json, error FROM events WHERE id=?',
+        'SELECT id, ts_start, ts_end, kind, status, seconds, message, tags, log_path, params_json, extra_json, error FROM events WHERE id=?',
         (event_id,),
     ).fetchone()
     if not r:
@@ -322,10 +361,73 @@ def api_event(event_id: int):
         'seconds': r['seconds'],
         'message': r['message'],
         'tags': json.loads(r['tags'] or '[]'),
+        'log_path': r['log_path'],
         'params': json.loads(r['params_json'] or '{}'),
         'extra': json.loads(r['extra_json'] or '{}'),
         'error': r['error'],
     })
+
+
+@app.get('/api/log/{event_id}', response_class=HTMLResponse)
+def api_log(event_id: int):
+    con = _connect()
+    r = con.execute('SELECT id, log_path FROM events WHERE id=?', (event_id,)).fetchone()
+    if not r:
+        return HTMLResponse('not found', status_code=404)
+    lp = r['log_path']
+    if not lp:
+        return HTMLResponse('no log for this event', status_code=404)
+    p = Path(lp)
+    if not p.exists():
+        return HTMLResponse('log file missing: ' + str(p), status_code=404)
+    try:
+        txt = p.read_text(encoding='utf-8', errors='replace')
+    except Exception as e:
+        return HTMLResponse('failed reading log: ' + str(e), status_code=500)
+    return HTMLResponse('<pre>' + txt.replace('&','&amp;').replace('<','&lt;') + '</pre>')
+
+
+@app.get('/api/stats')
+def api_stats():
+    con = _connect()
+    total = con.execute('SELECT COUNT(*) AS n FROM events').fetchone()['n']
+    by_status = {r['status']: r['n'] for r in con.execute('SELECT status, COUNT(*) AS n FROM events GROUP BY status').fetchall()}
+    top_kinds = [dict(r) for r in con.execute('SELECT kind, COUNT(*) AS n FROM events GROUP BY kind ORDER BY n DESC LIMIT 20').fetchall()]
+    # timeline: last 24h counts by hour (UTC)
+    timeline = [dict(r) for r in con.execute(
+        "SELECT substr(ts_start,1,13) AS hour, COUNT(*) AS n FROM events WHERE ts_start >= datetime('now','-1 day') GROUP BY hour ORDER BY hour"
+    ).fetchall()]
+    err_rate = 0.0
+    if total:
+        err_rate = float(by_status.get('error', 0)) / float(total)
+    return JSONResponse({'total': total, 'by_status': by_status, 'top_kinds': top_kinds, 'timeline_24h': timeline, 'error_rate': err_rate})
+
+
+@app.get('/api/stream')
+def api_stream(
+    limit: int = 100,
+    kind: Optional[str] = None,
+    status: Optional[str] = None,
+    since: Optional[str] = None,
+    until: Optional[str] = None,
+    q: Optional[str] = None,
+    sort: str = 'desc',
+):
+    def gen():
+        import time
+        last = None
+        while True:
+            try:
+                rows = api_events(limit=limit, kind=kind, status=status, since=since, until=until, q=q, sort=sort).body
+                # api_events returns JSONResponse; .body is bytes
+                if rows != last:
+                    last = rows
+                    yield f"data: {rows.decode('utf-8')}\n\n"
+            except Exception as e:
+                yield f"data: []\n\n"
+            time.sleep(1.5)
+
+    return StreamingResponse(gen(), media_type='text/event-stream')
 
 
 def main():

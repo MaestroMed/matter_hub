@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "tag": "Universe-01",
+      "patterns": ["primerium", "primerus", "primériens", "aristote", "nyx", "kami", "lumenor", "colonies rouges", "sylveria", "vesper"]
+    },
+    {
+      "tag": "Iris",
+      "patterns": ["iris"]
+    },
+    {
+      "tag": "Dolores",
+      "patterns": ["dolores"]
+    }
+  ]
+}

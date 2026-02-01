@@ -57,6 +57,7 @@ def ensure_db(db_path: Path = DEFAULT_DB) -> sqlite3.Connection:
           seconds REAL,
           message TEXT,
           tags TEXT,
+          log_path TEXT,
           params_json TEXT,
           extra_json TEXT,
           error TEXT
@@ -72,6 +73,8 @@ def ensure_db(db_path: Path = DEFAULT_DB) -> sqlite3.Connection:
         con.execute('ALTER TABLE events ADD COLUMN message TEXT')
     if not _has_column(con, 'events', 'tags'):
         con.execute('ALTER TABLE events ADD COLUMN tags TEXT')
+    if not _has_column(con, 'events', 'log_path'):
+        con.execute('ALTER TABLE events ADD COLUMN log_path TEXT')
 
     con.commit()
     return con
@@ -117,20 +120,40 @@ def log_event(
     params: dict | None = None,
     message: str | None = None,
     tags: list[str] | None = None,
+    log_path: str | None = None,
     db_path: Path = DEFAULT_DB,
 ):
     con = ensure_db(db_path)
     ts_start = _utcnow_iso()
     t0 = time.time()
 
+    # auto-tags via simple pattern rules
+    final_tags = list(tags or [])
+    try:
+        rules_path = Path(__file__).resolve().parent / 'project_tags.json'
+        if rules_path.exists():
+            rules = json.loads(rules_path.read_text(encoding='utf-8'))
+            hay = (message or '') + ' ' + json.dumps(params or {}, ensure_ascii=False)
+            low = hay.lower()
+            for proj in rules.get('projects', []):
+                tag = proj.get('tag')
+                for pat in proj.get('patterns', []):
+                    if pat and pat.lower() in low:
+                        if tag and tag not in final_tags:
+                            final_tags.append(tag)
+                        break
+    except Exception:
+        pass
+
     cur = con.execute(
-        "INSERT INTO events(ts_start, kind, status, message, tags, params_json, extra_json) VALUES (?,?,?,?,?,?,?)",
+        "INSERT INTO events(ts_start, kind, status, message, tags, log_path, params_json, extra_json) VALUES (?,?,?,?,?,?,?,?)",
         (
             ts_start,
             kind,
             'running',
             message,
-            json.dumps(tags or [], ensure_ascii=False),
+            json.dumps(final_tags, ensure_ascii=False),
+            log_path,
             json.dumps(params or {}, ensure_ascii=False),
             json.dumps({}, ensure_ascii=False),
         ),

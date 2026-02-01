@@ -26,7 +26,7 @@ def main():
 
     con = sqlite3.connect(args.db)
 
-    q = "SELECT id, ts_start, ts_end, kind, status, seconds, message, tags, params_json, extra_json, error FROM events"
+    q = "SELECT id, ts_start, ts_end, kind, status, seconds, message, tags, log_path, params_json, extra_json, error FROM events"
     where = []
     params = []
 
@@ -66,9 +66,10 @@ def main():
             'seconds': r[5],
             'message': r[6],
             'tags': json.loads(r[7] or '[]'),
-            'params': json.loads(r[8] or '{}'),
-            'extra': json.loads(r[9] or '{}'),
-            'error': r[10],
+            'log_path': r[8],
+            'params': json.loads(r[9] or '{}'),
+            'extra': json.loads(r[10] or '{}'),
+            'error': r[11],
         })
 
     if args.format == 'json':
