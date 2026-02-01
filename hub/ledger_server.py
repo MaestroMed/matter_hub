@@ -48,23 +48,60 @@ def index():
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>matter-hub — Ledger</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+    :root{
+      --bg:#ffffff; --fg:#111; --muted:#666; --card:#f7f7f7; --border:#e2e2e2; --hover:#f5f5f5;
+      --okBg:#e7f7ee; --okFg:#0b6b2f;
+      --warnBg:#fff6e6; --warnFg:#8a5a00;
+      --errBg:#fdeaea; --errFg:#9a1b1b;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{ --bg:#0f1115; --fg:#e6e6e6; --muted:#9aa0a6; --card:#151922; --border:#2a2f3a; --hover:#161c26; }
+    }
+    [data-theme="light"]{ --bg:#ffffff; --fg:#111; --muted:#666; --card:#f7f7f7; --border:#e2e2e2; --hover:#f5f5f5; }
+    [data-theme="dark"]{ --bg:#0f1115; --fg:#e6e6e6; --muted:#9aa0a6; --card:#151922; --border:#2a2f3a; --hover:#161c26; }
+
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 18px; background:var(--bg); color:var(--fg); }
+    h1{ margin: 0 0 10px 0; }
     .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-    input, select { padding: 6px 8px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-    th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; }
-    th { background: #f6f6f6; text-align: left; }
-    tr:hover { background:#fafafa; }
-    .pill { display:inline-block; padding:2px 8px; border-radius: 999px; font-size: 12px; }
-    .ok { background:#e7f7ee; color:#0b6b2f; }
-    .warn { background:#fff6e6; color:#8a5a00; }
-    .error { background:#fdeaea; color:#9a1b1b; }
-    pre { white-space: pre-wrap; }
-    .muted { color:#666; }
+    input, select, button { padding: 6px 8px; border:1px solid var(--border); background:var(--bg); color:var(--fg); border-radius:8px; }
+    button { cursor:pointer; }
+    .meta { color:var(--muted); }
+
+    .layout { display:grid; grid-template-columns: 1fr 520px; gap:16px; margin-top: 12px; }
+    @media (max-width: 1100px){ .layout{ grid-template-columns: 1fr; } }
+
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid var(--border); padding: 8px; font-size: 13px; }
+    th { background: var(--card); text-align: left; position: sticky; top: 0; z-index: 1; }
+    tr:hover { background:var(--hover); }
+
+    .pill { display:inline-block; padding:2px 8px; border-radius: 999px; font-size: 12px; border:1px solid var(--border); }
+    .ok { background:var(--okBg); color:var(--okFg); }
+    .warn { background:var(--warnBg); color:var(--warnFg); }
+    .error { background:var(--errBg); color:var(--errFg); }
+
+    .panel{ border:1px solid var(--border); background:var(--card); border-radius:12px; padding:12px; }
+    pre { white-space: pre-wrap; background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:10px; overflow:auto; }
   </style>
 </head>
 <body>
   <h1>Ledger</h1>
+  <div class="row">
+    <label><input id="autorefresh" type="checkbox" checked /> auto</label>
+    <label>theme
+      <select id="theme" onchange="setTheme()">
+        <option value="auto">auto</option>
+        <option value="dark">dark</option>
+        <option value="light">light</option>
+      </select>
+    </label>
+    <label>sort
+      <select id="sort">
+        <option value="desc">newest</option>
+        <option value="asc">oldest</option>
+      </select>
+    </label>
+  </div>
   <div class="row">
     <label>kind <input id="kind" placeholder="semantic_index"/></label>
     <label>status
@@ -81,20 +118,34 @@ def index():
     <label>until <input id="until" placeholder="" size="26"/></label>
     <label>limit <input id="limit" type="number" value="100" min="1" max="2000"/></label>
     <button onclick="loadEvents()">Refresh</button>
-    <span class="muted" id="meta"></span>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>id</th><th>ts_start</th><th>status</th><th>kind</th><th>seconds</th><th>message</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div class="layout">
+    <div class="panel">
+      <div class="row" style="justify-content:space-between;">
+        <div class="meta" id="meta"></div>
+        <div class="meta" id="counts"></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px;">id</th>
+            <th style="width:180px;">ts_start</th>
+            <th style="width:90px;">status</th>
+            <th style="width:160px;">kind</th>
+            <th style="width:80px;">seconds</th>
+            <th>message</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
 
-  <h2>Details</h2>
-  <div id="details" class="muted">Click an event row.</div>
+    <div class="panel">
+      <h2 style="margin-top:0;">Details</h2>
+      <div id="details" class="meta">Click an event row.</div>
+    </div>
+  </div>
 
 <script>
 async function api(url){
@@ -108,6 +159,24 @@ function pill(status){
   return `<span class="pill ${cls}">${status}</span>`;
 }
 
+function setTheme(){
+  const v = document.getElementById('theme').value;
+  if(v === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', v);
+  localStorage.setItem('ledger_theme', v);
+}
+(function initTheme(){
+  const saved = localStorage.getItem('ledger_theme') || 'auto';
+  document.getElementById('theme').value = saved;
+  setTheme();
+})();
+
+function countsFrom(rows){
+  const c = {ok:0,warn:0,error:0,running:0};
+  for(const r of rows){ if(c[r.status] !== undefined) c[r.status]++; }
+  return c;
+}
+
 async function loadEvents(){
   const kind = document.getElementById('kind').value;
   const status = document.getElementById('status').value;
@@ -115,6 +184,7 @@ async function loadEvents(){
   const since = document.getElementById('since').value;
   const until = document.getElementById('until').value;
   const limit = document.getElementById('limit').value;
+  const sort = document.getElementById('sort').value;
 
   const params = new URLSearchParams();
   if(kind) params.set('kind', kind);
@@ -123,12 +193,15 @@ async function loadEvents(){
   if(since) params.set('since', since);
   if(until) params.set('until', until);
   params.set('limit', limit || '100');
+  params.set('sort', sort || 'desc');
 
   const t0 = performance.now();
   const rows = await api('/api/events?' + params.toString());
   const t1 = performance.now();
 
+  const c = countsFrom(rows);
   document.getElementById('meta').textContent = `${rows.length} events • ${(t1-t0).toFixed(0)}ms`;
+  document.getElementById('counts').innerHTML = `${pill('ok')} ${c.ok} &nbsp; ${pill('warn')} ${c.warn} &nbsp; ${pill('error')} ${c.error} &nbsp; ${pill('running')} ${c.running}`;
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
@@ -146,8 +219,9 @@ async function loadEvents(){
     tr.onclick = async () => {
       const full = await api('/api/events/' + e.id);
       document.getElementById('details').innerHTML = `
-        <div><b>#${full.id}</b> ${full.ts_start} → ${full.ts_end ?? ''}</div>
-        <div><b>kind</b>: ${full.kind} • <b>status</b>: ${full.status} • <b>seconds</b>: ${(full.seconds ?? 0).toFixed(2)}</div>
+        <div style="margin-bottom:8px;"><b>#${full.id}</b></div>
+        <div class="meta">${full.ts_start} → ${full.ts_end ?? ''}</div>
+        <div style="margin-top:6px;"><b>kind</b>: ${full.kind} • <b>status</b>: ${pill(full.status)} • <b>seconds</b>: ${(full.seconds ?? 0).toFixed(2)}</div>
         <div><b>tags</b>: ${(full.tags||[]).join(', ')}</div>
         <div><b>message</b>: ${full.message ?? ''}</div>
         <h3>params</h3><pre>${JSON.stringify(full.params||{}, null, 2)}</pre>
@@ -160,7 +234,10 @@ async function loadEvents(){
 }
 
 loadEvents();
-setInterval(loadEvents, 5000);
+setInterval(() => {
+  const auto = document.getElementById('autorefresh').checked;
+  if(auto) loadEvents();
+}, 5000);
 </script>
 </body>
 </html>"""
@@ -175,6 +252,7 @@ def api_events(
     since: Optional[str] = None,
     until: Optional[str] = None,
     q: Optional[str] = None,
+    sort: str = 'desc',
 ):
     limit = max(1, min(int(limit), 2000))
     con = _connect()
@@ -203,7 +281,9 @@ def api_events(
     if where:
         sql += ' WHERE ' + ' AND '.join(where)
 
-    sql += ' ORDER BY id DESC LIMIT ?'
+    if sort not in ('asc','desc'):
+        sort = 'desc'
+    sql += f' ORDER BY id {sort.upper()} LIMIT ?'
     params.append(limit)
 
     rows = con.execute(sql, params).fetchall()
@@ -249,9 +329,16 @@ def api_event(event_id: int):
 
 
 def main():
+    import argparse
     import uvicorn
 
-    uvicorn.run(app, host='127.0.0.1', port=8899, log_level='warning')
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--host', default='127.0.0.1')
+    ap.add_argument('--port', type=int, default=8899)
+    ap.add_argument('--log-level', default='warning')
+    args = ap.parse_args()
+
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
 
 
 if __name__ == '__main__':
