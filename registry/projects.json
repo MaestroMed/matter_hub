@@ -1,5 +1,1451 @@
 {
-  "generatedAt": "2026-02-01T00:00:00Z",
-  "source": "scan D:\\clawd\\hub\\projects-scan.json",
-  "projects": []
+  "generatedAt": "2026-02-01T18:35:11Z",
+  "source": "D:\\PROJECTS\\matter-hub\\registry\\projects-scan.raw.json",
+  "count": 100,
+  "projects": [
+    {
+      "path": "D:\\fastfabric-premium",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "docker",
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json",
+        "Dockerfile"
+      ],
+      "score": 13,
+      "name": "fastfabric-premium",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Formaroute",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "Formaroute",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Sconnect",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "Sconnect",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\test_auto_ecole",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "test_auto_ecole",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\01TA\\01transfertAeroport\\prototype",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "prototype",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\artist_homepage",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "artist_homepage",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\AZConstruction\\az-construction",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "az-construction",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\dev\\test_codex",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "test_codex",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Numelite_v1\\numelite",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json"
+      ],
+      "score": 12,
+      "name": "numelite",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\ViralDNAMap",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "git",
+        "node"
+      ],
+      "markers": [
+        ".git",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "score": 12,
+      "name": "ViralDNAMap",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Boutique_v1",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "git"
+      ],
+      "markers": [
+        ".git"
+      ],
+      "score": 11,
+      "name": "Boutique_v1",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\clawd",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "git"
+      ],
+      "markers": [
+        ".git"
+      ],
+      "score": 11,
+      "name": "clawd",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cable_avenue\\cable-avenue",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "git"
+      ],
+      "markers": [
+        ".git"
+      ],
+      "score": 11,
+      "name": "cable-avenue",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\highlight_reeactor",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node",
+        "vscode"
+      ],
+      "markers": [
+        "package.json",
+        ".vscode"
+      ],
+      "score": 2,
+      "name": "highlight_reeactor",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cognima\\apps\\web",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "docker",
+        "node"
+      ],
+      "markers": [
+        "package.json",
+        "Dockerfile"
+      ],
+      "score": 2,
+      "name": "web",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cognima\\services\\api",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "docker",
+        "python"
+      ],
+      "markers": [
+        "requirements.txt",
+        "Dockerfile"
+      ],
+      "score": 2,
+      "name": "api",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cognima\\services\\ingest",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "docker",
+        "python"
+      ],
+      "markers": [
+        "requirements.txt",
+        "Dockerfile"
+      ],
+      "score": 2,
+      "name": "ingest",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\PROJECTS\\Numelite_v2",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "node",
+        "vscode"
+      ],
+      "markers": [
+        "package.json",
+        "pnpm-lock.yaml",
+        ".vscode"
+      ],
+      "score": 2,
+      "name": "Numelite_v2",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Universal_forge\\apps\\web",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "docker",
+        "node"
+      ],
+      "markers": [
+        "package.json",
+        "Dockerfile"
+      ],
+      "score": 2,
+      "name": "web",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Universal_forge\\services\\api",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "docker",
+        "python"
+      ],
+      "markers": [
+        "requirements.txt",
+        "Dockerfile"
+      ],
+      "score": 2,
+      "name": "api",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\ViralArchitectEngine\\backend",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "docker",
+        "python"
+      ],
+      "markers": [
+        "requirements.txt",
+        "Dockerfile"
+      ],
+      "score": 2,
+      "name": "backend",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Airble_fleur",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Airble_fleur",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Atelier Densité",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Atelier Densité",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\content_gatherer",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "python"
+      ],
+      "markers": [
+        "pyproject.toml"
+      ],
+      "score": 1,
+      "name": "content_gatherer",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\deep_direct\\deep_direct",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "python"
+      ],
+      "markers": [
+        "requirements.txt"
+      ],
+      "score": 1,
+      "name": "deep_direct",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\deep_direct_cpp",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "cpp"
+      ],
+      "markers": [
+        "CMakeLists.txt"
+      ],
+      "score": 1,
+      "name": "deep_direct_cpp",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Eve_formation",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Eve_formation",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\highlight_reeactor\\src-tauri",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "rust"
+      ],
+      "markers": [
+        "Cargo.toml"
+      ],
+      "score": 1,
+      "name": "src-tauri",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Numelite_v2\\packages\\config",
+      "root": "C:\\Users\\Matter1",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "config",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Numelite_v2\\packages\\database",
+      "root": "C:\\Users\\Matter1",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "database",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Numelite_v2\\packages\\i18n",
+      "root": "C:\\Users\\Matter1",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "i18n",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Numelite_v2\\packages\\ui",
+      "root": "C:\\Users\\Matter1",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Open_Content",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Open_Content",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Open_Content\\python",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "python"
+      ],
+      "markers": [
+        "requirements.txt"
+      ],
+      "score": 1,
+      "name": "python",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Open_Content\\src-tauri",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "rust"
+      ],
+      "markers": [
+        "Cargo.toml"
+      ],
+      "score": 1,
+      "name": "src-tauri",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Orchestrator\\westworld",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "westworld",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Sas_publis_rapide",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Sas_publis_rapide",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Vesper_forge",
+      "root": "C:\\Users\\Matter1",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Vesper_forge",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Whisperer\\app",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "app",
+      "priority": "normal"
+    },
+    {
+      "path": "C:\\Users\\Matter1\\Whisperer\\backend",
+      "root": "C:\\Users\\Matter1",
+      "depth": 2,
+      "kinds": [
+        "python"
+      ],
+      "markers": [
+        "requirements.txt"
+      ],
+      "score": 1,
+      "name": "backend",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\01TA",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "vscode"
+      ],
+      "markers": [
+        ".vscode"
+      ],
+      "score": 1,
+      "name": "01TA",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Become",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Become",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Become\\apps\\desktop-tauri\\app",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "app",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Become\\apps\\desktop-tauri\\src-tauri",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "rust"
+      ],
+      "markers": [
+        "Cargo.toml"
+      ],
+      "score": 1,
+      "name": "src-tauri",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cable_avenue",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "score": 1,
+      "name": "Cable_avenue",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cable_avenue\\apps\\web",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "web",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cable_avenue\\packages\\ui",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Cognima",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Cognima",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "fast_cooking",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\apps\\api",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "api",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\apps\\field",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "field",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\apps\\site",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "site",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\infra\\supabase",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "supabase",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\deploy",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "deploy",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\ingest",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ingest",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\lib",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "lib",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\manifest",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "manifest",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\seo",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "seo",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\social",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "social",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\fast_cooking\\packages\\ui",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "score": 1,
+      "name": "Forge_V2",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\apps\\forge",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "forge",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\apps\\forge\\src-tauri",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "rust"
+      ],
+      "markers": [
+        "Cargo.toml"
+      ],
+      "score": 1,
+      "name": "src-tauri",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\agents",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "agents",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\audio",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "audio",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\graph",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "graph",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\schema",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "schema",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\search",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "search",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\ui",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Forge_V2\\packages\\utils",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "utils",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Fragments",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "vscode"
+      ],
+      "markers": [
+        ".vscode"
+      ],
+      "score": 1,
+      "name": "Fragments",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Fragments\\context-os",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "python"
+      ],
+      "markers": [
+        "pyproject.toml"
+      ],
+      "score": 1,
+      "name": "context-os",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Motivation Project",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "python"
+      ],
+      "markers": [
+        "requirements.txt"
+      ],
+      "score": 1,
+      "name": "Motivation Project",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\myluna",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "myluna",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Numelite",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Numelite",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\PROJECTS\\Numelite_v2\\apps\\admin",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "admin",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\PROJECTS\\Numelite_v2\\apps\\client",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "client",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\PROJECTS\\Numelite_v2\\apps\\web",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "web",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\apps\\agent",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "agent",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\apps\\studio",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "studio",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\audio-core",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "audio-core",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\core-render",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "core-render",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\node-editor",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "node-editor",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\preset-kit",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "preset-kit",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\shader-lib",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "shader-lib",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\timeline-core",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "timeline-core",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Quasar\\packages\\ui-components",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui-components",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Scouting_Spotlight",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "score": 1,
+      "name": "Scouting_Spotlight",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Scouting_Spotlight\\apps\\ui",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Scouting_Spotlight\\packages\\core",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "core",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Scouting_Spotlight\\packages\\ingest",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ingest",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Scouting_Spotlight\\packages\\renderer",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "renderer",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Test_impression",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Test_impression",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Ultima Grind",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Ultima Grind",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Universal_forge",
+      "root": "D:\\",
+      "depth": 1,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "Universal_forge",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Universal_forge\\packages\\config",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "config",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Universal_forge\\packages\\ui",
+      "root": "D:\\",
+      "depth": 3,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "ui",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Vesper_forge\\vesper-forge",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "score": 1,
+      "name": "vesper-forge",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\Vesper_forge\\vesper-forge\\apps\\web",
+      "root": "D:\\",
+      "depth": 4,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "web",
+      "priority": "normal"
+    },
+    {
+      "path": "D:\\ViralArchitectEngine\\frontend",
+      "root": "D:\\",
+      "depth": 2,
+      "kinds": [
+        "node"
+      ],
+      "markers": [
+        "package.json"
+      ],
+      "score": 1,
+      "name": "frontend",
+      "priority": "normal"
+    }
+  ]
 }
