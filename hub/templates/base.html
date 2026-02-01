@@ -5,8 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{{ title }}</title>
   <link rel="stylesheet" href="/static/hub_shell.css" />
+  <link rel="stylesheet" href="/static/cocoon.css" />
 </head>
 <body>
+  <!-- Cocoon (always visible, top-right) -->
+  <div id="cocoon" class="cocoon" title="Cocoon">
+    <canvas id="cocoonCanvas"></canvas>
+    <div class="cocoonBadge">
+      <span>COCOON</span>
+      <span class="meta">v0</span>
+    </div>
+  </div>
+
+  <div id="cocoonPanel" class="cocoonPanel" aria-hidden="true">
+    <h2>COCOON</h2>
+    <div class="meta">Always visible. Click the orb to open/close. Esc closes.</div>
+    <div class="divider"></div>
+    <div class="row">
+      <button onclick="location.href='/projects'">Projects</button>
+      <button onclick="location.href='/search'">Search</button>
+      <button onclick="location.href='/canon'">Canon</button>
+    </div>
+    <div class="divider"></div>
+    <div class="meta">Next: automation controls + real progress from Ledger.</div>
+  </div>
   <div class="topbar">
     <div class="brand">matter-hub</div>
     <nav class="nav">
@@ -42,5 +64,11 @@ function setTheme(){
   setTheme();
 })();
 </script>
+
+<!-- BabylonJS (CDN) + Cocoon boot -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylon.proceduralTextures.min.js"></script>
+<script src="/static/cocoon.js"></script>
+
 </body>
 </html>
