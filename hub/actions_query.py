@@ -12,6 +12,13 @@ def main():
     ap.add_argument('--limit', type=int, default=50)
     args = ap.parse_args()
 
+    # ensure schema exists
+    try:
+        from action_log import ensure_db
+        ensure_db(Path(args.db))
+    except Exception:
+        pass
+
     con = sqlite3.connect(args.db)
     q = "SELECT id, ts_start, ts_end, kind, status, seconds, params_json, extra_json, error FROM events"
     where = []
