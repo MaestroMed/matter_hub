@@ -130,7 +130,8 @@ def canon_file(bundle: str, filename: str):
 
 def main():
     import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=8900, log_level='warning')
+    # Listen on all interfaces so it works from other devices too.
+    uvicorn.run(app, host='0.0.0.0', port=8900, log_level='info')
 
 
 if __name__ == '__main__':
