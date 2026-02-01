@@ -1,20 +1,24 @@
 """Local action ledger (SQLite) for monitoring Greydawn/matter-hub actions.
 
-Goal: one place to record what ran, when, with status, params, durations, and errors.
+World-class goal:
+- One durable, queryable source of truth for *everything the agent runs*.
+- Structured fields + raw JSON params/extra.
+- Safe for long-running jobs, crash-tolerant.
+
+DB: hub/actions.sqlite
 
 Usage:
   from action_log import log_event
-  with log_event('semantic_index', params={'limit': 5000}) as ev:
+  with log_event('semantic_index', params={'limit': 5000}, message='Index embeddings') as ev:
       ...
-      ev.ok(extra={'embedded': 123})
+      ev.ok(extra={'embedded': 5000})
 
-DB location default: hub/actions.sqlite
+Schema is auto-migrated (adds columns when needed).
 """
 
 from __future__ import annotations
 
 import json
-import os
 import sqlite3
 import time
 import traceback
@@ -30,11 +34,18 @@ def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+def _has_column(con: sqlite3.Connection, table: str, col: str) -> bool:
+    rows = con.execute(f"PRAGMA table_info({table})").fetchall()
+    return any(r[1] == col for r in rows)
+
+
 def ensure_db(db_path: Path = DEFAULT_DB) -> sqlite3.Connection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(str(db_path))
     con.execute('PRAGMA journal_mode=WAL;')
     con.execute('PRAGMA synchronous=NORMAL;')
+
+    # base schema
     con.executescript(
         """
         CREATE TABLE IF NOT EXISTS events(
@@ -44,6 +55,8 @@ def ensure_db(db_path: Path = DEFAULT_DB) -> sqlite3.Connection:
           kind TEXT,
           status TEXT,
           seconds REAL,
+          message TEXT,
+          tags TEXT,
           params_json TEXT,
           extra_json TEXT,
           error TEXT
@@ -53,6 +66,14 @@ def ensure_db(db_path: Path = DEFAULT_DB) -> sqlite3.Connection:
         CREATE INDEX IF NOT EXISTS idx_events_ts_start ON events(ts_start);
         """
     )
+
+    # migrations (if older db exists)
+    if not _has_column(con, 'events', 'message'):
+        con.execute('ALTER TABLE events ADD COLUMN message TEXT')
+    if not _has_column(con, 'events', 'tags'):
+        con.execute('ALTER TABLE events ADD COLUMN tags TEXT')
+
+    con.commit()
     return con
 
 
@@ -91,13 +112,28 @@ class _EventHandle:
 
 
 @contextmanager
-def log_event(kind: str, params: dict | None = None, db_path: Path = DEFAULT_DB):
+def log_event(
+    kind: str,
+    params: dict | None = None,
+    message: str | None = None,
+    tags: list[str] | None = None,
+    db_path: Path = DEFAULT_DB,
+):
     con = ensure_db(db_path)
     ts_start = _utcnow_iso()
     t0 = time.time()
+
     cur = con.execute(
-        "INSERT INTO events(ts_start, kind, status, params_json, extra_json) VALUES (?,?,?,?,?)",
-        (ts_start, kind, 'running', json.dumps(params or {}, ensure_ascii=False), json.dumps({}, ensure_ascii=False)),
+        "INSERT INTO events(ts_start, kind, status, message, tags, params_json, extra_json) VALUES (?,?,?,?,?,?,?)",
+        (
+            ts_start,
+            kind,
+            'running',
+            message,
+            json.dumps(tags or [], ensure_ascii=False),
+            json.dumps(params or {}, ensure_ascii=False),
+            json.dumps({}, ensure_ascii=False),
+        ),
     )
     con.commit()
     ev = _EventHandle(con=con, row_id=int(cur.lastrowid), kind=kind, t0=t0)

@@ -48,15 +48,18 @@ def cosine(a, b):
 
 
 def main():
+    from action_log import log_event
+
     ap = argparse.ArgumentParser()
     ap.add_argument('query')
     ap.add_argument('--db', default=r'D:\\PROJECTS\\matter-hub\\hub\\semantic.sqlite')
     ap.add_argument('--top', type=int, default=8)
     args = ap.parse_args()
 
-    qv = ollama_embed(args.query)
+    with log_event('semantic_search', params={'query': args.query, 'top': args.top, 'db': args.db}, message='Semantic search', tags=['search']) as ev:
+        qv = ollama_embed(args.query)
 
-    con = sqlite3.connect(args.db)
+        con = sqlite3.connect(args.db)
     rows = con.execute('SELECT v.id, v.dim, v.v, d.meta_json, d.text FROM vecs v JOIN docs d ON d.id=v.id').fetchall()
 
     scored = []
@@ -77,7 +80,8 @@ def main():
             'text': (text[:400] + '…') if text and len(text) > 400 else text,
         })
 
-    print(json.dumps({'query': args.query, 'top': out}, ensure_ascii=False, indent=2))
+        ev.ok(extra={'results': len(out)})
+        print(json.dumps({'query': args.query, 'top': out}, ensure_ascii=False, indent=2))
 
 
 if __name__ == '__main__':
