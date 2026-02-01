@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h1 style="margin:0 0 8px 0;">Search</h1>
+  <div class="meta">FTS + Semantic (Ollama)</div>
+  <div class="row" style="margin-top:10px;">
+    <label>query <input id="query" placeholder="Primerium Aristote" size="40"/></label>
+    <label>project
+      <select id="project">
+        <option value="">(any)</option>
+        <option value="Universe-01">Universe-01</option>
+        <option value="Iris">Iris</option>
+        <option value="Dolores">Dolores</option>
+      </select>
+    </label>
+    <label>role
+      <select id="role">
+        <option value="">(any)</option>
+        <option value="user">user</option>
+        <option value="assistant">assistant</option>
+      </select>
+    </label>
+    <label>top <input id="top" type="number" value="10" min="1" max="50"/></label>
+    <label><input id="group" type="checkbox"/> group</label>
+    <button onclick="go()">Search</button>
+    <span class="meta" id="meta"></span>
+  </div>
+
+  <div class="layout" style="margin-top:12px; grid-template-columns: 1fr 520px;">
+    <div class="panel">
+      <div id="results" class="meta">Run a search.</div>
+    </div>
+    <div class="panel">
+      <h2 style="margin-top:0;">Raw JSON</h2>
+      <pre id="selected"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+async function api(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(await r.text());
+  return await r.json();
+}
+
+function esc(s){
+  return (s||'').replaceAll('&','&amp;').replaceAll('<','&lt;');
+}
+
+function card(hit){
+  const txt = esc(hit.preview || hit.text || '');
+  const tags = (hit.tags||[]).join(', ');
+  return `<div style="padding:10px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--bg)">
+    <div class="meta">score=${hit.score} • ${hit.author_role||''} • tags=${tags}</div>
+    <div class="meta">convo=${hit.conversation_id||''} • id=${hit.id}</div>
+    <div style="margin-top:6px;">${txt}</div>
+  </div>`;
+}
+
+async function go(){
+  const query = document.getElementById('query').value;
+  const project = document.getElementById('project').value;
+  const role = document.getElementById('role').value;
+  const top = document.getElementById('top').value;
+  const group = document.getElementById('group').checked;
+
+  const params = new URLSearchParams();
+  params.set('q', query);
+  if(project) params.set('project', project);
+  if(role) params.set('role', role);
+  params.set('top', top || '10');
+  if(group) params.set('group','1');
+
+  const t0 = performance.now();
+  const res = await api('/api/search?' + params.toString());
+  const t1 = performance.now();
+  document.getElementById('meta').textContent = `${(t1-t0).toFixed(0)}ms • fts=${res.counts.fts} sem=${res.counts.semantic} merged=${res.counts.merged}`;
+
+  const hits = res.hits || [];
+  document.getElementById('results').innerHTML = hits.map(card).join('') || '<div class="meta">No results.</div>';
+  document.getElementById('selected').textContent = JSON.stringify(res, null, 2);
+}
+</script>
+{% endblock %}

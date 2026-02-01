@@ -1,0 +1,33 @@
+:root{
+  --bg:#0f1115; --fg:#e6e6e6; --muted:#9aa0a6; --card:#151922; --border:#2a2f3a; --hover:#161c26;
+  --okBg:#e7f7ee; --okFg:#0b6b2f;
+  --warnBg:#fff6e6; --warnFg:#8a5a00;
+  --errBg:#fdeaea; --errFg:#9a1b1b;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#ffffff; --fg:#111; --muted:#666; --card:#f7f7f7; --border:#e2e2e2; --hover:#f5f5f5; }
+}
+[data-theme="light"]{ --bg:#ffffff; --fg:#111; --muted:#666; --card:#f7f7f7; --border:#e2e2e2; --hover:#f5f5f5; }
+[data-theme="dark"]{ --bg:#0f1115; --fg:#e6e6e6; --muted:#9aa0a6; --card:#151922; --border:#2a2f3a; --hover:#161c26; }
+
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:var(--bg);color:var(--fg)}
+.topbar{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:5}
+.brand{font-weight:700;letter-spacing:.3px}
+.nav a{color:var(--fg);text-decoration:none;padding:6px 10px;border-radius:10px;border:1px solid transparent}
+.nav a.active{background:var(--card);border-color:var(--border)}
+.spacer{flex:1}
+select,input,button{padding:6px 8px;border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:8px}
+main{padding:14px}
+.panel{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:12px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border:1px solid var(--border);padding:8px;font-size:13px}
+.table th{background:var(--card);position:sticky;top:52px;z-index:1;text-align:left}
+tr:hover{background:var(--hover)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border)}
+.ok{background:var(--okBg);color:var(--okFg)}
+.warn{background:var(--warnBg);color:var(--warnFg)}
+.error{background:var(--errBg);color:var(--errFg)}
+.meta{color:var(--muted)}
+.layout{display:grid;grid-template-columns:1fr 520px;gap:16px}
+@media (max-width:1100px){.layout{grid-template-columns:1fr}}
+pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:10px;overflow:auto}

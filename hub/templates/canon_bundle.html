@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h1 style="margin:0 0 8px 0;">Canon: {{ bundle }}</h1>
+  <div class="meta">{{ path }}</div>
+  <ul>
+    {% for f in files %}
+      <li><a href="/canon/{{ bundle }}/file/{{ f }}">{{ f }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/hub_shell.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">matter-hub</div>
+    <nav class="nav">
+      <a href="/ledger" class="{% if active=='ledger' %}active{% endif %}">Ledger</a>
+      <a href="/projects" class="{% if active=='projects' %}active{% endif %}">Projects</a>
+      <a href="/search" class="{% if active=='search' %}active{% endif %}">Search</a>
+      <a href="/canon" class="{% if active=='canon' %}active{% endif %}">Canon</a>
+    </nav>
+    <div class="spacer"></div>
+    <label class="meta">theme
+      <select id="theme" onchange="setTheme()">
+        <option value="auto">auto</option>
+        <option value="dark">dark</option>
+        <option value="light">light</option>
+      </select>
+    </label>
+  </div>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+<script>
+function setTheme(){
+  const v = document.getElementById('theme').value;
+  if(v === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', v);
+  localStorage.setItem('hub_theme', v);
+}
+(function initTheme(){
+  const saved = localStorage.getItem('hub_theme') || 'auto';
+  document.getElementById('theme').value = saved;
+  setTheme();
+})();
+</script>
+</body>
+</html>

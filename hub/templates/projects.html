@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h1 style="margin:0 0 8px 0;">Projects</h1>
+  <div class="meta">Source: registry/projects.json • {{ count }} projects</div>
+  <div class="row" style="margin-top:10px;">
+    <label>q <input id="q" placeholder="Numelite" /></label>
+    <label>kind
+      <select id="kind">
+        <option value="">(any)</option>
+        <option value="git">git</option>
+        <option value="node">node</option>
+        <option value="python">python</option>
+        <option value="docker">docker</option>
+        <option value="rust">rust</option>
+        <option value="cpp">cpp</option>
+      </select>
+    </label>
+    <label>sort
+      <select id="sort">
+        <option value="score">score</option>
+        <option value="name">name</option>
+        <option value="path">path</option>
+      </select>
+    </label>
+    <button onclick="load()">Refresh</button>
+    <span class="meta" id="meta"></span>
+  </div>
+
+  <table class="table" style="margin-top:10px;">
+    <thead>
+      <tr>
+        <th style="width:220px;">name</th>
+        <th style="width:90px;">score</th>
+        <th style="width:180px;">kinds</th>
+        <th>path</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+async function api(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(await r.text());
+  return await r.json();
+}
+
+function render(rows){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  for(const p of rows){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.name}</td>
+      <td>${p.score ?? ''}</td>
+      <td>${(p.kinds||[]).join(', ')}</td>
+      <td><code>${p.path}</code></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function load(){
+  const q = document.getElementById('q').value;
+  const kind = document.getElementById('kind').value;
+  const sort = document.getElementById('sort').value;
+  const params = new URLSearchParams();
+  if(q) params.set('q', q);
+  if(kind) params.set('kind', kind);
+  if(sort) params.set('sort', sort);
+  params.set('limit','500');
+  const t0 = performance.now();
+  const rows = await api('/api/projects?' + params.toString());
+  const t1 = performance.now();
+  document.getElementById('meta').textContent = `${rows.length} rows • ${(t1-t0).toFixed(0)}ms`;
+  render(rows);
+}
+
+load();
+</script>
+{% endblock %}
