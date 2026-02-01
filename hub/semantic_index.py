@@ -74,6 +74,8 @@ def ensure_target(db_path: str):
 
 
 def main():
+    from action_log import log_event
+
     ap = argparse.ArgumentParser()
     ap.add_argument('--src', default=r'D:\\PROJECTS\\matter-hub\\hub\\chatgpt.sqlite')
     ap.add_argument('--dst', default=r'D:\\PROJECTS\\matter-hub\\hub\\semantic.sqlite')
@@ -100,37 +102,41 @@ def main():
     rows = src.execute(q, (args.limit,)).fetchall()
     print(json.dumps({'candidates': len(rows)}, ensure_ascii=False))
 
-    n = 0
-    t0 = time.time()
+    with log_event('semantic_index', params={'limit': args.limit, 'where': args.where, 'src': args.src, 'dst': args.dst, 'candidates': len(rows)}) as ev:
+        n = 0
+        t0 = time.time()
 
-    for mid, cid, role, created_at, text in rows:
-        # keep text reasonably sized for embeddings
-        snippet = (text or '').replace('\x00', ' ')
-        # keep text reasonably sized for embeddings
-        if len(snippet) > 2000:
-            snippet = snippet[:2000]
+        for mid, cid, role, created_at, text in rows:
+            snippet = (text or '').replace('\x00', ' ')
+            if len(snippet) > 2000:
+                snippet = snippet[:2000]
 
-        try:
-            vec = ollama_embed(snippet)
-        except Exception as e:
-            # skip problematic docs but keep going
-            print(f"WARN embedding failed id={mid}: {type(e).__name__}: {e}")
-            continue
-        blob = pack_f32(vec)
+            try:
+                vec = ollama_embed(snippet)
+            except Exception as e:
+                # skip problematic docs but keep going
+                print(f"WARN embedding failed id={mid}: {type(e).__name__}: {e}")
+                continue
 
-        meta = {'conversation_id': cid, 'author_role': role, 'created_at': created_at}
-        dst.execute('INSERT OR REPLACE INTO docs(id, source, text, meta_json) VALUES (?,?,?,?)', (mid, 'chatgpt.messages', snippet, json.dumps(meta, ensure_ascii=False)))
-        dst.execute('INSERT OR REPLACE INTO vecs(id, dim, v) VALUES (?,?,?)', (mid, len(vec), blob))
+            blob = pack_f32(vec)
+            meta = {'conversation_id': cid, 'author_role': role, 'created_at': created_at}
+            dst.execute(
+                'INSERT OR REPLACE INTO docs(id, source, text, meta_json) VALUES (?,?,?,?)',
+                (mid, 'chatgpt.messages', snippet, json.dumps(meta, ensure_ascii=False)),
+            )
+            dst.execute('INSERT OR REPLACE INTO vecs(id, dim, v) VALUES (?,?,?)', (mid, len(vec), blob))
 
-        n += 1
-        if n % 100 == 0:
-            dst.commit()
-            dt_s = time.time() - t0
-            print(f"... embedded {n}/{len(rows)} in {dt_s:.1f}s ({n/dt_s:.2f} docs/s)")
+            n += 1
+            if n % 100 == 0:
+                dst.commit()
+                dt_s = time.time() - t0
+                print(f"... embedded {n}/{len(rows)} in {dt_s:.1f}s ({n/dt_s:.2f} docs/s)")
 
-    dst.commit()
-    dt_s = time.time() - t0
-    print(json.dumps({'embedded': n, 'seconds': round(dt_s, 2), 'docs_per_s': round(n/dt_s, 3) if dt_s else None, 'dst': args.dst}, ensure_ascii=False))
+        dst.commit()
+        dt_s = time.time() - t0
+        summary = {'embedded': n, 'seconds': round(dt_s, 2), 'docs_per_s': round(n/dt_s, 3) if dt_s else None, 'dst': args.dst}
+        ev.ok(extra=summary)
+        print(json.dumps(summary, ensure_ascii=False))
 
 
 if __name__ == '__main__':
