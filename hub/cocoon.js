@@ -19,6 +19,15 @@
   function boot(){
     if(!window.BABYLON) return;
 
+    // Ensure canvas has backing resolution (some browsers keep it 300x150 otherwise)
+    const resizeCanvas = ()=>{
+      const r = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(r.width * dpr));
+      canvas.height = Math.max(1, Math.floor(r.height * dpr));
+    };
+    resizeCanvas();
+
     const engine = new BABYLON.Engine(canvas, true, {
       preserveDrawingBuffer: false,
       stencil: false,
@@ -37,14 +46,23 @@
     camera.panningSensibility = 0;
     camera.wheelPrecision = 999999;
 
+    // Environment reflections (PBR needs something to reflect; otherwise it can look black)
+    try{
+      scene.environmentTexture = BABYLON.CubeTexture.CreateFromPrefilteredData(
+        'https://playground.babylonjs.com/textures/environment.env',
+        scene
+      );
+      scene.environmentIntensity = 1.15;
+    }catch(err){ /* ignore */ }
+
     // lighting: sculpted, minimal
     const key = new BABYLON.DirectionalLight('key', new BABYLON.Vector3(-0.6, -1.0, -0.2), scene);
-    key.intensity = 1.2;
+    key.intensity = 1.35;
     const rim = new BABYLON.DirectionalLight('rim', new BABYLON.Vector3(0.7, -0.5, 0.9), scene);
-    rim.intensity = 0.9;
+    rim.intensity = 1.05;
 
     const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0, 1, 0), scene);
-    hemi.intensity = 0.25;
+    hemi.intensity = 0.35;
 
     // Egg mesh (procedural for now; we can swap to glTF later)
     const egg = BABYLON.MeshBuilder.CreateSphere('egg', {diameter: 1.3, segments: 96}, scene);
@@ -54,7 +72,9 @@
     const mat = new BABYLON.PBRMetallicRoughnessMaterial('eggMat', scene);
     mat.baseColor = new BABYLON.Color3(0.62, 0.64, 0.67); // grey, slightly cool
     mat.metallic = 1.0;
-    mat.roughness = 0.22;
+    mat.roughness = 0.18;
+    // tiny lift so it never collapses to pitch-black on some GPUs
+    mat.emissiveColor = new BABYLON.Color3(0.02, 0.025, 0.03);
 
     // micro detail using a procedural noise normal-ish trick (cheap placeholder)
     // Later: real normal/roughness maps.
@@ -93,7 +113,7 @@
     });
 
     engine.runRenderLoop(()=> scene.render());
-    window.addEventListener('resize', ()=> engine.resize());
+    window.addEventListener('resize', ()=>{ resizeCanvas(); engine.resize(); });
   }
 
   // wait for BABYLON to be present
