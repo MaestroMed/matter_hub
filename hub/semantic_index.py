@@ -25,15 +25,25 @@ BASE = 'http://127.0.0.1:11434'
 EMBED_MODEL = 'nomic-embed-text:latest'
 
 
-def ollama_embed(text: str):
-    payload = json.dumps({'model': EMBED_MODEL, 'prompt': text}).encode('utf-8')
-    req = urllib.request.Request(BASE + '/api/embeddings', data=payload, headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(req, timeout=600) as r:
-        out = json.loads(r.read().decode('utf-8'))
-    v = out.get('embedding')
-    if not v:
-        raise RuntimeError('empty embedding')
-    return v
+def ollama_embed(text: str, retries: int = 5):
+    last_err = None
+    for i in range(retries):
+        try:
+            payload = json.dumps({'model': EMBED_MODEL, 'prompt': text}).encode('utf-8')
+            req = urllib.request.Request(BASE + '/api/embeddings', data=payload, headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=600) as r:
+                out = json.loads(r.read().decode('utf-8'))
+            v = out.get('embedding')
+            if not v:
+                raise RuntimeError('empty embedding')
+            # small throttle helps stability
+            time.sleep(0.05)
+            return v
+        except Exception as e:
+            last_err = e
+            time.sleep(min(2 ** i, 10))
+
+    raise last_err
 
 
 def pack_f32(vec):
@@ -74,11 +84,14 @@ def main():
     src = sqlite3.connect(args.src)
     dst = ensure_target(args.dst)
 
+    # attach dst to src so we can filter out already-embedded ids in one query
+    src.execute("ATTACH DATABASE ? AS dst", (args.dst,))
+
     # choose candidates not yet embedded
     q = f"""
       SELECT m.id, m.conversation_id, m.author_role, m.created_at, m.content_text
       FROM messages m
-      LEFT JOIN vecs v ON v.id = m.id
+      LEFT JOIN dst.vecs v ON v.id = m.id
       WHERE v.id IS NULL AND ({args.where})
       ORDER BY m.created_at
       LIMIT ?
@@ -92,11 +105,17 @@ def main():
 
     for mid, cid, role, created_at, text in rows:
         # keep text reasonably sized for embeddings
-        snippet = text
-        if len(snippet) > 4000:
-            snippet = snippet[:4000]
+        snippet = (text or '').replace('\x00', ' ')
+        # keep text reasonably sized for embeddings
+        if len(snippet) > 2000:
+            snippet = snippet[:2000]
 
-        vec = ollama_embed(snippet)
+        try:
+            vec = ollama_embed(snippet)
+        except Exception as e:
+            # skip problematic docs but keep going
+            print(f"WARN embedding failed id={mid}: {type(e).__name__}: {e}")
+            continue
         blob = pack_f32(vec)
 
         meta = {'conversation_id': cid, 'author_role': role, 'created_at': created_at}
