@@ -3,9 +3,6 @@ import ProjectDescription
 public enum Module: String, CaseIterable {
     case designSystem = "DesignSystem"
     case graphCore = "GraphCore"
-    case intelligence = "Intelligence"
-    case capture = "Capture"
-    case notes = "Notes"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -21,20 +18,6 @@ public enum Module: String, CaseIterable {
             return []
         case .graphCore:
             return []
-        case .intelligence:
-            return [.target(name: Module.graphCore.rawValue)]
-        case .capture:
-            return [
-                .target(name: Module.graphCore.rawValue),
-                .target(name: Module.intelligence.rawValue),
-                .target(name: Module.designSystem.rawValue),
-            ]
-        case .notes:
-            return [
-                .target(name: Module.graphCore.rawValue),
-                .target(name: Module.intelligence.rawValue),
-                .target(name: Module.designSystem.rawValue),
-            ]
         }
     }
 
