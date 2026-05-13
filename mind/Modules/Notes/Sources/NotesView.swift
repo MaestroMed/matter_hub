@@ -5,17 +5,15 @@ import GraphCore
 
 public struct NotesView: View {
     @Environment(\.modelContext) private var context
-    @Query(
-        filter: #Predicate<Node> { node in
-            node.kindRaw == "note" || node.kindRaw == "capture"
-        },
-        sort: [SortDescriptor(\Node.updatedAt, order: .reverse)]
-    )
-    private var nodes: [Node]
+    @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
 
     @State private var searchText: String = ""
 
     public init() {}
+
+    private var notes: [Node] {
+        allNodes.filter { $0.kindRaw == "note" || $0.kindRaw == "capture" }
+    }
 
     public var body: some View {
         ScrollView {
@@ -57,8 +55,8 @@ public struct NotesView: View {
     }
 
     private var filtered: [Node] {
-        guard !searchText.isEmpty else { return nodes }
-        return nodes.filter {
+        guard !searchText.isEmpty else { return notes }
+        return notes.filter {
             $0.title.localizedCaseInsensitiveContains(searchText) ||
             $0.content.localizedCaseInsensitiveContains(searchText)
         }
