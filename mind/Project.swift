@@ -29,10 +29,7 @@ let appTarget: Target = .target(
     entitlements: .file(path: "App/MIND.entitlements"),
     dependencies: Module.allCases.map { .target(name: $0.rawValue) },
     settings: .settings(base: [
-        "SWIFT_STRICT_CONCURRENCY": "complete",
         "SWIFT_VERSION": "6.0",
-        "DEVELOPMENT_TEAM": "$(DEVELOPMENT_TEAM)",
-        "CODE_SIGN_STYLE": "Manual",
         "ENABLE_USER_SCRIPT_SANDBOXING": "YES",
     ])
 )

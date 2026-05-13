@@ -46,10 +46,8 @@ public enum Module: String, CaseIterable {
             bundleId: bundleId,
             deploymentTargets: .iOS("26.0"),
             sources: ["Modules/\(rawValue)/Sources/**"],
-            resources: ResourceFileElements(resources: []),
             dependencies: dependencies,
             settings: .settings(base: [
-                "SWIFT_STRICT_CONCURRENCY": "complete",
                 "SWIFT_VERSION": "6.0",
             ])
         )

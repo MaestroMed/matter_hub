@@ -19,6 +19,10 @@ concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     name: Build (and TestFlight on demand)
@@ -27,10 +31,19 @@ jobs:
     defaults:
       run:
         working-directory: mind
+        shell: bash
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show runner info
+        run: |
+          set -ex
+          sw_vers
+          xcodebuild -version
+          xcrun simctl list runtimes
+          which brew && brew --version
 
       - name: Select latest Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -38,10 +51,16 @@ jobs:
           xcode-version: latest-stable
 
       - name: Install Tuist
-        run: brew install tuist
+        run: |
+          set -ex
+          brew install tuist
+          tuist version
 
       - name: Install xcbeautify
-        run: brew install xcbeautify
+        run: |
+          set -ex
+          brew install xcbeautify
+          xcbeautify --version
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -51,21 +70,29 @@ jobs:
           working-directory: mind
 
       - name: Generate Xcode project
-        run: tuist install && tuist generate --no-open
+        run: |
+          set -ex
+          tuist generate --no-open
+          ls -la
+
+      - name: List available simulators
+        run: xcrun simctl list devices available
 
       - name: Build (no signing)
         run: |
+          set -ex
           set -o pipefail
           xcodebuild \
             -project MIND.xcodeproj \
             -scheme MIND \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
+            -sdk iphonesimulator \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build | xcbeautify
+            build 2>&1 | xcbeautify --renderer github-actions
 
       - name: Deploy to TestFlight
         if: ${{ github.event.inputs.deploy == 'true' }}
