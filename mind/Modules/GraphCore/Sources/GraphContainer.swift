@@ -9,7 +9,7 @@ public enum GraphCore {
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .private("iCloud.com.mind.app")
+            cloudKitDatabase: .private("iCloud.app.mind.ios")
         )
         do {
             return try ModelContainer(for: schema, configurations: [configuration])

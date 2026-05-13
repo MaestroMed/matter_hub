@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 public enum APIKeyStore {
-    private static let service = "com.mind.app.anthropic"
+    private static let service = "app.mind.ios.anthropic"
     private static let account = "api-key"
 
     public static func save(_ key: String) {

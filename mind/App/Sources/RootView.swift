@@ -57,7 +57,7 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Good morning")
+                    Text("Good morning, Mehdi 👋")
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                     Text("Stay soft. Stay focused.")
                         .font(.system(.body, design: .rounded))

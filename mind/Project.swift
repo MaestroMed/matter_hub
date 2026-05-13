@@ -1,7 +1,7 @@
 import ProjectDescription
 import ProjectDescriptionHelpers
 
-let appBundleId = "com.mind.app"
+let appBundleId = "app.mind.ios"
 let appName = "MIND"
 
 let appTarget: Target = .target(

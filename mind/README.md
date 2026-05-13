@@ -26,8 +26,7 @@ data layer.
 You don't need this if you're developing entirely via CI from iPhone.
 
 ```bash
-brew install mise
-mise install
+brew install tuist xcbeautify
 bundle install
 tuist install && tuist generate
 open MIND.xcodeproj
@@ -39,7 +38,7 @@ open MIND.xcodeproj
 
 1. **Apple Developer Program** — https://developer.apple.com/programs/enroll
 2. **App Store Connect** — create a new app:
-   - Bundle ID: `com.mind.app` (change in `Project.swift`, `fastlane/Appfile`, `App/MIND.entitlements`, `Modules/GraphCore/Sources/GraphContainer.swift`)
+   - Bundle ID: `app.mind.ios` (change in `Project.swift`, `fastlane/Appfile`, `App/MIND.entitlements`, `Modules/GraphCore/Sources/GraphContainer.swift`)
    - SKU: `MIND`
    - Platform: iOS
 3. **Match repo** — create a private GitHub repo for fastlane signing certificates (e.g. `mind-certificates`).
@@ -78,7 +77,7 @@ To ship a build to TestFlight:
 
 ## Claude API key
 
-Stored locally in iOS Keychain (`com.mind.app.anthropic`). Set it on first run
+Stored locally in iOS Keychain (`app.mind.ios.anthropic`). Set it on first run
 through Settings inside the app.
 
 ## Roadmap

@@ -8,7 +8,7 @@ public enum Module: String, CaseIterable {
     case notes = "Notes"
 
     public var bundleId: String {
-        "com.mind.app.\(rawValue.lowercased())"
+        "app.mind.ios.\(rawValue.lowercased())"
     }
 
     public var path: Path {
