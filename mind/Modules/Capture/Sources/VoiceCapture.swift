@@ -80,12 +80,11 @@ public final class VoiceCapture {
         audioEngine.prepare()
         try audioEngine.start()
 
-        task = recognizer.recognitionTask(with: request) { [weak self] result, _ in
-            guard let self else { return }
-            if let result {
-                Task { @MainActor in
-                    self.transcript = result.bestTranscription.formattedString
-                }
+        task = recognizer.recognitionTask(with: request) { result, _ in
+            guard let result else { return }
+            let text = result.bestTranscription.formattedString
+            Task { @MainActor [weak self] in
+                self?.transcript = text
             }
         }
     }
