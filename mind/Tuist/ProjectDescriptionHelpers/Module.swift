@@ -3,6 +3,7 @@ import ProjectDescription
 public enum Module: String, CaseIterable {
     case designSystem = "DesignSystem"
     case graphCore = "GraphCore"
+    case notes = "Notes"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -18,6 +19,11 @@ public enum Module: String, CaseIterable {
             return []
         case .graphCore:
             return []
+        case .notes:
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.designSystem.rawValue),
+            ]
         }
     }
 
