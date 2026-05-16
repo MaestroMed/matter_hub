@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import DesignSystem
+import FocusKit
 import GraphCore
 import Notes
 import Chat
@@ -70,6 +71,9 @@ struct RootView: View {
 
 private struct HomeView: View {
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
+    @State private var focus = FocusController.shared
+
+    private static let defaultFocusDuration: TimeInterval = 25 * 60  // 25 min pomodoro
 
     private var noteCount: Int {
         allNodes.filter { $0.kindRaw == "note" }.count
@@ -118,17 +122,51 @@ private struct HomeView: View {
     private var deepFocusCard: some View {
         LiquidCard {
             VStack(spacing: 16) {
-                Text("Deep Focus")
+                Text(focus.isRunning ? "In focus" : "Deep Focus")
                     .font(.system(.headline, design: .rounded))
                     .foregroundStyle(.secondary)
-                Text("24:36")
-                    .font(.system(size: 64, weight: .light, design: .rounded))
-                    .monospacedDigit()
-                LiquidButton(title: "Start Focus", systemImage: "drop.fill") {}
+                    .contentTransition(.opacity)
+
+                focusTimer
+
+                if focus.isRunning {
+                    LiquidButton(title: "End focus", systemImage: "stop.fill") {
+                        focus.end()
+                    }
+                } else {
+                    LiquidButton(title: "Start Focus", systemImage: "drop.fill") {
+                        focus.start(
+                            intention: "Deep Focus",
+                            duration: Self.defaultFocusDuration
+                        )
+                    }
+                }
             }
             .padding(24)
             .frame(maxWidth: .infinity)
+            .animation(LiquidMetrics.spring, value: focus.isRunning)
         }
+    }
+
+    @ViewBuilder
+    private var focusTimer: some View {
+        if let session = focus.session, session.endDate > .now {
+            Text(timerInterval: .now...session.endDate, countsDown: true)
+                .font(.system(size: 64, weight: .light, design: .rounded))
+                .monospacedDigit()
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .contentTransition(.numericText())
+        } else {
+            Text(Self.format(seconds: Self.defaultFocusDuration))
+                .font(.system(size: 64, weight: .light, design: .rounded))
+                .monospacedDigit()
+        }
+    }
+
+    private static func format(seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 
     private var statsCard: some View {
