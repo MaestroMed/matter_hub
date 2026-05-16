@@ -16,7 +16,6 @@ let appTarget: Target = .target(
         "CFBundleShortVersionString": "0.1.0",
         "CFBundleVersion": "1",
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
-        "UIRequiresFullScreen": false,
         "NSMicrophoneUsageDescription": "MIND uses your microphone to capture voice notes and transcribe them on-device.",
         "NSSpeechRecognitionUsageDescription": "MIND transcribes your voice locally so you can capture thoughts hands-free.",
         "NSCameraUsageDescription": "MIND scans documents and images so they become part of your second brain.",
