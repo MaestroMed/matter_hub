@@ -28,10 +28,36 @@ let appTarget: Target = .target(
     sources: ["App/Sources/**"],
     resources: ["App/Resources/**"],
     entitlements: .file(path: "App/MIND.entitlements"),
-    dependencies: Module.allCases.map { .target(name: $0.rawValue) },
+    dependencies: Module.allCases.map { .target(name: $0.rawValue) } + [
+        .target(name: "MINDWidgets"),
+    ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",
         "ENABLE_USER_SCRIPT_SANDBOXING": "YES",
+    ])
+)
+
+let widgetTarget: Target = .target(
+    name: "MINDWidgets",
+    destinations: .iOS,
+    product: .appExtension,
+    bundleId: "\(appBundleId).widgets",
+    deploymentTargets: .iOS("26.0"),
+    infoPlist: .extendingDefault(with: [
+        "CFBundleDisplayName": "MIND Widgets",
+        "NSExtension": [
+            "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
+        ],
+    ]),
+    sources: ["Widgets/Sources/**"],
+    resources: ["Widgets/Resources/**"],
+    entitlements: .file(path: "Widgets/MINDWidgets.entitlements"),
+    dependencies: [
+        .target(name: Module.graphCore.rawValue),
+        .target(name: Module.focusKit.rawValue),
+    ],
+    settings: .settings(base: [
+        "SWIFT_VERSION": "6.0",
     ])
 )
 
@@ -52,5 +78,5 @@ let project = Project(
             .release(name: "Release"),
         ]
     ),
-    targets: [appTarget] + Module.allCases.map { $0.target() }
+    targets: [appTarget, widgetTarget] + Module.allCases.map { $0.target() }
 )
