@@ -22,6 +22,8 @@ let appTarget: Target = .target(
         "NSPhotoLibraryUsageDescription": "MIND can pull photos to enrich your knowledge graph.",
         "UIBackgroundModes": ["audio", "processing"],
         "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true,
+        "NSSupportsLiveActivitiesFrequentUpdates": true,
     ]),
     sources: ["App/Sources/**"],
     resources: ["App/Resources/**"],

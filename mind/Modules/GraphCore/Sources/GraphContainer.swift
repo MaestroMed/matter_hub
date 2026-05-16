@@ -2,31 +2,65 @@ import Foundation
 import SwiftData
 
 public enum GraphCore {
+    public static let appGroupIdentifier = "group.app.mind.ios"
+    public static let cloudKitContainerIdentifier = "iCloud.app.mind.ios"
+
     public static let schema = Schema([Node.self, Edge.self])
 
     @MainActor
-    public static let sharedContainer: ModelContainer = {
-        // CloudKit-backed private DB. Requires a signed app with iCloud entitlements
-        // (real device with provisioning profile, or Simulator with a signed-in Apple ID
-        // and proper signing). Falls back to local-only storage otherwise so the app
-        // still runs on unsigned Simulators and first-launch before iCloud sign-in.
-        let cloudConfiguration = ModelConfiguration(
+    public static let sharedContainer: ModelContainer = makeContainer()
+
+    /// True when the host runtime can actually serve the App Group container
+    /// (signed app + matching provisioning entitlement). False on unsigned
+    /// Simulators, where asking SwiftData for a groupContainer crashes
+    /// before `try?` ever sees the failure.
+    public static var hasAppGroup: Bool {
+        FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) != nil
+    }
+
+    @MainActor
+    private static func makeContainer() -> ModelContainer {
+        // Try the richest configuration first and fall back step by step:
+        //   1. App Group + CloudKit  → production signed device with iCloud sign-in
+        //   2. App Group only        → production without iCloud sign-in
+        //   3. CloudKit only         → signed but no App Group entitlement
+        //   4. Local                 → unsigned Simulator dev loop
+        // App-Group-bearing configurations are only attempted when
+        // `hasAppGroup` is true; otherwise the SwiftData initializer
+        // crashes outside any `try?` boundary on iOS 26.
+        var attempts: [ModelConfiguration] = []
+        if hasAppGroup {
+            attempts.append(ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                groupContainer: .identifier(appGroupIdentifier),
+                cloudKitDatabase: .private(cloudKitContainerIdentifier)
+            ))
+            attempts.append(ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                groupContainer: .identifier(appGroupIdentifier),
+                cloudKitDatabase: .none
+            ))
+        }
+        attempts.append(ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .private("iCloud.app.mind.ios")
-        )
-        if let container = try? ModelContainer(for: schema, configurations: [cloudConfiguration]) {
-            return container
-        }
-        let localConfiguration = ModelConfiguration(
+            cloudKitDatabase: .private(cloudKitContainerIdentifier)
+        ))
+        attempts.append(ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
             cloudKitDatabase: .none
-        )
-        do {
-            return try ModelContainer(for: schema, configurations: [localConfiguration])
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+        ))
+
+        for configuration in attempts {
+            if let container = try? ModelContainer(for: schema, configurations: [configuration]) {
+                return container
+            }
         }
-    }()
+        fatalError("Failed to create ModelContainer for MIND graph")
+    }
 }
