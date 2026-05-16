@@ -64,7 +64,7 @@ public enum Module: String, CaseIterable {
             destinations: .iOS,
             product: .framework,
             bundleId: bundleId,
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("26.0"),
             sources: ["Modules/\(rawValue)/Sources/**"],
             dependencies: dependencies,
             settings: .settings(base: [

@@ -9,7 +9,7 @@ let appTarget: Target = .target(
     destinations: .iOS,
     product: .app,
     bundleId: appBundleId,
-    deploymentTargets: .iOS("18.0"),
+    deploymentTargets: .iOS("26.0"),
     infoPlist: .extendingDefault(with: [
         "UILaunchScreen": ["UIColorName": "LaunchBackground"],
         "CFBundleDisplayName": "MIND",
@@ -44,7 +44,7 @@ let project = Project(
     settings: .settings(
         base: [
             "SWIFT_VERSION": "6.0",
-            "IPHONEOS_DEPLOYMENT_TARGET": "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET": "26.0",
         ],
         configurations: [
             .debug(name: "Debug"),
