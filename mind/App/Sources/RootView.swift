@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import DesignSystem
+import GraphCore
 import Notes
 import Chat
 import Settings
@@ -68,34 +69,150 @@ struct RootView: View {
 }
 
 private struct HomeView: View {
+    @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
+
+    private var noteCount: Int {
+        allNodes.filter { $0.kindRaw == "note" }.count
+    }
+
+    private var captureCount: Int {
+        allNodes.filter { $0.kindRaw == "capture" }.count
+    }
+
+    private var recentCaptures: [Node] {
+        allNodes
+            .filter { $0.kindRaw == "capture" || $0.kindRaw == "note" }
+            .prefix(3)
+            .map { $0 }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Good morning, Mehdi 👋")
-                        .font(.system(.largeTitle, design: .rounded, weight: .semibold))
-                    Text("Stay soft. Stay focused.")
-                        .font(.system(.body, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
+                greeting
 
-                LiquidCard {
-                    VStack(spacing: 16) {
-                        Text("Deep Focus")
-                            .font(.system(.headline, design: .rounded))
-                            .foregroundStyle(.secondary)
-                        Text("24:36")
-                            .font(.system(size: 64, weight: .light, design: .rounded))
-                            .monospacedDigit()
-                        LiquidButton(title: "Start Focus", systemImage: "drop.fill") {}
-                    }
-                    .padding(24)
-                    .frame(maxWidth: .infinity)
+                deepFocusCard
+
+                statsCard
+
+                if !recentCaptures.isEmpty {
+                    recentSection
                 }
             }
             .padding(20)
             .padding(.top, 40)
             .padding(.bottom, 120)
+        }
+    }
+
+    private var greeting: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(Self.timeBasedGreeting), Mehdi 👋")
+                .font(.system(.largeTitle, design: .rounded, weight: .semibold))
+            Text(Self.timeBasedSubtitle)
+                .font(.system(.body, design: .rounded))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var deepFocusCard: some View {
+        LiquidCard {
+            VStack(spacing: 16) {
+                Text("Deep Focus")
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.secondary)
+                Text("24:36")
+                    .font(.system(size: 64, weight: .light, design: .rounded))
+                    .monospacedDigit()
+                LiquidButton(title: "Start Focus", systemImage: "drop.fill") {}
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var statsCard: some View {
+        LiquidCard(cornerRadius: 20) {
+            HStack(spacing: 0) {
+                statColumn(value: noteCount, label: "Notes")
+                divider
+                statColumn(value: captureCount, label: "Captures")
+                divider
+                statColumn(value: allNodes.count, label: "Total")
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    @ViewBuilder
+    private func statColumn(value: Int, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text("\(value)")
+                .font(.system(.title, design: .rounded, weight: .semibold))
+                .foregroundStyle(LiquidPalette.iris)
+            Text(label.uppercased())
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.25))
+            .frame(width: 1, height: 28)
+    }
+
+    private var recentSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recent thoughts".uppercased())
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .padding(.leading, 4)
+
+            ForEach(recentCaptures) { node in
+                LiquidCard(cornerRadius: 20) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(node.title)
+                            .font(.system(.body, design: .rounded, weight: .semibold))
+                            .lineLimit(2)
+                        if !node.content.isEmpty {
+                            Text(node.content)
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        Text(node.updatedAt.formatted(.relative(presentation: .named)))
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+    }
+
+    private static var timeBasedGreeting: String {
+        let hour = Calendar.current.component(.hour, from: .now)
+        switch hour {
+        case 5..<12:  return "Good morning"
+        case 12..<18: return "Good afternoon"
+        case 18..<23: return "Good evening"
+        default:      return "Still up"
+        }
+    }
+
+    private static var timeBasedSubtitle: String {
+        let hour = Calendar.current.component(.hour, from: .now)
+        switch hour {
+        case 5..<12:  return "Stay soft. Stay focused."
+        case 12..<18: return "Keep moving. One thought at a time."
+        case 18..<23: return "Wind down. Capture what mattered."
+        default:      return "Your brain stays on, but you should rest soon."
         }
     }
 }
