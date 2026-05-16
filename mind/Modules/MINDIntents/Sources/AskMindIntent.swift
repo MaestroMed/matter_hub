@@ -5,11 +5,11 @@ import Intelligence
 import SwiftData
 
 public struct AskMindIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Ask MIND"
-    public static var description = IntentDescription(
+    public static let title: LocalizedStringResource = "Ask MIND"
+    public static let description = IntentDescription(
         "Ask your second brain anything. Uses Claude with your graph as context."
     )
-    public static var openAppWhenRun: Bool = false
+    public static let openAppWhenRun: Bool = false
 
     @Parameter(title: "Question", description: "What do you want to ask?", requestValueDialog: "What do you want to ask MIND?")
     public var question: String

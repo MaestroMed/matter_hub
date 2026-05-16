@@ -4,11 +4,11 @@ import GraphCore
 import SwiftData
 
 public struct CaptureIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Capture a thought"
-    public static var description = IntentDescription(
+    public static let title: LocalizedStringResource = "Capture a thought"
+    public static let description = IntentDescription(
         "Save a quick note, idea, or reminder into MIND."
     )
-    public static var openAppWhenRun: Bool = false
+    public static let openAppWhenRun: Bool = false
 
     @Parameter(title: "Thought", description: "What's on your mind?", requestValueDialog: "What do you want to capture?")
     public var text: String
