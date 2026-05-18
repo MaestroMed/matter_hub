@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AuditKit
 import DesignSystem
 import FocusKit
 import GraphCore
@@ -72,6 +73,7 @@ struct RootView: View {
 private struct HomeView: View {
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
     @State private var focus = FocusController.shared
+    @State private var isAuditing: Bool = false
 
     private static let defaultFocusDuration: TimeInterval = 25 * 60  // 25 min pomodoro
 
@@ -97,6 +99,8 @@ private struct HomeView: View {
 
                 deepFocusCard
 
+                auditCard
+
                 statsCard
 
                 if !recentCaptures.isEmpty {
@@ -106,6 +110,46 @@ private struct HomeView: View {
             .padding(20)
             .padding(.top, 40)
             .padding(.bottom, 120)
+        }
+        .sheet(isPresented: $isAuditing) {
+            AuditSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+    }
+
+    private var auditCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                isAuditing = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Audit client")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("Du domaine au pitch en quelques minutes.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
         }
     }
 
