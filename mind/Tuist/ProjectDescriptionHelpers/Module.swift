@@ -10,6 +10,7 @@ public enum Module: String, CaseIterable {
     case capture = "Capture"
     case mindIntents = "MINDIntents"
     case focusKit = "FocusKit"
+    case visualKit = "VisualKit"
     case auditKit = "AuditKit"
 
     public var bundleId: String {
@@ -39,6 +40,7 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.designSystem.rawValue),
                 .target(name: Module.intelligence.rawValue),
+                .target(name: Module.visualKit.rawValue),
             ]
         case .chat:
             return [
@@ -60,6 +62,12 @@ public enum Module: String, CaseIterable {
             ]
         case .focusKit:
             return []
+        case .visualKit:
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.intelligence.rawValue),
+                .target(name: Module.auditKit.rawValue),
+            ]
         case .auditKit:
             return [
                 .target(name: Module.graphCore.rawValue),

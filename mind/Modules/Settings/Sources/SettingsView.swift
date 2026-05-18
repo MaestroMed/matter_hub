@@ -1,13 +1,17 @@
 import SwiftUI
 import DesignSystem
 import Intelligence
+import VisualKit
 
 public struct SettingsView: View {
     @State private var apiKey: String = ""
     @State private var keySaved: Bool = false
+    @State private var openAIKey: String = ""
+    @State private var openAIKeySaved: Bool = false
     @State private var selectedModel: String = "claude-sonnet-4-6"
     @State private var preferOnDevice: Bool = true
     @State private var showKey: Bool = false
+    @State private var showOpenAIKey: Bool = false
     @State private var prefs = MINDPreferences.shared
 
     private let availableModels: [(id: String, name: String)] = [
@@ -40,6 +44,35 @@ public struct SettingsView: View {
                                 APIKeyStore.clear()
                                 apiKey = ""
                                 keySaved = false
+                            }
+                            .font(.system(.subheadline, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                section(title: "OpenAI API Key (visual boards)") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Clé sk-… utilisée pour générer les boards visuels GPT Image 2 dans l'audit. Stockée dans le Keychain.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+
+                        openAIKeyField
+
+                        HStack(spacing: 8) {
+                            LiquidButton(
+                                title: openAIKeySaved ? "Saved" : "Save key",
+                                systemImage: openAIKeySaved ? "checkmark" : "key.fill"
+                            ) {
+                                OpenAIAPIKeyStore.save(openAIKey)
+                                openAIKeySaved = true
+                            }
+                            .disabled(openAIKey.isEmpty)
+
+                            Button("Clear") {
+                                OpenAIAPIKeyStore.clear()
+                                openAIKey = ""
+                                openAIKeySaved = false
                             }
                             .font(.system(.subheadline, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
@@ -123,6 +156,10 @@ public struct SettingsView: View {
                 apiKey = stored
                 keySaved = true
             }
+            if let stored = OpenAIAPIKeyStore.read() {
+                openAIKey = stored
+                openAIKeySaved = true
+            }
         }
     }
 
@@ -155,6 +192,40 @@ public struct SettingsView: View {
                 showKey.toggle()
             } label: {
                 Image(systemName: showKey ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    private var openAIKeyField: some View {
+        HStack {
+            Group {
+                if showOpenAIKey {
+                    TextField("sk-…", text: $openAIKey)
+                } else {
+                    SecureField("sk-…", text: $openAIKey)
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(.system(.body, design: .monospaced))
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: openAIKey) { _, _ in openAIKeySaved = false }
+
+            Button {
+                showOpenAIKey.toggle()
+            } label: {
+                Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
                     .foregroundStyle(.secondary)
             }
         }
