@@ -1,7 +1,6 @@
 import Foundation
 import Observation
 import AuditKit
-import GraphCore
 
 /// Drives a full board generation: ask Claude for N prompts per category,
 /// pipe each prompt through OpenAI gpt-image-2, persist the PNG and the
@@ -76,28 +75,35 @@ public final class VisualBoardController {
         phase = .idle
     }
 
+    /// Loads an existing manifest for the report's client key, or returns
+    /// nil if nothing has been generated yet. Used by the UI to decide
+    /// between "Show existing board" vs "Show generate CTA".
+    public func loadManifest(for report: AuditReport) {
+        let key = VisualBoardKey.key(for: report.client.url)
+        self.manifest = AssetStore.readManifest(for: key)
+    }
+
     /// Kick off a new board run. Loads any existing manifest first so the
     /// UI can show the previous board while the new one regenerates.
     public func generateBoard(
-        for client: Node,
-        report: AuditReport,
+        for report: AuditReport,
         quality: OpenAIImageQuality = .high,
         categories: [VisualConcept.Kind] = VisualBoardController.defaultCategories,
         variantsPerCategory: Int = VisualBoardController.defaultVariantsPerCategory
     ) {
         cancel()
         error = nil
-        manifest = AssetStore.readManifest(for: client.id)
+        let key = VisualBoardKey.key(for: report.client.url)
+        manifest = AssetStore.readManifest(for: key)
         phase = .composingPrompts
         completedImages = 0
         totalImages = categories.count * variantsPerCategory
 
-        let clientID = client.id
-        let clientName = client.title
+        let clientName = report.client.displayName
         currentTask = Task { [weak self] in
             await self?.execute(
                 report: report,
-                clientID: clientID,
+                clientKey: key,
                 clientName: clientName,
                 categories: categories,
                 variantsPerCategory: variantsPerCategory,
@@ -111,17 +117,15 @@ public final class VisualBoardController {
     /// the replacement concept.
     public func regenerate(
         concept: VisualConcept,
-        for client: Node,
-        report: AuditReport,
+        for report: AuditReport,
         quality: OpenAIImageQuality = .high
     ) {
-        let clientID = client.id
-        let clientName = client.title
+        let key = VisualBoardKey.key(for: report.client.url)
+        let clientName = report.client.displayName
         currentTask = Task { [weak self] in
             await self?.replaceOne(
                 concept: concept,
-                report: report,
-                clientID: clientID,
+                clientKey: key,
                 clientName: clientName,
                 quality: quality
             )
@@ -132,7 +136,7 @@ public final class VisualBoardController {
 
     private func execute(
         report: AuditReport,
-        clientID: UUID,
+        clientKey: String,
         clientName: String,
         categories: [VisualConcept.Kind],
         variantsPerCategory: Int,
@@ -177,7 +181,7 @@ public final class VisualBoardController {
                     _ = try AssetStore.writeImage(
                         data: data,
                         filename: concept.filename,
-                        for: clientID
+                        for: clientKey
                     )
                     writtenConcepts.append(concept)
                 } catch {
@@ -191,7 +195,7 @@ public final class VisualBoardController {
 
             let costEstimate = Double(writtenConcepts.count) * quality.indicativeCostPerImageEUR
             let finalManifest = VisualBoardManifest(
-                clientNodeID: clientID,
+                clientKey: clientKey,
                 clientName: clientName,
                 concepts: writtenConcepts,
                 qualityUsed: quality,
@@ -211,14 +215,10 @@ public final class VisualBoardController {
 
     private func replaceOne(
         concept: VisualConcept,
-        report: AuditReport,
-        clientID: UUID,
+        clientKey: String,
         clientName: String,
         quality: OpenAIImageQuality
     ) async {
-        // Reuse the same prompt by default — the user can edit later or
-        // ask Claude for a different angle by hitting Regenerate again,
-        // which would re-prompt Claude. For V1 we just re-render.
         phase = .generatingImages
         do {
             let data = try await imageClient.generate(
@@ -229,12 +229,12 @@ public final class VisualBoardController {
             _ = try AssetStore.writeImage(
                 data: data,
                 filename: concept.filename,
-                for: clientID
+                for: clientKey
             )
 
             // Update manifest: keep all other concepts, swap this one.
             var current = manifest ?? VisualBoardManifest(
-                clientNodeID: clientID,
+                clientKey: clientKey,
                 clientName: clientName,
                 concepts: [],
                 qualityUsed: quality

@@ -80,7 +80,10 @@ public enum VisualSize: String, Sendable, Codable {
 /// a given client Node. Stored as `manifest.json` next to the PNGs in
 /// the App Group container.
 public struct VisualBoardManifest: Sendable, Codable, Hashable {
-    public var clientNodeID: UUID
+    /// Stable per-prospect key derived from the audited URL (host).
+    /// Lets us look up the same board across audit runs without needing
+    /// to thread a Node SwiftData id around.
+    public var clientKey: String
     public var clientName: String
     public var generatedAt: Date
     public var concepts: [VisualConcept]
@@ -88,14 +91,14 @@ public struct VisualBoardManifest: Sendable, Codable, Hashable {
     public var totalCostEUR: Double?       // best-effort estimate
 
     public init(
-        clientNodeID: UUID,
+        clientKey: String,
         clientName: String,
         generatedAt: Date = .now,
         concepts: [VisualConcept],
         qualityUsed: OpenAIImageQuality,
         totalCostEUR: Double? = nil
     ) {
-        self.clientNodeID = clientNodeID
+        self.clientKey = clientKey
         self.clientName = clientName
         self.generatedAt = generatedAt
         self.concepts = concepts
@@ -109,6 +112,17 @@ public struct VisualBoardManifest: Sendable, Codable, Hashable {
         concepts
             .filter { $0.kind == kind }
             .sorted { $0.variant < $1.variant }
+    }
+}
+
+public enum VisualBoardKey {
+    /// Stable string derived from a URL: `https://www.stripe.com/` and
+    /// `stripe.com` both collapse to `"stripe.com"`. Used as the
+    /// filesystem subfolder name + manifest clientKey.
+    public static func key(for url: URL) -> String {
+        let host = url.host(percentEncoded: false)?.lowercased() ?? url.absoluteString.lowercased()
+        let cleaned = host.replacingOccurrences(of: "www.", with: "")
+        return cleaned.replacingOccurrences(of: "[^a-z0-9.-]", with: "_", options: .regularExpression)
     }
 }
 

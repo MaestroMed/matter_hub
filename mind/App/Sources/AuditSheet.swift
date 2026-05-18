@@ -3,6 +3,7 @@ import SwiftData
 import AuditKit
 import DesignSystem
 import GraphCore
+import VisualKit
 
 struct AuditSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +17,7 @@ struct AuditSheet: View {
     @State private var pdfURL: URL?
     @State private var briefMarkdown: String?
     @State private var exportSheetReport: ExportSheetReport?
+    @State private var visualBoardReport: VisualBoardReportItem?
     @FocusState private var urlFocused: Bool
 
     var body: some View {
@@ -52,9 +54,20 @@ struct AuditSheet: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(item: $visualBoardReport) { item in
+            VisualBoardView(report: item.report)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
     }
 
     private struct ExportSheetReport: Identifiable {
+        let id = UUID()
+        let report: AuditReport
+    }
+
+    private struct VisualBoardReportItem: Identifiable {
         let id = UUID()
         let report: AuditReport
     }
@@ -699,6 +712,11 @@ struct AuditSheet: View {
                         briefMarkdown = ClaudeCodeBriefBuilder.build(from: report)
                     } label: {
                         Label("Brief Claude Code", systemImage: "terminal.fill")
+                    }
+                    Button {
+                        visualBoardReport = VisualBoardReportItem(report: report)
+                    } label: {
+                        Label("Maquetter le futur", systemImage: "sparkles")
                     }
                     Spacer()
                 }

@@ -32,9 +32,9 @@ public enum AssetStore {
     public static func writeImage(
         data: Data,
         filename: String,
-        for clientNodeID: UUID
+        for clientKey: String
     ) throws -> URL {
-        let dir = try directory(for: clientNodeID)
+        let dir = try directory(for: clientKey)
         let url = dir.appendingPathComponent(filename)
         do {
             try data.write(to: url, options: .atomic)
@@ -46,15 +46,15 @@ public enum AssetStore {
 
     public static func imageURL(
         filename: String,
-        for clientNodeID: UUID
+        for clientKey: String
     ) -> URL? {
-        guard let dir = try? directory(for: clientNodeID) else { return nil }
+        guard let dir = try? directory(for: clientKey) else { return nil }
         let url = dir.appendingPathComponent(filename)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
     public static func writeManifest(_ manifest: VisualBoardManifest) throws -> URL {
-        let dir = try directory(for: manifest.clientNodeID)
+        let dir = try directory(for: manifest.clientKey)
         let url = dir.appendingPathComponent(manifestFilename)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -68,8 +68,8 @@ public enum AssetStore {
         }
     }
 
-    public static func readManifest(for clientNodeID: UUID) -> VisualBoardManifest? {
-        guard let dir = try? directory(for: clientNodeID) else { return nil }
+    public static func readManifest(for clientKey: String) -> VisualBoardManifest? {
+        guard let dir = try? directory(for: clientKey) else { return nil }
         let url = dir.appendingPathComponent(manifestFilename)
         guard FileManager.default.fileExists(atPath: url.path),
               let data = try? Data(contentsOf: url) else {
@@ -80,18 +80,18 @@ public enum AssetStore {
         return try? decoder.decode(VisualBoardManifest.self, from: data)
     }
 
-    public static func clearBoard(for clientNodeID: UUID) {
-        guard let dir = try? directory(for: clientNodeID) else { return }
+    public static func clearBoard(for clientKey: String) {
+        guard let dir = try? directory(for: clientKey) else { return }
         try? FileManager.default.removeItem(at: dir)
     }
 
     // MARK: - Directory resolution
 
-    private static func directory(for clientNodeID: UUID) throws -> URL {
+    private static func directory(for clientKey: String) throws -> URL {
         let root = try baseDirectory()
         let folder = root
             .appendingPathComponent(boardsFolder, isDirectory: true)
-            .appendingPathComponent(clientNodeID.uuidString, isDirectory: true)
+            .appendingPathComponent(clientKey, isDirectory: true)
 
         if !FileManager.default.fileExists(atPath: folder.path) {
             try FileManager.default.createDirectory(
