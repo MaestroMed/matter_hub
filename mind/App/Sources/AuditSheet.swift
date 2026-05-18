@@ -13,6 +13,7 @@ struct AuditSheet: View {
     @State private var urlString: String = ""
     @State private var name: String = ""
     @State private var saved: Bool = false
+    @State private var pdfURL: URL?
     @FocusState private var urlFocused: Bool
 
     var body: some View {
@@ -399,6 +400,19 @@ struct AuditSheet: View {
                             Label("Mail", systemImage: "envelope.fill")
                         }
                     }
+                    Button {
+                        pdfURL = PDFReportRenderer.makePDF(for: report)
+                    } label: {
+                        Label("PDF", systemImage: "doc.richtext.fill")
+                    }
+                    if let pdfURL {
+                        ShareLink(
+                            item: pdfURL,
+                            preview: SharePreview("Audit \(report.client.displayName)")
+                        ) {
+                            Label("Partager", systemImage: "square.and.arrow.up")
+                        }
+                    }
                     Spacer()
                 }
                 .font(.system(.caption, design: .rounded, weight: .semibold))
@@ -472,6 +486,7 @@ struct AuditSheet: View {
         )
         controller.run(for: client)
         saved = false
+        pdfURL = nil
         urlFocused = false
     }
 
@@ -480,6 +495,7 @@ struct AuditSheet: View {
         urlString = ""
         name = ""
         saved = false
+        pdfURL = nil
         urlFocused = true
     }
 
