@@ -38,6 +38,25 @@ let appTarget: Target = .target(
     ])
 )
 
+let testTarget: Target = .target(
+    name: "MINDTests",
+    destinations: .iOS,
+    product: .unitTests,
+    bundleId: "\(appBundleId).tests",
+    deploymentTargets: .iOS("26.0"),
+    sources: ["Tests/Sources/**"],
+    dependencies: [
+        .target(name: appName),
+        .target(name: Module.auditKit.rawValue),
+        .target(name: Module.graphCore.rawValue),
+        .target(name: Module.visualKit.rawValue),
+        .target(name: Module.intelligence.rawValue),
+    ],
+    settings: .settings(base: [
+        "SWIFT_VERSION": "6.0",
+    ])
+)
+
 let widgetTarget: Target = .target(
     name: "MINDWidgets",
     destinations: .iOS,
@@ -79,5 +98,5 @@ let project = Project(
             .release(name: "Release"),
         ]
     ),
-    targets: [appTarget, widgetTarget] + Module.allCases.map { $0.target() }
+    targets: [appTarget, widgetTarget, testTarget] + Module.allCases.map { $0.target() }
 )
