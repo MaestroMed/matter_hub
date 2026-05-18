@@ -392,11 +392,23 @@ private struct HomeView: View {
                 focusTimer
 
                 if focus.isRunning {
-                    LiquidButton(title: "End focus", systemImage: "stop.fill") {
+                    // success → three-pulse "done" that signals the
+                    // session is being wrapped up. Feels rewarding.
+                    LiquidButton(
+                        title: "End focus",
+                        systemImage: "stop.fill",
+                        haptic: .success
+                    ) {
                         focus.end()
                     }
                 } else {
-                    LiquidButton(title: "Start Focus", systemImage: "drop.fill") {
+                    // select → medium thump that says "I'm committing,
+                    // don't disturb me". Heavier than a normal tap.
+                    LiquidButton(
+                        title: "Start Focus",
+                        systemImage: "drop.fill",
+                        haptic: .select
+                    ) {
                         focus.start(
                             intention: "Deep Focus",
                             duration: defaultFocusDuration

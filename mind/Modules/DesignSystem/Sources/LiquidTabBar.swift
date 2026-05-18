@@ -35,7 +35,13 @@ public struct LiquidTabBar<Tag: Hashable>: View {
                 pill(icon: tab.icon, tag: tab.tag)
             }
 
-            Button(action: onCapture) {
+            Button {
+                // Medium thump on the central +. Capture is the most
+                // commit-flavoured action in the tab bar — meds a stronger
+                // confirmation than a regular tap.
+                LiquidHaptics.select()
+                onCapture()
+            } label: {
                 ZStack {
                     Circle()
                         .fill(LiquidGradient.primary)
@@ -47,6 +53,7 @@ public struct LiquidTabBar<Tag: Hashable>: View {
                 }
             }
             .padding(.horizontal, 12)
+            .accessibilityLabel("Quick capture")
 
             ForEach(trailingTabs) { tab in
                 pill(icon: tab.icon, tag: tab.tag)
@@ -73,12 +80,34 @@ public struct LiquidTabBar<Tag: Hashable>: View {
     @ViewBuilder
     private func pill(icon: String, tag: Tag) -> some View {
         Button {
+            // Light tap on every tab switch — matches the standard
+            // iOS tab bar feel and reassures the user the touch was
+            // registered even when the underlying view takes a beat
+            // to compose.
+            LiquidHaptics.tap()
             withAnimation(LiquidMetrics.spring) { selection = tag }
         } label: {
             Image(systemName: icon)
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(selection == tag ? LiquidPalette.iris : .secondary)
                 .frame(width: 48, height: 40)
+        }
+        // VoiceOver: every pill announces the tab it switches to.
+        // Without this, the user just hears "icon" with no context.
+        .accessibilityLabel(tabAccessibilityLabel(for: icon))
+        .accessibilityAddTraits(selection == tag ? .isSelected : [])
+    }
+
+    /// Maps SF Symbol names to a human-readable label for VoiceOver.
+    /// Centralised here because the same icon name is used in multiple
+    /// callers; if we ever change the icon the label still makes sense.
+    private func tabAccessibilityLabel(for icon: String) -> String {
+        switch icon {
+        case "house.fill":                  return "Home"
+        case "doc.text.fill":               return "Notes"
+        case "person.text.rectangle.fill":  return "Clients"
+        case "gearshape.fill":              return "Settings"
+        default:                            return "Tab"
         }
     }
 }
