@@ -92,6 +92,17 @@ private struct HomeView: View {
     @State private var showFocusHistory: Bool = false
     @State private var showTasks: Bool = false
     @State private var showAmbient: Bool = false
+    @State private var showHabits: Bool = false
+    @State private var showJournal: Bool = false
+    @State private var showGoals: Bool = false
+
+    private var habitsTodayCount: Int {
+        HabitsView.checkedTodayCount(in: allNodes)
+    }
+
+    private var openGoalsCount: Int {
+        allNodes.filter { $0.kindRaw == "goal" && GoalsView.progress(of: $0) < 100 }.count
+    }
 
     private var openTaskCount: Int {
         allNodes.filter { $0.kindRaw == "task" && $0.completedAt == nil }.count
@@ -161,6 +172,8 @@ private struct HomeView: View {
 
                 tasksCard
 
+                lifeModulesRow
+
                 auditCard
 
                 askMindCard
@@ -199,6 +212,24 @@ private struct HomeView: View {
         }
         .fullScreenCover(isPresented: $showAmbient) {
             AmbientView()
+        }
+        .sheet(isPresented: $showHabits) {
+            HabitsView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showJournal) {
+            JournalView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showGoals) {
+            GoalsView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet()
@@ -356,6 +387,69 @@ private struct HomeView: View {
     private static func format(seconds: TimeInterval) -> String {
         let total = Int(seconds)
         return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+
+    private var lifeModulesRow: some View {
+        HStack(spacing: 10) {
+            lifeModuleTile(
+                icon: "repeat.circle.fill",
+                title: "Habits",
+                tint: .orange,
+                badge: habitsTodayCount > 0 ? "\(habitsTodayCount)✓" : nil
+            ) { showHabits = true }
+
+            lifeModuleTile(
+                icon: "book.closed.fill",
+                title: "Journal",
+                tint: LiquidPalette.iris,
+                badge: nil
+            ) { showJournal = true }
+
+            lifeModuleTile(
+                icon: "target",
+                title: "Goals",
+                tint: .purple,
+                badge: openGoalsCount > 0 ? "\(openGoalsCount)" : nil
+            ) { showGoals = true }
+        }
+    }
+
+    private func lifeModuleTile(
+        icon: String,
+        title: String,
+        tint: Color,
+        badge: String?,
+        action: @escaping () -> Void
+    ) -> some View {
+        LiquidCard(cornerRadius: 18) {
+            Button(action: action) {
+                VStack(spacing: 6) {
+                    ZStack {
+                        Circle()
+                            .fill(tint.opacity(0.18))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: icon)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(tint)
+                    }
+                    Text(title)
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    if let badge {
+                        Text(badge)
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(tint)
+                    } else {
+                        Text(" ")
+                            .font(.system(.caption2, design: .rounded))
+                    }
+                }
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private var tasksCard: some View {
