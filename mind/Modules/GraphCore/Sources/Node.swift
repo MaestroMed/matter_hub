@@ -13,6 +13,8 @@ public enum NodeKind: String, Codable, CaseIterable, Sendable {
     case goal
     case journal
     case capture
+    case client   // an organization / brand / prospect being tracked
+    case audit    // a full digital audit report attached to a client
 }
 
 @Model
