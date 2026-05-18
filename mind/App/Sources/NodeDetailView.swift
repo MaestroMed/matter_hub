@@ -12,6 +12,7 @@ import Notes
 /// date treatment.
 struct NodeDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
     let node: Node
 
     @State private var showClientDetail: Bool = false
@@ -28,6 +29,10 @@ struct NodeDetailView: View {
         }
         .background {
             LiquidBackground().ignoresSafeArea()
+        }
+        .onAppear {
+            node.touchAccess()
+            try? context.save()
         }
         .sheet(isPresented: $showClientDetail) {
             ClientDetailView(

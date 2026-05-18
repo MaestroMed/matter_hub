@@ -87,6 +87,7 @@ private struct HomeView: View {
     @State private var prefs = MINDPreferences.shared
     @State private var isAuditing: Bool = false
     @State private var isChatting: Bool = false
+    @State private var selectedClient: Node?
 
     private var defaultFocusDuration: TimeInterval {
         TimeInterval(prefs.focusDurationMinutes) * 60
@@ -107,10 +108,31 @@ private struct HomeView: View {
             .map { $0 }
     }
 
+    /// Top 5 clients to surface in the "Reprendre" carousel, ranked by
+    /// most-recently-opened, falling back to creation date when the user
+    /// hasn't opened a client yet.
+    private var resumableClients: [Node] {
+        allNodes
+            .filter { $0.kindRaw == "client" }
+            .sorted { lhs, rhs in
+                let l = lhs.lastAccessedAt ?? lhs.createdAt
+                let r = rhs.lastAccessedAt ?? rhs.createdAt
+                return l > r
+            }
+            .prefix(5)
+            .map { $0 }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 greeting
+
+                if !resumableClients.isEmpty {
+                    ResumeCarousel(clients: resumableClients) { client in
+                        selectedClient = client
+                    }
+                }
 
                 deepFocusCard
 
@@ -131,6 +153,12 @@ private struct HomeView: View {
             .padding(20)
             .padding(.top, 40)
             .padding(.bottom, 120)
+        }
+        .sheet(item: $selectedClient) { client in
+            NodeDetailView(node: client)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet()

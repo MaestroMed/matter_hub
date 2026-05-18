@@ -4,6 +4,7 @@ import GraphCore
 
 struct ClientDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
     let client: Node
     let audits: [Node]
 
@@ -24,6 +25,10 @@ struct ClientDetailView: View {
         }
         .background {
             LiquidBackground().ignoresSafeArea()
+        }
+        .onAppear {
+            client.touchAccess()
+            try? context.save()
         }
     }
 

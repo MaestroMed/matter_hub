@@ -25,6 +25,10 @@ public final class Node {
     public var content: String
     public var createdAt: Date
     public var updatedAt: Date
+    /// Last time the user actively opened this Node (detail view, client
+    /// detail, etc.). Optional + nil default so it migrates cleanly into
+    /// existing stores. Drives the HomeView "Reprendre" carousel ordering.
+    public var lastAccessedAt: Date?
     public var tags: [String]
     public var sourceURL: String?
     public var embedding: [Float]?
@@ -56,6 +60,14 @@ public final class Node {
     public var kind: NodeKind {
         get { NodeKind(rawValue: kindRaw) ?? .note }
         set { kindRaw = newValue.rawValue }
+    }
+
+    /// Marks the Node as just-opened by the user. Caller is responsible
+    /// for `try? context.save()` afterwards. Idempotent — safe to call
+    /// every time a detail view appears.
+    @MainActor
+    public func touchAccess() {
+        lastAccessedAt = .now
     }
 }
 
