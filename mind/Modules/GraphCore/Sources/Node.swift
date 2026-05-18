@@ -29,6 +29,9 @@ public final class Node {
     /// detail, etc.). Optional + nil default so it migrates cleanly into
     /// existing stores. Drives the HomeView "Reprendre" carousel ordering.
     public var lastAccessedAt: Date?
+    /// When the user marked a task-shaped Node as done. nil = still open.
+    /// Safe to ignore on other kinds (notes, captures, audits, clients).
+    public var completedAt: Date?
     public var tags: [String]
     public var sourceURL: String?
     public var embedding: [Float]?
@@ -68,6 +71,21 @@ public final class Node {
     @MainActor
     public func touchAccess() {
         lastAccessedAt = .now
+    }
+
+    /// Flips a task-shaped Node between done and open states.
+    @MainActor
+    public func toggleCompletion() {
+        if completedAt == nil {
+            completedAt = .now
+        } else {
+            completedAt = nil
+        }
+        updatedAt = .now
+    }
+
+    public var isCompleted: Bool {
+        completedAt != nil
     }
 }
 

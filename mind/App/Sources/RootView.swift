@@ -90,6 +90,11 @@ private struct HomeView: View {
     @State private var isChatting: Bool = false
     @State private var selectedClient: Node?
     @State private var showFocusHistory: Bool = false
+    @State private var showTasks: Bool = false
+
+    private var openTaskCount: Int {
+        allNodes.filter { $0.kindRaw == "task" && $0.completedAt == nil }.count
+    }
 
     private var defaultFocusDuration: TimeInterval {
         TimeInterval(prefs.focusDurationMinutes) * 60
@@ -153,6 +158,8 @@ private struct HomeView: View {
                     focusWeekCard
                 }
 
+                tasksCard
+
                 auditCard
 
                 askMindCard
@@ -179,6 +186,12 @@ private struct HomeView: View {
         }
         .sheet(isPresented: $showFocusHistory) {
             FocusHistoryView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showTasks) {
+            TasksView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -324,6 +337,49 @@ private struct HomeView: View {
     private static func format(seconds: TimeInterval) -> String {
         let total = Int(seconds)
         return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+
+    private var tasksCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                showTasks = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(.green.opacity(0.20))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.green)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Tasks")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text(openTaskCount == 0
+                             ? "Capture ce qui reste à faire."
+                             : "\(openTaskCount) à faire")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if openTaskCount > 0 {
+                        Text("\(openTaskCount)")
+                            .font(.system(.title3, design: .rounded, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(.green)
+                            .contentTransition(.numericText())
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private var focusWeekCard: some View {
