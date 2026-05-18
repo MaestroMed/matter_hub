@@ -8,6 +8,7 @@ public struct SettingsView: View {
     @State private var selectedModel: String = "claude-sonnet-4-6"
     @State private var preferOnDevice: Bool = true
     @State private var showKey: Bool = false
+    @State private var prefs = MINDPreferences.shared
 
     private let availableModels: [(id: String, name: String)] = [
         ("claude-sonnet-4-6", "Claude Sonnet 4.6"),
@@ -68,6 +69,37 @@ public struct SettingsView: View {
                             VStack(spacing: 6) {
                                 ForEach(availableModels, id: \.id) { model in
                                     modelRow(id: model.id, name: model.name)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                section(title: "Préférences") {
+                    VStack(spacing: 16) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Notifications audit")
+                                    .font(.system(.body, design: .rounded, weight: .medium))
+                                Text("Reçois un banner quand un audit se termine en arrière-plan.")
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            LiquidToggle(isOn: $prefs.auditNotificationsEnabled)
+                        }
+
+                        Divider().background(.white.opacity(0.2))
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Durée Deep Focus")
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                            Text("Durée par défaut quand tu démarres une session depuis l'écran d'accueil.")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                ForEach(MINDPreferences.focusDurationPresets, id: \.self) { minutes in
+                                    durationPill(minutes: minutes)
                                 }
                             }
                         }
@@ -158,6 +190,29 @@ public struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(selectedModel == id ? LiquidPalette.lavender.opacity(0.3) : Color.clear)
             }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func durationPill(minutes: Int) -> some View {
+        let isSelected = prefs.focusDurationMinutes == minutes
+        Button {
+            withAnimation(LiquidMetrics.spring) {
+                prefs.focusDurationMinutes = minutes
+            }
+        } label: {
+            Text("\(minutes)m")
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(isSelected ? .white : LiquidPalette.iris)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background {
+                    Capsule().fill(isSelected
+                                   ? AnyShapeStyle(LiquidGradient.primary)
+                                   : AnyShapeStyle(LiquidPalette.lavender.opacity(0.35)))
+                }
         }
         .buttonStyle(.plain)
     }

@@ -9,6 +9,8 @@ import Chat
 import Settings
 import Capture
 
+// Settings module exports MINDPreferences which we re-use here.
+
 enum MINDTab: Hashable {
     case home
     case notes
@@ -82,10 +84,13 @@ struct RootView: View {
 private struct HomeView: View {
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
     @State private var focus = FocusController.shared
+    @State private var prefs = MINDPreferences.shared
     @State private var isAuditing: Bool = false
     @State private var isChatting: Bool = false
 
-    private static let defaultFocusDuration: TimeInterval = 25 * 60  // 25 min pomodoro
+    private var defaultFocusDuration: TimeInterval {
+        TimeInterval(prefs.focusDurationMinutes) * 60
+    }
 
     private var noteCount: Int {
         allNodes.filter { $0.kindRaw == "note" }.count
@@ -233,7 +238,7 @@ private struct HomeView: View {
                     LiquidButton(title: "Start Focus", systemImage: "drop.fill") {
                         focus.start(
                             intention: "Deep Focus",
-                            duration: Self.defaultFocusDuration
+                            duration: defaultFocusDuration
                         )
                     }
                 }
@@ -254,9 +259,10 @@ private struct HomeView: View {
                 .frame(maxWidth: .infinity)
                 .contentTransition(.numericText())
         } else {
-            Text(Self.format(seconds: Self.defaultFocusDuration))
+            Text(Self.format(seconds: defaultFocusDuration))
                 .font(.system(size: 64, weight: .light, design: .rounded))
                 .monospacedDigit()
+                .contentTransition(.numericText())
         }
     }
 

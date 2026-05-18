@@ -20,8 +20,10 @@ public final class AuditNotifier {
     }
 
     /// Posts an immediate local notification summarising the audit result.
-    /// Silently no-ops if the user denied notifications.
+    /// Silently no-ops if the user denied system notifications OR turned
+    /// audit notifications off in MIND Settings.
     public func notifyAuditCompleted(report: AuditReport) async {
+        guard isAuditNotificationsEnabledInPrefs() else { return }
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
         guard settings.authorizationStatus == .authorized
@@ -45,6 +47,7 @@ public final class AuditNotifier {
     }
 
     public func notifyAuditFailed(client: AuditClient, message: String) async {
+        guard isAuditNotificationsEnabledInPrefs() else { return }
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
         guard settings.authorizationStatus == .authorized
@@ -65,6 +68,14 @@ public final class AuditNotifier {
             trigger: nil
         )
         try? await center.add(request)
+    }
+
+    /// Reads the App-Group-shared user pref without taking a hard
+    /// dependency on the Settings module. Defaults to true (opt-in
+    /// behaviour) when no value has been written.
+    private nonisolated func isAuditNotificationsEnabledInPrefs() -> Bool {
+        let suite = UserDefaults(suiteName: "group.app.mind.ios") ?? .standard
+        return suite.object(forKey: "mind.pref.auditNotificationsEnabled") as? Bool ?? true
     }
 
     private func formattedBody(for report: AuditReport) -> String {
