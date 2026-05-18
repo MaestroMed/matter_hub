@@ -56,8 +56,8 @@ public struct RadialScoreChart: View {
 
                 ForEach(Array(scores.enumerated()), id: \.element.id) { index, score in
                     let angle = angle(at: index)
-                    let x = center.x + labelRadius * cos(angle)
-                    let y = center.y + labelRadius * sin(angle)
+                    let x = center.x + labelRadius * CGFloat(Foundation.cos(Double(angle)))
+                    let y = center.y + labelRadius * CGFloat(Foundation.sin(Double(angle)))
                     AxisLabel(label: score.label, value: score.value)
                         .position(x: x, y: y)
                 }
@@ -74,13 +74,21 @@ public struct RadialScoreChart: View {
         return -.pi / 2 + CGFloat(index) * step
     }
 
+    /// Pre-computes (cos, sin) for an angle, always going through
+    /// `Foundation.cos/sin(Double)` to avoid the SwiftUI Canvas
+    /// ambiguity on the bare `cos/sin` overloads under Xcode 26.3 (CI).
+    private func unitVector(_ angle: CGFloat) -> (cos: CGFloat, sin: CGFloat) {
+        let raw = Double(angle)
+        return (CGFloat(Foundation.cos(raw)), CGFloat(Foundation.sin(raw)))
+    }
+
     private func drawRings(_ ctx: GraphicsContext, center: CGPoint, radius: CGFloat) {
         for fraction in [0.25, 0.5, 0.75, 1.0] {
             let r = radius * fraction
             var path = Path()
             for i in 0..<scores.count {
-                let a = angle(at: i)
-                let p = CGPoint(x: center.x + r * cos(a), y: center.y + r * sin(a))
+                let v = unitVector(angle(at: i))
+                let p = CGPoint(x: center.x + r * v.cos, y: center.y + r * v.sin)
                 if i == 0 { path.move(to: p) } else { path.addLine(to: p) }
             }
             path.closeSubpath()
@@ -94,8 +102,8 @@ public struct RadialScoreChart: View {
 
     private func drawAxes(_ ctx: GraphicsContext, center: CGPoint, radius: CGFloat) {
         for i in 0..<scores.count {
-            let a = angle(at: i)
-            let end = CGPoint(x: center.x + radius * cos(a), y: center.y + radius * sin(a))
+            let v = unitVector(angle(at: i))
+            let end = CGPoint(x: center.x + radius * v.cos, y: center.y + radius * v.sin)
             var path = Path()
             path.move(to: center)
             path.addLine(to: end)
@@ -106,9 +114,9 @@ public struct RadialScoreChart: View {
     private func drawScorePolygon(_ ctx: GraphicsContext, center: CGPoint, radius: CGFloat) {
         var path = Path()
         for (i, score) in scores.enumerated() {
-            let a = angle(at: i)
+            let v = unitVector(angle(at: i))
             let r = radius * CGFloat(score.value) / 100
-            let p = CGPoint(x: center.x + r * cos(a), y: center.y + r * sin(a))
+            let p = CGPoint(x: center.x + r * v.cos, y: center.y + r * v.sin)
             if i == 0 { path.move(to: p) } else { path.addLine(to: p) }
         }
         path.closeSubpath()
@@ -125,9 +133,9 @@ public struct RadialScoreChart: View {
 
     private func drawScoreDots(_ ctx: GraphicsContext, center: CGPoint, radius: CGFloat) {
         for (i, score) in scores.enumerated() {
-            let a = angle(at: i)
+            let v = unitVector(angle(at: i))
             let r = radius * CGFloat(score.value) / 100
-            let p = CGPoint(x: center.x + r * cos(a), y: center.y + r * sin(a))
+            let p = CGPoint(x: center.x + r * v.cos, y: center.y + r * v.sin)
             let dot = Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
             ctx.fill(dot, with: .color(.white))
             ctx.stroke(dot, with: .color(LiquidPalette.iris), lineWidth: 1.5)
