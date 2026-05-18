@@ -518,6 +518,7 @@ struct AuditSheet: View {
             sourceURL: report.client.url.absoluteString
         )
         context.insert(clientNode)
+        clientNode.refreshEmbedding()
 
         let auditNode = Node(
             kind: .audit,
@@ -527,6 +528,7 @@ struct AuditSheet: View {
             sourceURL: report.client.url.absoluteString
         )
         context.insert(auditNode)
+        auditNode.refreshEmbedding()
 
         let edge = Edge(kind: .derivedFrom, from: auditNode, to: clientNode)
         context.insert(edge)

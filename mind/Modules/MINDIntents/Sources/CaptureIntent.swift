@@ -30,6 +30,7 @@ public struct CaptureIntent: AppIntent {
             content: trimmed
         )
         context.insert(node)
+        node.refreshEmbedding()
         try context.save()
 
         return .result(dialog: "Captured. Stored in your second brain.")

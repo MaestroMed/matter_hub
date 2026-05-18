@@ -97,6 +97,7 @@ public struct QuickCaptureSheet: View {
             content: trimmed
         )
         context.insert(node)
+        node.refreshEmbedding()
         try? context.save()
         let nodeID = node.id
 

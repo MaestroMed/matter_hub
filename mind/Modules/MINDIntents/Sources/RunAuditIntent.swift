@@ -77,6 +77,7 @@ public struct RunAuditIntent: AppIntent {
             sourceURL: report.client.url.absoluteString
         )
         context.insert(clientNode)
+        clientNode.refreshEmbedding()
 
         let auditNode = Node(
             kind: .audit,
@@ -86,6 +87,7 @@ public struct RunAuditIntent: AppIntent {
             sourceURL: report.client.url.absoluteString
         )
         context.insert(auditNode)
+        auditNode.refreshEmbedding()
 
         let edge = Edge(kind: .derivedFrom, from: auditNode, to: clientNode)
         context.insert(edge)
