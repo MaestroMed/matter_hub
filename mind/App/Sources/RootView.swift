@@ -89,6 +89,7 @@ private struct HomeView: View {
     @State private var isAuditing: Bool = false
     @State private var isChatting: Bool = false
     @State private var selectedClient: Node?
+    @State private var showFocusHistory: Bool = false
 
     private var defaultFocusDuration: TimeInterval {
         TimeInterval(prefs.focusDurationMinutes) * 60
@@ -172,6 +173,12 @@ private struct HomeView: View {
         }
         .sheet(item: $selectedClient) { client in
             NodeDetailView(node: client)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showFocusHistory) {
+            FocusHistoryView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -321,31 +328,40 @@ private struct HomeView: View {
 
     private var focusWeekCard: some View {
         LiquidCard(cornerRadius: 18) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(LiquidPalette.iris.opacity(0.22))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 17, weight: .semibold))
+            Button {
+                showFocusHistory = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.22))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Focus cette semaine")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text(focusWeekSummary)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("\(thisWeekSessions.count)")
+                        .font(.system(.title, design: .rounded, weight: .bold))
+                        .monospacedDigit()
                         .foregroundStyle(LiquidPalette.iris)
+                        .contentTransition(.numericText())
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.tertiary)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Focus cette semaine")
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    Text(focusWeekSummary)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text("\(thisWeekSessions.count)")
-                    .font(.system(.title, design: .rounded, weight: .bold))
-                    .monospacedDigit()
-                    .foregroundStyle(LiquidPalette.iris)
-                    .contentTransition(.numericText())
+                .padding(16)
+                .frame(maxWidth: .infinity)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity)
+            .buttonStyle(.plain)
         }
     }
 
