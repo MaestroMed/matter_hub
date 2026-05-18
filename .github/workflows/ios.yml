@@ -45,38 +45,24 @@ jobs:
           xcrun simctl list runtimes
           which brew && brew --version
 
-      - name: Select Xcode with iOS 26 SDK
+      - name: Pick the newest Xcode (incl. betas)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest
+
+      - name: Inspect runner Xcode + SDKs
         run: |
           set -ex
-          # Print every Xcode the runner image ships with so the log shows
-          # what was available if this step ever fails.
+          echo "=== xcode-select path ==="
+          xcode-select -p
+          echo "=== /Applications/Xcode*.app ==="
           ls -d /Applications/Xcode*.app 2>/dev/null || true
-
-          SELECTED=""
-          # Sort reverse so we try the newest Xcode first.
-          for xc in $(ls -d /Applications/Xcode*.app 2>/dev/null | sort -r); do
-            if "$xc/Contents/Developer/usr/bin/xcodebuild" -showsdks 2>/dev/null \
-                | grep -qi "iphoneos26"; then
-              SELECTED="$xc"
-              break
-            fi
-          done
-
-          if [ -z "$SELECTED" ]; then
-            echo "::error::No Xcode with iOS 26 SDK found on this runner image."
-            echo "Available SDKs by Xcode:"
-            for xc in $(ls -d /Applications/Xcode*.app 2>/dev/null | sort -r); do
-              echo "  $xc:"
-              "$xc/Contents/Developer/usr/bin/xcodebuild" -showsdks 2>/dev/null \
-                | grep iphoneos | sed 's/^/    /' || echo "    (none)"
-            done
-            exit 1
-          fi
-
-          sudo xcode-select -s "$SELECTED"
-          echo "Selected: $SELECTED"
+          echo "=== xcodebuild -version ==="
           xcodebuild -version
-          xcodebuild -showsdks | grep iphoneos
+          echo "=== xcodebuild -showsdks ==="
+          xcodebuild -showsdks
+          echo "=== simctl runtimes ==="
+          xcrun simctl list runtimes
 
       - name: Install Tuist
         run: |
