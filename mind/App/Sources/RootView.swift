@@ -118,10 +118,14 @@ private struct HomeView: View {
 
                 askMindCard
 
-                statsCard
+                if allNodes.isEmpty {
+                    welcomeEmptyState
+                } else {
+                    statsCard
 
-                if !recentCaptures.isEmpty {
-                    recentSection
+                    if !recentCaptures.isEmpty {
+                        recentSection
+                    }
                 }
             }
             .padding(20)
@@ -269,6 +273,76 @@ private struct HomeView: View {
     private static func format(seconds: TimeInterval) -> String {
         let total = Int(seconds)
         return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+
+    private var welcomeEmptyState: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidGradient.primary)
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Bienvenue dans MIND")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                        Text("Ton second cerveau démarre vide.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    onboardingHint(
+                        icon: "drop.fill",
+                        title: "Capture",
+                        detail: "Tap le bouton + en bas pour saisir ta première pensée."
+                    )
+                    onboardingHint(
+                        icon: "magnifyingglass",
+                        title: "Audit client",
+                        detail: "Du domaine au pitch en 2 minutes — pour qualifier un prospect."
+                    )
+                    onboardingHint(
+                        icon: "brain.head.profile",
+                        title: "Deep Focus",
+                        detail: "Démarre une session focus, suis-la en Live Activity."
+                    )
+                }
+            }
+            .padding(22)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func onboardingHint(
+        icon: String,
+        title: String,
+        detail: String
+    ) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(LiquidPalette.lavender.opacity(0.5))
+                    .frame(width: 30, height: 30)
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                Text(detail)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
     }
 
     private var statsCard: some View {
