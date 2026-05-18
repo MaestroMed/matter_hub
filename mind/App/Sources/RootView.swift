@@ -91,6 +91,7 @@ private struct HomeView: View {
     @State private var selectedClient: Node?
     @State private var showFocusHistory: Bool = false
     @State private var showTasks: Bool = false
+    @State private var showAmbient: Bool = false
 
     private var openTaskCount: Int {
         allNodes.filter { $0.kindRaw == "task" && $0.completedAt == nil }.count
@@ -196,6 +197,9 @@ private struct HomeView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .fullScreenCover(isPresented: $showAmbient) {
+            AmbientView()
+        }
         .sheet(isPresented: $isAuditing) {
             AuditSheet()
                 .presentationDetents([.large])
@@ -279,12 +283,27 @@ private struct HomeView: View {
     }
 
     private var greeting: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(Self.timeBasedGreeting), Mehdi 👋")
-                .font(.system(.largeTitle, design: .rounded, weight: .semibold))
-            Text(Self.timeBasedSubtitle)
-                .font(.system(.body, design: .rounded))
-                .foregroundStyle(.secondary)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(Self.timeBasedGreeting), Mehdi 👋")
+                    .font(.system(.largeTitle, design: .rounded, weight: .semibold))
+                Text(Self.timeBasedSubtitle)
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button {
+                showAmbient = true
+            } label: {
+                Image(systemName: "moon.stars.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                    .padding(10)
+                    .background {
+                        Circle().fill(LiquidPalette.lavender.opacity(0.4))
+                    }
+            }
+            .buttonStyle(.plain)
         }
     }
 
