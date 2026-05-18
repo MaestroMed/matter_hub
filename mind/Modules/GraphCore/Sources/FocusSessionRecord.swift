@@ -12,17 +12,23 @@ import SwiftData
 /// by future "Focus history" detail views.
 @Model
 public final class FocusSessionRecord {
-    @Attribute(.unique) public var id: UUID
-    public var intention: String
-    public var startDate: Date
-    public var completedAt: Date
+    // All non-optional properties carry a default value (init or model
+    // declaration). CloudKit-backed SwiftData refuses to sync records
+    // with non-optional + no-default attributes — failing with "Store
+    // failed to load. CloudKit integration requires that all attributes
+    // be optional, or have a default value set." Defaults are inert in
+    // practice because every record is created via the full init below.
+    @Attribute(.unique) public var id: UUID = UUID()
+    public var intention: String = ""
+    public var startDate: Date = Date.now
+    public var completedAt: Date = Date.now
     /// Planned duration in seconds (what the user committed to at start).
-    public var plannedDurationSeconds: Double
+    public var plannedDurationSeconds: Double = 0
     /// Effective duration in seconds (might be shorter if user ended early).
-    public var actualDurationSeconds: Double
+    public var actualDurationSeconds: Double = 0
     /// `true` if the user reached the end of the planned timer, `false`
     /// if they tapped End focus early. Used to compute completion rate.
-    public var completedNormally: Bool
+    public var completedNormally: Bool = false
 
     public init(
         id: UUID = UUID(),

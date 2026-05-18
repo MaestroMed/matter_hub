@@ -63,6 +63,50 @@ public final class ClaudeSynthesizer {
         }
     }
 
+    /// Exposed for unit tests: turns a raw Claude response string into an
+    /// AuditReport (or throws ClaudeSynthesizerError). Mirrors what
+    /// `synthesize` does after the HTTP round trip, minus the network
+    /// call. Keeps the parsing path testable without mocking the LLM.
+    /// `nonisolated` so tests (and any future caller) can invoke it
+    /// without hopping onto the MainActor — the function only does pure
+    /// JSON work, it doesn't touch the synthesizer's stored `cloud`.
+    public nonisolated static func parseResponse(
+        _ response: String,
+        client: AuditClient,
+        performance: AuditReport.PerformanceMetrics? = nil,
+        findings: AuditFindings? = nil
+    ) throws -> AuditReport {
+        let json = stripFencesStatic(response)
+        guard let data = json.data(using: .utf8) else {
+            throw ClaudeSynthesizerError.decodingFailed(
+                "could not encode response to UTF-8",
+                rawResponse: response
+            )
+        }
+        do {
+            let payload = try JSONDecoder().decode(ClaudePayload.self, from: data)
+            return payload.toReport(
+                client: client,
+                performance: performance,
+                findings: findings
+            )
+        } catch {
+            throw ClaudeSynthesizerError.decodingFailed(
+                String(describing: error),
+                rawResponse: response
+            )
+        }
+    }
+
+    private nonisolated static func stripFencesStatic(_ response: String) -> String {
+        let trimmed = response.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("```") else { return trimmed }
+        return trimmed
+            .replacingOccurrences(of: "```json", with: "")
+            .replacingOccurrences(of: "```", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     // MARK: - Prompt
 
     private func buildPrompt(
