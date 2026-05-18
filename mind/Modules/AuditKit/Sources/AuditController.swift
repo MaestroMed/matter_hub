@@ -29,9 +29,14 @@ public final class AuditController {
 
     private var currentTask: Task<Void, Never>?
     private let synthesizer: ClaudeSynthesizer
+    private let notifier: AuditNotifier
 
-    public init(synthesizer: ClaudeSynthesizer? = nil) {
+    public init(
+        synthesizer: ClaudeSynthesizer? = nil,
+        notifier: AuditNotifier? = nil
+    ) {
         self.synthesizer = synthesizer ?? ClaudeSynthesizer()
+        self.notifier = notifier ?? AuditNotifier()
     }
 
     public var isRunning: Bool {
@@ -58,7 +63,9 @@ public final class AuditController {
         phase = .idle
     }
 
-    /// Kick off a new audit run. Replaces any in-flight one.
+    /// Kick off a new audit run. Replaces any in-flight one. Requests
+    /// notification permission on first use so the completion banner can
+    /// land even if the user backgrounded the app while the audit ran.
     public func run(for client: AuditClient) {
         cancel()
         report = nil
@@ -66,7 +73,9 @@ public final class AuditController {
         phase = .probing
 
         currentTask = Task { [weak self] in
-            await self?.execute(for: client)
+            guard let self else { return }
+            await self.notifier.requestPermissionIfNeeded()
+            await self.execute(for: client)
         }
     }
 
@@ -86,11 +95,16 @@ public final class AuditController {
 
             self.report = synthesized
             self.phase = .completed
+            await notifier.notifyAuditCompleted(report: synthesized)
         } catch is CancellationError {
             self.phase = .idle
         } catch {
             self.error = error.localizedDescription
             self.phase = .failed
+            await notifier.notifyAuditFailed(
+                client: client,
+                message: error.localizedDescription
+            )
         }
     }
 
