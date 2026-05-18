@@ -19,6 +19,7 @@ enum MINDTab: Hashable {
 struct RootView: View {
     @State private var selection: MINDTab = .home
     @State private var isCapturing: Bool = false
+    @State private var selectedNode: Node?
 
     var body: some View {
         ZStack {
@@ -53,6 +54,12 @@ struct RootView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(item: $selectedNode) { node in
+            NodeDetailView(node: node)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
     }
 
     @ViewBuilder
@@ -61,7 +68,9 @@ struct RootView: View {
         case .home:
             HomeView()
         case .notes:
-            NotesView()
+            NotesView { node in
+                selectedNode = node
+            }
         case .clients:
             ClientsView()
         case .settings:
