@@ -61,7 +61,9 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.auditKit.rawValue),
             ]
         case .focusKit:
-            return []
+            return [
+                .target(name: Module.graphCore.rawValue),
+            ]
         case .visualKit:
             return [
                 .target(name: Module.graphCore.rawValue),

@@ -1,6 +1,8 @@
 import Foundation
 @preconcurrency import ActivityKit
 import Observation
+import SwiftData
+import GraphCore
 
 /// Owns the lifecycle of the single in-flight Deep Focus session: start,
 /// pause, resume, end. Wraps ActivityKit so the rest of the app stays
@@ -105,7 +107,7 @@ public final class FocusController {
 
     public func end() {
         Task { [weak self] in
-            await self?.endActivity(phase: .completed)
+            await self?.endActivity(phase: .completed, persistRecord: true)
         }
     }
 
@@ -120,8 +122,17 @@ public final class FocusController {
         self.session = nil
     }
 
-    private func endActivity(phase: FocusActivityAttributes.ContentState.Phase) async {
+    private func endActivity(
+        phase: FocusActivityAttributes.ContentState.Phase,
+        persistRecord: Bool = false
+    ) async {
         guard let activity else { return }
+
+        // Snapshot the session before we tear it down so we can persist a
+        // FocusSessionRecord with the correct intention + duration even if
+        // the activity teardown briefly mutates state.
+        let snapshot = session
+
         let finalState = FocusActivityAttributes.ContentState(
             phase: phase,
             endDate: .now
@@ -134,6 +145,33 @@ public final class FocusController {
         pushTokenTask = nil
         self.activity = nil
         self.session = nil
+
+        if persistRecord, let snapshot {
+            persist(snapshot: snapshot)
+        }
+    }
+
+    /// Writes a FocusSessionRecord to the shared SwiftData store. Best
+    /// effort — failure to persist (e.g. container unavailable on an
+    /// unsigned Simulator) silently no-ops so the UX isn't blocked.
+    private func persist(snapshot: FocusSession) {
+        let now = Date.now
+        let elapsed = min(snapshot.totalDuration, now.timeIntervalSince(snapshot.startDate))
+        let completedNormally = abs(elapsed - snapshot.totalDuration) < 5  // 5s grace
+
+        let record = FocusSessionRecord(
+            id: snapshot.id,
+            intention: snapshot.intention,
+            startDate: snapshot.startDate,
+            completedAt: now,
+            plannedDurationSeconds: snapshot.totalDuration,
+            actualDurationSeconds: max(0, elapsed),
+            completedNormally: completedNormally
+        )
+
+        let context = ModelContext(GraphCore.sharedContainer)
+        context.insert(record)
+        try? context.save()
     }
 
     private func observePushTokens(for activity: Activity<FocusActivityAttributes>) {

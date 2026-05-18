@@ -5,7 +5,7 @@ public enum GraphCore {
     public static let appGroupIdentifier = "group.app.mind.ios"
     public static let cloudKitContainerIdentifier = "iCloud.app.mind.ios"
 
-    public static let schema = Schema([Node.self, Edge.self])
+    public static let schema = Schema([Node.self, Edge.self, FocusSessionRecord.self])
 
     @MainActor
     public static let sharedContainer: ModelContainer = makeContainer()
