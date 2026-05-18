@@ -30,6 +30,7 @@ let appTarget: Target = .target(
     entitlements: .file(path: "App/MIND.entitlements"),
     dependencies: Module.allCases.map { .target(name: $0.rawValue) } + [
         .target(name: "MINDWidgets"),
+        .external(name: "Sentry"),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

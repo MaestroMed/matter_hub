@@ -17,6 +17,7 @@ public final class MINDPreferences {
     private enum Key {
         static let focusDurationMinutes      = "mind.pref.focusDurationMinutes"
         static let auditNotificationsEnabled = "mind.pref.auditNotificationsEnabled"
+        static let sentryDSN                 = "mind.pref.sentryDSN"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -46,6 +47,18 @@ public final class MINDPreferences {
         }
     }
 
+    /// Sentry DSN for crash + error reporting. Empty / nil → Sentry is
+    /// not initialised. Stored in UserDefaults (not Keychain) because
+    /// the DSN is not a secret per Sentry's own threat model — it
+    /// identifies the project, doesn't authenticate writes (Sentry
+    /// rate-limits abuse at the ingest side).
+    public var sentryDSN: String {
+        didSet {
+            let trimmed = sentryDSN.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.sentryDSN)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -61,6 +74,8 @@ public final class MINDPreferences {
         // "explicitly disabled" (false). Default to opt-in.
         let storedNotifs = suite.object(forKey: Key.auditNotificationsEnabled) as? Bool
         self.auditNotificationsEnabled = storedNotifs ?? true
+
+        self.sentryDSN = suite.string(forKey: Key.sentryDSN) ?? ""
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -81,6 +96,14 @@ public final class MINDPreferences {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         let stored = suite.integer(forKey: Key.focusDurationMinutes)
         return stored > 0 ? stored : 25
+    }
+
+    public static func currentSentryDSN(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.sentryDSN)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
     }
 }
 

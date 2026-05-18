@@ -108,6 +108,34 @@ public struct SettingsView: View {
                     }
                 }
 
+                section(title: "Crash reporting (Sentry)") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Colle ton DSN Sentry (sentry.io → projet → Client Keys). Vide = télémétrie désactivée.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                        HStack {
+                            TextField("https://xxx@sentry.io/yyy", text: $prefs.sentryDSN)
+                                .textFieldStyle(.plain)
+                                .font(.system(.caption, design: .monospaced))
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(.ultraThinMaterial)
+                                .overlay {
+                                    Capsule(style: .continuous)
+                                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                                }
+                        }
+                        Text("Redémarre l'app après modification pour appliquer.")
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+
                 section(title: "Préférences") {
                     VStack(spacing: 16) {
                         HStack {
