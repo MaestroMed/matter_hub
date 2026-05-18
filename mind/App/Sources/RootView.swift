@@ -22,6 +22,11 @@ struct RootView: View {
     @State private var selection: MINDTab = .home
     @State private var isCapturing: Bool = false
     @State private var selectedNode: Node?
+    /// Flipped to `true` by OnboardingView's final "Start" button on
+    /// first launch. Persisted in standard UserDefaults (not the app
+    /// group) because the widget doesn't need to know; only this view
+    /// reads it. Once true, the cover never re-appears.
+    @AppStorage("mind.onboarding.completed") private var onboardingDone: Bool = false
 
     var body: some View {
         ZStack {
@@ -61,6 +66,19 @@ struct RootView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
+        }
+        // First-launch onboarding. `isPresented` is bound to !onboardingDone
+        // so the cover opens automatically the very first time RootView
+        // renders, and dismisses the moment the user hits "Start".
+        .fullScreenCover(isPresented: Binding(
+            get: { !onboardingDone },
+            set: { newValue in
+                if !newValue { onboardingDone = true }
+            }
+        )) {
+            OnboardingView {
+                onboardingDone = true
+            }
         }
     }
 

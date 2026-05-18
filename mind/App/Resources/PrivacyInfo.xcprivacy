@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PrivacyInfo.xcprivacy — Apple privacy manifest for MIND.
+
+  Required by App Store submission since May 2024. Apple's static
+  analysis runs over the bundled binary AND every embedded framework
+  (here: Sentry). The framework manifests are not auto-merged into
+  the app's declaration, so this file lists every Required Reason
+  API category that MIND itself touches in app code.
+
+  Reference reason codes:
+    https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+
+  Tracking:  NO. MIND does not track users across apps or websites.
+  Tracking domains: NONE.
+  Data collected:
+    - Crash Data (opt-in via Sentry, not linked, not for tracking)
+    - Performance Data (opt-in via Sentry, not linked, not for tracking)
+  Everything else (notes, focus history, audits) stays in the user's
+  private CloudKit zone or on-device. Nothing is sent to Anthropic /
+  OpenAI / PageSpeed except the URLs and audit content the user
+  explicitly submits.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+        <!-- Sentry crash reports. Only sent if the user explicitly
+             configures a Sentry DSN under Settings → Crash reporting.
+             Not linked to user identity, not used for tracking. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeCrashData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Sentry performance traces (20% sampling). Same opt-in
+             condition as crash data. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePerformanceData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Other diagnostic data captured by Sentry breadcrumbs
+             (HTTP calls, navigation events). -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+    </array>
+
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <!-- UserDefaults (CA92.1): MINDPreferences stores user-only
+             configuration (selected persona, Sentry DSN, etc.) that
+             never leaves the app sandbox. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+
+        <!-- File timestamp (C617.1): SwiftData / FileManager inspect
+             timestamps on documents the user opens (PDF exports, audit
+             reports the user re-opens). All access is user-initiated. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>C617.1</string>
+            </array>
+        </dict>
+
+        <!-- Disk space (E174.1): used to verify there is enough room
+             before writing a PDF / JSON export to the Documents
+             directory, so we can surface a clear error if the user is
+             out of storage. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>E174.1</string>
+            </array>
+        </dict>
+
+        <!-- System boot time (35F9.1): Sentry uses ProcessInfo's
+             systemUptime to measure time between in-app events for
+             performance traces. Listed here because Sentry is statically
+             linked into the app binary and Apple's static analyzer
+             reports the usage against MIND. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>35F9.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

@@ -65,6 +65,11 @@ let widgetTarget: Target = .target(
     deploymentTargets: .iOS("26.0"),
     infoPlist: .extendingDefault(with: [
         "CFBundleDisplayName": "MIND Widgets",
+        // Must match the parent app's version to satisfy
+        // embeddedBinaryValidationUtility — Xcode flags a mismatch
+        // when CFBundleShortVersionString differs from the host app.
+        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleVersion": "1",
         "NSExtension": [
             "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
         ],
