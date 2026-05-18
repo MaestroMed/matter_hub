@@ -50,8 +50,8 @@ public final class AuditController {
     public var progressLabel: String {
         switch phase {
         case .idle:         return "Prêt à auditer"
-        case .probing:      return "Sondes en parallèle (perf, sécu, DNS, whois, App Store)…"
-        case .synthesizing: return "Claude rédige le rapport…"
+        case .probing:      return "13 sondes en parallèle (perf, sécu, SEO, brand, infra, trust)…"
+        case .synthesizing: return "Claude rédige le rapport complet…"
         case .completed:    return "Audit terminé"
         case .failed:       return "Audit en échec"
         }
@@ -108,9 +108,11 @@ public final class AuditController {
         }
     }
 
-    /// Fans out the five probe calls concurrently and folds them into a
+    /// Fans out all probe calls concurrently and folds them into a
     /// PerformanceMetrics + AuditFindings pair. Every probe is allowed to
     /// soft-fail to nil so a single bad upstream never sinks the audit.
+    /// Total wall time is bounded by the slowest probe (PageSpeed
+    /// Insights, usually 15-40s).
     private func runProbesInParallel(
         for client: AuditClient
     ) async -> (AuditReport.PerformanceMetrics?, AuditFindings) {
@@ -118,17 +120,36 @@ public final class AuditController {
         let host = url.host(percentEncoded: false) ?? ""
         let searchName = client.name?.trimmingCharacters(in: .whitespaces) ?? hostLabel(for: host)
 
+        // First wave (Session 2)
         async let perf      = softFetch { try await PageSpeedProbe.fetch(for: url) }
         async let security  = softFetch { try await SecurityHeadersProbe.fetch(for: url) }
         async let email     = softFetch { try await DNSProbe.fetch(for: host) }
         async let domain    = softFetch { try await WhoisProbe.fetch(for: host) }
         async let mobile    = softFetch { try await AppStoreProbe.search(name: searchName) }
 
+        // Second wave (ULTRAPLAN BLOC B)
+        async let schema       = softFetch { try await SchemaOrgProbe.fetch(for: url) }
+        async let openGraph    = softFetch { try await OpenGraphProbe.fetch(for: url) }
+        async let crawlability = softFetch { try await RobotsSitemapProbe.fetch(for: url) }
+        async let compliance   = softFetch { try await CookieBannerProbe.fetch(for: url) }
+        async let analytics    = softFetch { try await AnalyticsProbe.fetch(for: url) }
+        async let payment      = softFetch { try await PaymentProbe.fetch(for: url) }
+        async let cdn          = softFetch { try await CDNProbe.fetch(for: url) }
+        async let trust        = softFetch { try await TrustpilotProbe.fetch(for: url) }
+
         let findings = AuditFindings(
-            security: await security,
-            email:    await email,
-            domain:   await domain,
-            mobile:   await mobile
+            security:     await security,
+            email:        await email,
+            domain:       await domain,
+            mobile:       await mobile,
+            schema:       await schema,
+            openGraph:    await openGraph,
+            crawlability: await crawlability,
+            compliance:   await compliance,
+            analytics:    await analytics,
+            payment:      await payment,
+            cdn:          await cdn,
+            trust:        await trust
         )
         return (await perf, findings)
     }

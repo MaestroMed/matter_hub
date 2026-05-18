@@ -13,17 +13,18 @@ public enum ClaudeSynthesizerError: Error, LocalizedError, Sendable {
 }
 
 /// Bridges the audit pipeline to the Anthropic Messages API. Feeds Claude
-/// the raw measurements (Lighthouse + structured findings), forces a
-/// strict JSON response shape, and maps it back into an `AuditReport`.
-/// Persona-aware: the system prompt explains the three buyer profiles
-/// Mehdi targets so the recommendations get phrased for the right room.
+/// the raw measurements (Lighthouse + 12 structured findings sections),
+/// forces a strict JSON response shape, and maps it back into a rich
+/// `AuditReport`. Persona-aware: the system prompt explains the three
+/// buyer profiles Mehdi targets so the recommendations get phrased for
+/// the right room.
 @MainActor
 public final class ClaudeSynthesizer {
     private let cloud: CloudIntelligence
 
     public init(cloud: CloudIntelligence? = nil) {
         let configured = cloud ?? CloudIntelligence()
-        configured.maxTokens = 4096
+        configured.maxTokens = 8192  // expanded prompt → richer report
         self.cloud = configured
     }
 
@@ -73,7 +74,7 @@ public final class ClaudeSynthesizer {
         let findingsBlock = self.findingsBlock(findings)
 
         return """
-        Tu es l'auditeur digital intégré de MIND. Tu produis un audit complet d'un prospect potentiel pour Mehdi — développeur iOS premium et studio one-man.
+        Tu es l'auditeur digital ultra-complet de MIND. Tu produis un audit world-class d'un prospect potentiel pour Mehdi — développeur iOS premium / studio one-man qui cherche à transformer la maturité digitale de ses clients.
 
         Client à auditer:
           - URL: \(client.url.absoluteString)
@@ -95,13 +96,13 @@ public final class ClaudeSynthesizer {
           - lifestyleDTC → cohérence visuelle cross-platform, social commerce, app premium, packaging digital
           - other   → propose ce qui colle au contexte réel du client
 
-        Règles pour le scoring (sois rigoureux, base-toi sur les mesures réelles):
-          - "performance" → s'aligne sur le score Lighthouse performance si dispo, sinon ton estimation
-          - "security" → reflète directement le grade des headers (A+/A → 90-100, B → 70-85, C → 55-70, D → 40-55, F → <40)
-          - "seo" → s'aligne sur Lighthouse SEO si dispo
-          - "mobile" → tient compte de la présence d'app native iOS (mobile=20 si pas d'app, +30-40 si app présente, +10-20 selon le rating)
-          - "brand" → ton estimation depuis ce que tu sais du client
-          - "overall" → moyenne pondérée raisonnable, pas une moyenne arithmétique aveugle
+        Règles de scoring (sois rigoureux, base-toi sur les mesures réelles):
+          - "performance" → reflète le score Lighthouse performance
+          - "seo" → s'aligne sur Lighthouse SEO + complétude OG + Schema.org + sitemap
+          - "security" → reflète le grade des headers (A+/A → 90-100, B → 70-85, C → 55-70, D → 40-55, F → <40)
+          - "brand" → cohérence visuelle, OG presence, Schema, brand recognition générale
+          - "mobile" → présence app native iOS (mobile=20 si pas d'app, +30-40 si app présente, +10-20 selon rating)
+          - "overall" → moyenne pondérée raisonnable
 
         Tu réponds STRICTEMENT avec un JSON valide, sans backticks, sans texte avant ni après, sans markdown autour. Schéma exact:
 
@@ -115,20 +116,31 @@ public final class ClaudeSynthesizer {
             "brand": int 0-100,
             "mobile": int 0-100
           },
-          "synthesis": string markdown 300-500 mots: qui ils sont, USP, business model, audience cible, maturité digitale, frictions clés, opportunités saillantes. Cite explicitement les mesures de l'audit quand elles renforcent un point.,
+          "synthesis": string markdown 800-1500 mots structuré en sections avec headings ##:
+            ## Identité (qui ils sont, USP, business model, audience cible)
+            ## Maturité digitale (état actuel par axe avec citations des mesures)
+            ## Frictions repérées (UX, copy, formulaires, perf, conversion)
+            ## Opportunités saillantes (ce qui change tout, classé par impact)
+            ## Risques cachés (ce que le prospect ignore probablement)
+            ## Verdict (one-liner final)
+            Cite explicitement les mesures de l'audit quand elles renforcent un point. Utilise des - bullets, des **emphases**, des [liens](url) markdown.,
           "quickWins": [
             { "title": string court, "detail": string 1-2 phrases, "effortDays": float (0.5, 1, 2, 5, etc.), "impact": "low" | "medium" | "high" }
-          ] (3-5 items),
+          ] (10 à 15 items, classés par ROI décroissant),
           "strategicBets": [
             { "title": string court, "detail": string 1-2 phrases, "durationMonths": int, "budgetMinEUR": int, "budgetMaxEUR": int }
-          ] (1-3 items),
-          "pitch": string 8-10 lignes d'email cold prêt à envoyer, ton humain, mentionne 2 frictions concrètes vues dans l'audit + une proposition concrète, signe "Mehdi"
+          ] (3 à 6 items, propose 1 mission low budget + 1 mid + 1 high + éventuellement option premium),
+          "hiddenRisks": [
+            { "title": string court, "detail": string 1-2 phrases qui expliquent l'enjeu, "severity": "low" | "medium" | "high" | "critical" }
+          ] (2 à 5 items: trucs non-évidents que le prospect ignore probablement — dette technique invisible, dépendance cachée, GDPR risk, perte de revenu silencieuse, etc.),
+          "pitch": string 10-15 lignes d'email cold prêt à envoyer, ton humain et précis. Mentionne 2-3 frictions concrètes vues dans l'audit (avec les chiffres réels), propose 3 options de mission (low / mid / high budget en référence aux strategicBets), termine par un CTA simple (un slot de visio). Signe "Mehdi"
         }
 
         Important:
           - Aucun caractère hors du JSON.
           - Tous les nombres sont des nombres bruts (pas de string "85").
           - Tous les champs sont obligatoires.
+          - synthesis doit être substantiel (800-1500 mots), pas un résumé.
         """
     }
 
@@ -150,18 +162,19 @@ public final class ClaudeSynthesizer {
 
     private func findingsBlock(_ findings: AuditFindings?) -> String {
         guard let findings, findings.hasAnyData else {
-            return "Sondes complémentaires: aucune donnée structurée (toutes en échec ou skip)."
+            return "Sondes complémentaires: aucune donnée structurée."
         }
 
-        var lines: [String] = ["Sondes complémentaires:"]
+        var lines: [String] = ["Sondes complémentaires (12 sections):"]
 
         if let security = findings.security {
             let present = security.presentHeaders.isEmpty ? "aucun" : security.presentHeaders.joined(separator: ", ")
             let missing = security.missingHeaders.isEmpty ? "aucun" : security.missingHeaders.joined(separator: ", ")
             lines.append("""
-              - Sécurité headers: grade \(security.grade) (\(security.score)/100), TLS \(security.tlsValid ? "valide" : "invalide")
-                  présents: \(present)
-                  manquants: \(missing)
+              SÉCURITÉ
+              - grade headers: \(security.grade) (\(security.score)/100), TLS \(security.tlsValid ? "valide" : "invalide")
+              - présents: \(present)
+              - manquants: \(missing)
             """)
         }
 
@@ -170,17 +183,19 @@ public final class ClaudeSynthesizer {
                 ? "aucun MX trouvé"
                 : email.mxHosts.prefix(3).joined(separator: ", ")
             lines.append("""
-              - Infra email: provider \(email.provider ?? "inconnu")
-                  MX: \(mxLine)
-                  SPF: \(email.hasSPF ? "OK" : "manquant") · DMARC: \(email.hasDMARC ? "OK" : "manquant")
+              EMAIL
+              - provider: \(email.provider ?? "inconnu")
+              - MX: \(mxLine)
+              - SPF: \(email.hasSPF ? "OK" : "MANQUANT") · DMARC: \(email.hasDMARC ? "OK" : "MANQUANT")
             """)
         }
 
         if let domain = findings.domain {
             let age = domain.ageYears.map { String(format: "%.1f", $0) + " ans" } ?? "n/a"
-            let registrar = domain.registrar ?? "inconnu"
             lines.append("""
-              - Domaine: registrar \(registrar) · âge \(age)
+              DOMAINE
+              - registrar: \(domain.registrar ?? "inconnu")
+              - âge: \(age)
             """)
         }
 
@@ -189,14 +204,99 @@ public final class ClaudeSynthesizer {
                 let rating = mobile.averageRating.map { String(format: "%.1f", $0) + "★" } ?? "n/a"
                 let reviews = mobile.ratingCount.map { "\($0) avis" } ?? "0 avis"
                 lines.append("""
+                  MOBILE
                   - App iOS: « \(mobile.appName ?? "?") » par \(mobile.sellerName ?? "?") (\(mobile.primaryGenre ?? "?")) — \(rating), \(reviews)
                 """)
             } else {
-                lines.append("  - App iOS: aucune trouvée sur l'App Store (opportunité native potentielle)")
+                lines.append("""
+                  MOBILE
+                  - App iOS: AUCUNE trouvée sur l'App Store — opportunité native potentielle
+                """)
             }
         }
 
-        return lines.joined(separator: "\n")
+        if let schema = findings.schema {
+            let types = schema.detectedTypes.isEmpty ? "aucun" : schema.detectedTypes.joined(separator: ", ")
+            lines.append("""
+              SCHEMA.ORG
+              - JSON-LD: \(schema.hasJSONLD ? "présent" : "ABSENT")
+              - types détectés: \(types)
+            """)
+        }
+
+        if let og = findings.openGraph {
+            let parts = [
+                "og:title=\(og.hasTitle ? "✓" : "✗")",
+                "og:description=\(og.hasDescription ? "✓" : "✗")",
+                "og:image=\(og.hasImage ? "✓" : "✗")",
+                "og:type=\(og.hasType ? "✓" : "✗")",
+                "twitter:card=\(og.hasTwitterCard ? "✓" : "✗")",
+            ].joined(separator: " ")
+            lines.append("""
+              OPENGRAPH
+              - complétude: \(og.completenessScore)/100
+              - \(parts)
+            """)
+        }
+
+        if let crawl = findings.crawlability {
+            let smapCount = crawl.sitemapURLCount.map { " (\($0) URLs)" } ?? ""
+            lines.append("""
+              CRAWLABILITY
+              - robots.txt: \(crawl.hasRobotsTxt ? "présent" : "ABSENT"), autorise tout: \(crawl.allowsAllCrawlers ? "oui" : "non")
+              - sitemap.xml: \(crawl.hasSitemap ? "présent\(smapCount)" : "ABSENT")
+            """)
+        }
+
+        if let comp = findings.compliance {
+            lines.append("""
+              COMPLIANCE
+              - banner cookies: \(comp.hasCookieBanner ? "présent" : "ABSENT") · vendor: \(comp.cookieProvider ?? "inconnu / custom")
+              - privacy: \(comp.hasPrivacyLink ? "lien présent" : "ABSENT") · CGU: \(comp.hasTermsLink ? "lien présent" : "ABSENT")
+            """)
+        }
+
+        if let analytics = findings.analytics {
+            let providers = analytics.providers.isEmpty ? "aucun" : analytics.providers.joined(separator: ", ")
+            lines.append("""
+              ANALYTICS
+              - SDKs: \(providers)
+              - error-tracking: \(analytics.hasErrorTracking ? "présent" : "ABSENT")
+            """)
+        }
+
+        if let payment = findings.payment {
+            let processors = payment.processors.isEmpty ? "aucun" : payment.processors.joined(separator: ", ")
+            lines.append("""
+              PAYMENT
+              - processors: \(processors)
+              - pay-wall détecté: \(payment.hasPayWall ? "oui" : "non")
+            """)
+        }
+
+        if let cdn = findings.cdn {
+            lines.append("""
+              CDN / HOSTING
+              - provider: \(cdn.provider ?? "inconnu / non détecté")
+              - server header: \(cdn.serverHeader ?? "n/a")
+            """)
+        }
+
+        if let trust = findings.trust {
+            if let score = trust.trustpilotScore, let count = trust.trustpilotReviewCount {
+                lines.append("""
+                  TRUST
+                  - Trustpilot: \(String(format: "%.1f", score))/5 (\(count) avis)
+                """)
+            } else {
+                lines.append("""
+                  TRUST
+                  - Trustpilot: pas de profile trouvé
+                """)
+            }
+        }
+
+        return lines.joined(separator: "\n\n")
     }
 
     private func stripFences(_ response: String) -> String {
@@ -217,6 +317,7 @@ private struct ClaudePayload: Decodable {
     let synthesis: String
     let quickWins: [QuickWinPayload]
     let strategicBets: [StrategicBetPayload]
+    let hiddenRisks: [HiddenRiskPayload]?
     let pitch: String
 
     struct ScoringPayload: Decodable {
@@ -241,6 +342,12 @@ private struct ClaudePayload: Decodable {
         let durationMonths: Int
         let budgetMinEUR: Int
         let budgetMaxEUR: Int
+    }
+
+    struct HiddenRiskPayload: Decodable {
+        let title: String
+        let detail: String
+        let severity: String
     }
 
     func toReport(
@@ -277,6 +384,13 @@ private struct ClaudePayload: Decodable {
                     durationMonths: $0.durationMonths,
                     budgetMinEUR: $0.budgetMinEUR,
                     budgetMaxEUR: $0.budgetMaxEUR
+                )
+            },
+            hiddenRisks: (hiddenRisks ?? []).map {
+                AuditReport.HiddenRisk(
+                    title: $0.title,
+                    detail: $0.detail,
+                    severity: AuditReport.HiddenRisk.Severity(rawValue: $0.severity) ?? .medium
                 )
             },
             pitch: pitch

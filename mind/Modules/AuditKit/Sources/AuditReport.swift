@@ -32,10 +32,17 @@ public struct AuditReport: Sendable, Codable, Hashable {
     /// 3–5 short-cycle wins the prospect could ship in a few weeks.
     public let quickWins: [QuickWin]
 
-    /// 1–3 high-value strategic bets with rough timeline + budget.
+    /// 3–6 high-value strategic bets with rough timeline + budget.
     public let strategicBets: [StrategicBet]
 
-    /// 8–10 line cold-email body ready to paste into Mail.app via mailto:.
+    /// 2–5 hidden / non-obvious risks the prospect probably doesn't know
+    /// they're sitting on. Surfaced by Claude after reading the full
+    /// audit data. Useful as conversation starter in the pitch.
+    public let hiddenRisks: [HiddenRisk]
+
+    /// Cold-email body ready to paste into Mail.app via mailto:. Now
+    /// includes three budget tiers (low / mid / high) so Mehdi can
+    /// shape the same pitch to different prospect maturity levels.
     public let pitch: String
 
     public init(
@@ -48,6 +55,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         synthesis: String,
         quickWins: [QuickWin],
         strategicBets: [StrategicBet],
+        hiddenRisks: [HiddenRisk] = [],
         pitch: String
     ) {
         self.client = client
@@ -59,6 +67,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.synthesis = synthesis
         self.quickWins = quickWins
         self.strategicBets = strategicBets
+        self.hiddenRisks = hiddenRisks
         self.pitch = pitch
     }
 
@@ -174,6 +183,32 @@ public struct AuditReport: Sendable, Codable, Hashable {
             self.durationMonths = durationMonths
             self.budgetMinEUR = budgetMinEUR
             self.budgetMaxEUR = budgetMaxEUR
+        }
+    }
+
+    public struct HiddenRisk: Sendable, Codable, Hashable, Identifiable {
+        public let id: UUID
+        public let title: String
+        public let detail: String
+        public let severity: Severity
+
+        public enum Severity: String, Sendable, Codable, CaseIterable {
+            case low
+            case medium
+            case high
+            case critical
+        }
+
+        public init(
+            id: UUID = UUID(),
+            title: String,
+            detail: String,
+            severity: Severity
+        ) {
+            self.id = id
+            self.title = title
+            self.detail = detail
+            self.severity = severity
         }
     }
 }
