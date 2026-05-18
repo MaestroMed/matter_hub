@@ -113,8 +113,7 @@ struct NodeDetailView: View {
                 }
             }
             LiquidCard(cornerRadius: 18) {
-                Text(LocalizedStringKey(node.content))
-                    .font(.system(.subheadline, design: .rounded))
+                MarkdownView(node.content)
                     .padding(18)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)

@@ -180,8 +180,7 @@ struct AuditSheet: View {
 
             section("Synthèse") {
                 LiquidCard(cornerRadius: 18) {
-                    Text(LocalizedStringKey(report.synthesis))
-                        .font(.system(.subheadline, design: .rounded))
+                    MarkdownView(report.synthesis)
                         .padding(18)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
