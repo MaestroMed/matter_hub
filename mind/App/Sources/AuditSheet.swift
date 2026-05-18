@@ -14,6 +14,7 @@ struct AuditSheet: View {
     @State private var name: String = ""
     @State private var saved: Bool = false
     @State private var pdfURL: URL?
+    @State private var briefMarkdown: String?
     @FocusState private var urlFocused: Bool
 
     var body: some View {
@@ -34,6 +35,15 @@ struct AuditSheet: View {
             if controller.report == nil && controller.phase == .idle {
                 urlFocused = true
             }
+        }
+        .sheet(item: Binding(
+            get: { briefMarkdown.map { BriefPreviewItem(markdown: $0) } },
+            set: { briefMarkdown = $0?.markdown }
+        )) { item in
+            BriefPreviewSheet(markdown: item.markdown)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
     }
 
@@ -681,6 +691,11 @@ struct AuditSheet: View {
                             Label("Partager", systemImage: "square.and.arrow.up")
                         }
                     }
+                    Button {
+                        briefMarkdown = ClaudeCodeBriefBuilder.build(from: report)
+                    } label: {
+                        Label("Brief Claude Code", systemImage: "terminal.fill")
+                    }
                     Spacer()
                 }
                 .font(.system(.caption, design: .rounded, weight: .semibold))
@@ -775,6 +790,64 @@ struct AuditSheet: View {
             URLQueryItem(name: "body", value: report.pitch),
         ]
         return components?.url
+    }
+
+    // MARK: - Brief preview
+
+    private struct BriefPreviewItem: Identifiable {
+        let id = UUID()
+        let markdown: String
+    }
+
+    private struct BriefPreviewSheet: View {
+        @Environment(\.dismiss) private var dismiss
+        let markdown: String
+
+        var body: some View {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Brief Claude Code")
+                                .font(.system(.title2, design: .rounded, weight: .semibold))
+                            Text("Prêt à coller dans une session Claude Code.")
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    HStack(spacing: 12) {
+                        Button {
+                            UIPasteboard.general.string = markdown
+                        } label: {
+                            Label("Copier", systemImage: "doc.on.doc.fill")
+                        }
+                        ShareLink(item: markdown) {
+                            Label("Partager", systemImage: "square.and.arrow.up")
+                        }
+                        Spacer()
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+
+                    LiquidCard(cornerRadius: 18) {
+                        MarkdownView(markdown)
+                            .padding(18)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+                    }
+                }
+                .padding(20)
+                .padding(.bottom, 40)
+            }
+            .background { LiquidBackground().ignoresSafeArea() }
+        }
     }
 
     private func persist(_ report: AuditReport) {
