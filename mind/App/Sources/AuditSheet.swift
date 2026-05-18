@@ -202,6 +202,22 @@ struct AuditSheet: View {
                 }
             }
 
+            if !report.hiddenRisks.isEmpty {
+                section("Risques cachés") {
+                    VStack(spacing: 10) {
+                        ForEach(report.hiddenRisks) { hiddenRiskCard($0) }
+                    }
+                }
+            }
+
+            if let findings = report.findings, findings.hasAnyData {
+                section("Détails techniques") {
+                    VStack(spacing: 10) {
+                        findingsCards(findings)
+                    }
+                }
+            }
+
             section("Pitch prêt à envoyer") {
                 pitchCard(report)
             }
@@ -220,15 +236,29 @@ struct AuditSheet: View {
                     .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(LiquidPalette.iris)
                     .tracking(1.2)
-                Text("\(report.scoring.overall)")
-                    .font(.system(size: 64, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(LiquidPalette.iris)
-                    .contentTransition(.numericText())
-                Text("score global / 100")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.secondary)
-                scoringRow(report.scoring)
+
+                ZStack {
+                    RadialScoreChart(
+                        performance: report.scoring.performance,
+                        seo: report.scoring.seo,
+                        security: report.scoring.security,
+                        brand: report.scoring.brand,
+                        mobile: report.scoring.mobile
+                    )
+                    .frame(height: 240)
+
+                    VStack(spacing: 0) {
+                        Text("\(report.scoring.overall)")
+                            .font(.system(size: 44, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(LiquidPalette.iris)
+                            .contentTransition(.numericText())
+                        Text("/ 100")
+                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 if let perf = report.performance {
                     perfDetails(perf)
                 }
@@ -236,32 +266,6 @@ struct AuditSheet: View {
             .padding(24)
             .frame(maxWidth: .infinity)
         }
-    }
-
-    @ViewBuilder
-    private func scoringRow(_ scoring: AuditReport.Scoring) -> some View {
-        HStack(spacing: 0) {
-            scorePill(value: scoring.performance, label: "Perf")
-            scorePill(value: scoring.seo,         label: "SEO")
-            scorePill(value: scoring.security,    label: "Sécu")
-            scorePill(value: scoring.brand,       label: "Brand")
-            scorePill(value: scoring.mobile,      label: "Mobile")
-        }
-        .padding(.top, 6)
-    }
-
-    @ViewBuilder
-    private func scorePill(value: Int, label: String) -> some View {
-        VStack(spacing: 2) {
-            Text("\(value)")
-                .font(.system(.subheadline, design: .rounded, weight: .bold))
-                .monospacedDigit()
-                .foregroundStyle(scoreColor(value))
-            Text(label)
-                .font(.system(.caption2, design: .rounded))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private func scoreColor(_ value: Int) -> Color {
@@ -350,6 +354,271 @@ struct AuditSheet: View {
         if days < 1   { return "≈ \(Int((days * 8).rounded())) h" }
         if days < 1.5 { return "1 jour" }
         return "\(Int(days.rounded())) jours"
+    }
+
+    @ViewBuilder
+    private func hiddenRiskCard(_ risk: AuditReport.HiddenRisk) -> some View {
+        LiquidCard(cornerRadius: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(severityColor(risk.severity))
+                    Text(risk.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    Spacer()
+                    severityBadge(risk.severity)
+                }
+                Text(risk.detail)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func severityBadge(_ severity: AuditReport.HiddenRisk.Severity) -> some View {
+        Text(severity.rawValue.uppercased())
+            .font(.system(.caption2, design: .rounded, weight: .bold))
+            .tracking(0.4)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background {
+                Capsule().fill(severityColor(severity).opacity(0.88))
+            }
+    }
+
+    private func severityColor(_ severity: AuditReport.HiddenRisk.Severity) -> Color {
+        switch severity {
+        case .low:      return .gray
+        case .medium:   return .orange
+        case .high:     return .red
+        case .critical: return .purple
+        }
+    }
+
+    @ViewBuilder
+    private func findingsCards(_ findings: AuditFindings) -> some View {
+        if let security = findings.security {
+            findingCard(
+                icon: "lock.shield.fill",
+                title: "Sécurité headers",
+                tint: securityTint(security.grade),
+                lines: [
+                    "Grade \(security.grade) · score \(security.score)/100",
+                    "TLS \(security.tlsValid ? "valide" : "invalide")",
+                    security.presentHeaders.isEmpty
+                        ? "aucun header sécurité"
+                        : "présents : \(security.presentHeaders.prefix(3).joined(separator: ", "))",
+                    security.missingHeaders.isEmpty
+                        ? nil
+                        : "manquants : \(security.missingHeaders.prefix(3).joined(separator: ", "))",
+                ]
+            )
+        }
+
+        if let email = findings.email {
+            findingCard(
+                icon: "envelope.fill",
+                title: "Infra email",
+                tint: email.hasSPF && email.hasDMARC ? .green : .orange,
+                lines: [
+                    "Provider : \(email.provider ?? "inconnu")",
+                    "SPF \(email.hasSPF ? "✓" : "✗")  ·  DMARC \(email.hasDMARC ? "✓" : "✗")",
+                ]
+            )
+        }
+
+        if let domain = findings.domain {
+            let age = domain.ageYears.map { String(format: "%.1f", $0) + " ans" } ?? "n/a"
+            findingCard(
+                icon: "globe",
+                title: "Domaine",
+                tint: LiquidPalette.iris,
+                lines: [
+                    "Registrar : \(domain.registrar ?? "inconnu")",
+                    "Âge : \(age)",
+                ]
+            )
+        }
+
+        if let mobile = findings.mobile {
+            if mobile.hasIOSApp {
+                let rating = mobile.averageRating.map { String(format: "%.1f", $0) + "★" } ?? "n/a"
+                let count = mobile.ratingCount.map { "\($0) avis" } ?? "0 avis"
+                findingCard(
+                    icon: "apple.logo",
+                    title: "App iOS",
+                    tint: .green,
+                    lines: [
+                        "« \(mobile.appName ?? "?") » par \(mobile.sellerName ?? "?")",
+                        "\(rating) · \(count)",
+                    ]
+                )
+            } else {
+                findingCard(
+                    icon: "apple.logo",
+                    title: "App iOS",
+                    tint: .orange,
+                    lines: ["Aucune app native — opportunité claire"]
+                )
+            }
+        }
+
+        if let schema = findings.schema {
+            let types = schema.detectedTypes.isEmpty ? "aucun" : schema.detectedTypes.prefix(4).joined(separator: ", ")
+            findingCard(
+                icon: "curlybraces",
+                title: "Schema.org",
+                tint: schema.hasJSONLD ? .green : .red,
+                lines: [
+                    schema.hasJSONLD ? "JSON-LD présent" : "JSON-LD ABSENT",
+                    "Types : \(types)",
+                ]
+            )
+        }
+
+        if let og = findings.openGraph {
+            findingCard(
+                icon: "square.on.square.dashed",
+                title: "OpenGraph",
+                tint: og.completenessScore >= 80 ? .green : (og.completenessScore >= 50 ? .orange : .red),
+                lines: [
+                    "Complétude \(og.completenessScore)/100",
+                    [og.hasTitle ? "title✓" : "title✗",
+                     og.hasDescription ? "desc✓" : "desc✗",
+                     og.hasImage ? "image✓" : "image✗",
+                     og.hasType ? "type✓" : "type✗",
+                     og.hasTwitterCard ? "twitter✓" : "twitter✗"].joined(separator: " · "),
+                ]
+            )
+        }
+
+        if let crawl = findings.crawlability {
+            findingCard(
+                icon: "magnifyingglass.circle.fill",
+                title: "Crawlability",
+                tint: crawl.hasRobotsTxt && crawl.hasSitemap ? .green : .orange,
+                lines: [
+                    "robots.txt : \(crawl.hasRobotsTxt ? "présent" : "ABSENT")",
+                    "sitemap.xml : \(crawl.hasSitemap ? "présent" : "ABSENT")\(crawl.sitemapURLCount.map { " (\($0) URLs)" } ?? "")",
+                ]
+            )
+        }
+
+        if let comp = findings.compliance {
+            findingCard(
+                icon: "checkmark.shield.fill",
+                title: "Compliance",
+                tint: comp.hasCookieBanner && comp.hasPrivacyLink ? .green : .orange,
+                lines: [
+                    "Cookie banner : \(comp.hasCookieBanner ? "présent" : "ABSENT")\(comp.cookieProvider.map { " (\($0))" } ?? "")",
+                    "Privacy : \(comp.hasPrivacyLink ? "✓" : "✗")  ·  CGU : \(comp.hasTermsLink ? "✓" : "✗")",
+                ]
+            )
+        }
+
+        if let analytics = findings.analytics {
+            let providers = analytics.providers.isEmpty ? "aucun" : analytics.providers.prefix(3).joined(separator: ", ")
+            findingCard(
+                icon: "chart.line.uptrend.xyaxis",
+                title: "Analytics",
+                tint: analytics.hasAnyAnalytics ? .green : .orange,
+                lines: [
+                    "SDKs : \(providers)",
+                    "Error tracking : \(analytics.hasErrorTracking ? "✓" : "✗")",
+                ]
+            )
+        }
+
+        if let payment = findings.payment {
+            let processors = payment.processors.isEmpty ? "aucun" : payment.processors.joined(separator: ", ")
+            findingCard(
+                icon: "creditcard.fill",
+                title: "Payment",
+                tint: payment.hasMonetization ? .green : .gray,
+                lines: [
+                    "Processors : \(processors)",
+                    payment.hasPayWall ? "Pay-wall détecté" : "Pas de pay-wall",
+                ]
+            )
+        }
+
+        if let cdn = findings.cdn {
+            findingCard(
+                icon: "cloud.fill",
+                title: "CDN / Hosting",
+                tint: LiquidPalette.iris,
+                lines: [
+                    "Provider : \(cdn.provider ?? "inconnu / non détecté")",
+                    cdn.serverHeader.map { "Server : \($0)" } ?? "Server : n/a",
+                ]
+            )
+        }
+
+        if let trust = findings.trust {
+            if let score = trust.trustpilotScore, let count = trust.trustpilotReviewCount {
+                findingCard(
+                    icon: "star.fill",
+                    title: "Trustpilot",
+                    tint: score >= 4.0 ? .green : (score >= 3.0 ? .orange : .red),
+                    lines: [
+                        String(format: "%.1f", score) + "★ · \(count) avis",
+                    ]
+                )
+            } else {
+                findingCard(
+                    icon: "star",
+                    title: "Trustpilot",
+                    tint: .gray,
+                    lines: ["Pas de profile public détecté"]
+                )
+            }
+        }
+    }
+
+    private func findingCard(
+        icon: String,
+        title: String,
+        tint: Color,
+        lines: [String?]
+    ) -> some View {
+        LiquidCard(cornerRadius: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(tint.opacity(0.18))
+                            .frame(width: 30, height: 30)
+                        Image(systemName: icon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(tint)
+                    }
+                    Text(title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    Spacer()
+                }
+                ForEach(lines.compactMap { $0 }, id: \.self) { line in
+                    Text(line)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func securityTint(_ grade: String) -> Color {
+        switch grade {
+        case "A+", "A": return .green
+        case "B":       return .orange
+        case "C", "D":  return .orange
+        default:        return .red
+        }
     }
 
     @ViewBuilder
