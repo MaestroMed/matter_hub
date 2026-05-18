@@ -56,6 +56,7 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.intelligence.rawValue),
+                .target(name: Module.auditKit.rawValue),
             ]
         case .focusKit:
             return []

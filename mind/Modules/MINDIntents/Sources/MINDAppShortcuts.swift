@@ -23,5 +23,16 @@ public struct MINDAppShortcuts: AppShortcutsProvider {
             shortTitle: "Ask MIND",
             systemImageName: "bubble.left.and.bubble.right.fill"
         )
+
+        AppShortcut(
+            intent: RunAuditIntent(),
+            phrases: [
+                "Audit in \(.applicationName)",
+                "Audit a client in \(.applicationName)",
+                "Run an audit in \(.applicationName)",
+            ],
+            shortTitle: "Audit",
+            systemImageName: "magnifyingglass"
+        )
     }
 }
