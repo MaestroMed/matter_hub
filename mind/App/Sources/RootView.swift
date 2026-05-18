@@ -12,7 +12,7 @@ import Capture
 enum MINDTab: Hashable {
     case home
     case notes
-    case chat
+    case clients
     case settings
 }
 
@@ -38,7 +38,7 @@ struct RootView: View {
                         LiquidTab(icon: "doc.text.fill", tag: MINDTab.notes),
                     ],
                     trailing: [
-                        LiquidTab(icon: "bubble.left.and.bubble.right.fill", tag: MINDTab.chat),
+                        LiquidTab(icon: "person.text.rectangle.fill", tag: MINDTab.clients),
                         LiquidTab(icon: "gearshape.fill", tag: MINDTab.settings),
                     ],
                     onCapture: { isCapturing = true }
@@ -62,8 +62,8 @@ struct RootView: View {
             HomeView()
         case .notes:
             NotesView()
-        case .chat:
-            ChatView()
+        case .clients:
+            ClientsView()
         case .settings:
             SettingsView()
         }
@@ -74,6 +74,7 @@ private struct HomeView: View {
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
     @State private var focus = FocusController.shared
     @State private var isAuditing: Bool = false
+    @State private var isChatting: Bool = false
 
     private static let defaultFocusDuration: TimeInterval = 25 * 60  // 25 min pomodoro
 
@@ -101,6 +102,8 @@ private struct HomeView: View {
 
                 auditCard
 
+                askMindCard
+
                 statsCard
 
                 if !recentCaptures.isEmpty {
@@ -116,6 +119,46 @@ private struct HomeView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $isChatting) {
+            ChatView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+    }
+
+    private var askMindCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                isChatting = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.aqua.opacity(0.30))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Ask MIND")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("Pose une question à ton graphe.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
         }
     }
 
