@@ -15,6 +15,7 @@ struct AuditSheet: View {
     @State private var saved: Bool = false
     @State private var pdfURL: URL?
     @State private var briefMarkdown: String?
+    @State private var exportSheetReport: ExportSheetReport?
     @FocusState private var urlFocused: Bool
 
     var body: some View {
@@ -45,6 +46,17 @@ struct AuditSheet: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(item: $exportSheetReport) { item in
+            ExportSheet(report: item.report)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+    }
+
+    private struct ExportSheetReport: Identifiable {
+        let id = UUID()
+        let report: AuditReport
     }
 
     // MARK: - Header
@@ -679,17 +691,9 @@ struct AuditSheet: View {
                         }
                     }
                     Button {
-                        pdfURL = PDFReportRenderer.makePDF(for: report)
+                        exportSheetReport = ExportSheetReport(report: report)
                     } label: {
-                        Label("PDF", systemImage: "doc.richtext.fill")
-                    }
-                    if let pdfURL {
-                        ShareLink(
-                            item: pdfURL,
-                            preview: SharePreview("Audit \(report.client.displayName)")
-                        ) {
-                            Label("Partager", systemImage: "square.and.arrow.up")
-                        }
+                        Label("Exporter", systemImage: "square.and.arrow.up.on.square.fill")
                     }
                     Button {
                         briefMarkdown = ClaudeCodeBriefBuilder.build(from: report)
@@ -790,6 +794,154 @@ struct AuditSheet: View {
             URLQueryItem(name: "body", value: report.pitch),
         ]
         return components?.url
+    }
+
+    // MARK: - Export sheet
+
+    private struct ExportSheet: View {
+        @Environment(\.dismiss) private var dismiss
+        let report: AuditReport
+
+        @State private var markdownURL: URL?
+        @State private var jsonURL: URL?
+        @State private var htmlURL: URL?
+        @State private var pdfURL: URL?
+
+        var body: some View {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Exporter l'audit")
+                                .font(.system(.title2, design: .rounded, weight: .semibold))
+                            Text(report.client.displayName)
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    exportRow(
+                        icon: "doc.text",
+                        title: "Markdown",
+                        subtitle: "Pour Notion, Linear, Obsidian, Bear",
+                        url: markdownURL,
+                        action: prepareMarkdown
+                    )
+
+                    exportRow(
+                        icon: "doc.richtext.fill",
+                        title: "PDF brandé",
+                        subtitle: "Une page A4, score hero, quick wins, pitch",
+                        url: pdfURL,
+                        action: preparePDF
+                    )
+
+                    exportRow(
+                        icon: "envelope.fill",
+                        title: "Email HTML",
+                        subtitle: "Email stylé à coller directement",
+                        url: htmlURL,
+                        action: prepareHTML
+                    )
+
+                    exportRow(
+                        icon: "curlybraces",
+                        title: "JSON",
+                        subtitle: "Pour Make, Zapier, n8n, intégration tierce",
+                        url: jsonURL,
+                        action: prepareJSON
+                    )
+                }
+                .padding(20)
+                .padding(.bottom, 32)
+            }
+            .background { LiquidBackground().ignoresSafeArea() }
+        }
+
+        @ViewBuilder
+        private func exportRow(
+            icon: String,
+            title: String,
+            subtitle: String,
+            url: URL?,
+            action: @escaping () -> Void
+        ) -> some View {
+            LiquidCard(cornerRadius: 18) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: icon)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        Text(subtitle)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if let url {
+                        ShareLink(item: url, preview: SharePreview(title)) {
+                            Image(systemName: "square.and.arrow.up.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                    } else {
+                        Button(action: action) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+
+        // MARK: - Prepare each format
+
+        private func prepareMarkdown() {
+            let text = AuditExporter.markdown(from: report)
+            markdownURL = writeTemp(text: text, ext: "md", prefix: "MIND-audit")
+        }
+
+        private func preparePDF() {
+            pdfURL = PDFReportRenderer.makePDF(for: report)
+        }
+
+        private func prepareHTML() {
+            let html = AuditExporter.htmlEmail(from: report)
+            htmlURL = writeTemp(text: html, ext: "html", prefix: "MIND-audit")
+        }
+
+        private func prepareJSON() {
+            guard let data = AuditExporter.json(from: report) else { return }
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("MIND-audit-\(report.client.id.uuidString.prefix(8)).json")
+            try? data.write(to: url)
+            jsonURL = url
+        }
+
+        private func writeTemp(text: String, ext: String, prefix: String) -> URL? {
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(prefix)-\(report.client.id.uuidString.prefix(8)).\(ext)")
+            do {
+                try text.write(to: url, atomically: true, encoding: .utf8)
+                return url
+            } catch {
+                return nil
+            }
+        }
     }
 
     // MARK: - Brief preview
