@@ -19,6 +19,12 @@ public struct AuditReport: Sendable, Codable, Hashable {
     /// PageSpeed Insights responded successfully).
     public let performance: PerformanceMetrics?
 
+    /// Structured findings from the secondary probes (security headers,
+    /// DNS / email infra, domain registration, mobile app presence).
+    /// Optional — every section inside is also optional, so a flaky probe
+    /// degrades gracefully.
+    public let findings: AuditFindings?
+
     /// Long-form markdown synthesis suitable for rendering as a LiquidCard
     /// inside MIND and as the body of a PDF export.
     public let synthesis: String
@@ -38,6 +44,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         persona: Persona,
         scoring: Scoring,
         performance: PerformanceMetrics?,
+        findings: AuditFindings? = nil,
         synthesis: String,
         quickWins: [QuickWin],
         strategicBets: [StrategicBet],
@@ -48,6 +55,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.persona = persona
         self.scoring = scoring
         self.performance = performance
+        self.findings = findings
         self.synthesis = synthesis
         self.quickWins = quickWins
         self.strategicBets = strategicBets

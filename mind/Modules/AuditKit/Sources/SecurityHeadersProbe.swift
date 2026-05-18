@@ -18,12 +18,12 @@ public enum SecurityHeadersProbeError: Error, LocalizedError, Sendable {
 /// third-party API. URLSession's own TLS validation tells us if the cert
 /// is at least basic-valid.
 public enum SecurityHeadersProbe {
-    private struct HeaderRule {
+    private struct HeaderRule: Sendable {
         let name: String
         let weight: Int
         /// Optional value predicate — when present, the header has to match
         /// to count. None == "any non-empty value passes".
-        let validate: ((String) -> Bool)?
+        let validate: (@Sendable (String) -> Bool)?
     }
 
     private static let rules: [HeaderRule] = [

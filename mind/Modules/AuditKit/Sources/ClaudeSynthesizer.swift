@@ -12,11 +12,11 @@ public enum ClaudeSynthesizerError: Error, LocalizedError, Sendable {
     }
 }
 
-/// Bridges the audit pipeline to the Anthropic Messages API. Asks Claude to
-/// produce a strictly-typed JSON payload describing the audit, then maps it
-/// back into an `AuditReport`. Persona-aware: the system prompt explains
-/// the three buyer profiles Mehdi targets so the recommendations get
-/// phrased for the right room.
+/// Bridges the audit pipeline to the Anthropic Messages API. Feeds Claude
+/// the raw measurements (Lighthouse + structured findings), forces a
+/// strict JSON response shape, and maps it back into an `AuditReport`.
+/// Persona-aware: the system prompt explains the three buyer profiles
+/// Mehdi targets so the recommendations get phrased for the right room.
 @MainActor
 public final class ClaudeSynthesizer {
     private let cloud: CloudIntelligence
@@ -29,9 +29,14 @@ public final class ClaudeSynthesizer {
 
     public func synthesize(
         for client: AuditClient,
-        performance: AuditReport.PerformanceMetrics?
+        performance: AuditReport.PerformanceMetrics?,
+        findings: AuditFindings? = nil
     ) async throws -> AuditReport {
-        let prompt = buildPrompt(client: client, performance: performance)
+        let prompt = buildPrompt(
+            client: client,
+            performance: performance,
+            findings: findings
+        )
         let response = try await cloud.complete(prompt: prompt)
         let json = stripFences(response)
 
@@ -44,7 +49,11 @@ public final class ClaudeSynthesizer {
 
         do {
             let payload = try JSONDecoder().decode(ClaudePayload.self, from: data)
-            return payload.toReport(client: client, performance: performance)
+            return payload.toReport(
+                client: client,
+                performance: performance,
+                findings: findings
+            )
         } catch {
             throw ClaudeSynthesizerError.decodingFailed(
                 String(describing: error),
@@ -57,23 +66,11 @@ public final class ClaudeSynthesizer {
 
     private func buildPrompt(
         client: AuditClient,
-        performance: AuditReport.PerformanceMetrics?
+        performance: AuditReport.PerformanceMetrics?,
+        findings: AuditFindings?
     ) -> String {
-        let perfBlock: String
-        if let p = performance {
-            perfBlock = """
-            Mesures Lighthouse (mobile):
-              - performance score: \(p.performanceScore)/100
-              - SEO score: \(p.seoScore)/100
-              - accessibilité score: \(p.accessibilityScore)/100
-              - best-practices score: \(p.bestPracticesScore)/100
-              - LCP: \(p.largestContentfulPaintSeconds.map { String(format: "%.2fs", $0) } ?? "n/a")
-              - INP: \(p.interactionToNextPaintMs.map { "\($0) ms" } ?? "n/a")
-              - CLS: \(p.cumulativeLayoutShift.map { String(format: "%.3f", $0) } ?? "n/a")
-            """
-        } else {
-            perfBlock = "Mesures Lighthouse: indisponibles (probe en échec, raisonne à partir de tes connaissances générales)."
-        }
+        let perfBlock = performanceBlock(performance)
+        let findingsBlock = self.findingsBlock(findings)
 
         return """
         Tu es l'auditeur digital intégré de MIND. Tu produis un audit complet d'un prospect potentiel pour Mehdi — développeur iOS premium et studio one-man.
@@ -83,6 +80,8 @@ public final class ClaudeSynthesizer {
           - Nom fourni: \(client.name ?? "(inconnu — infère depuis l'URL et tes connaissances)")
 
         \(perfBlock)
+
+        \(findingsBlock)
 
         Trois personae cibles principalement:
           - "saasB2B" → startup SaaS B2B type Stripe, Linear, Vercel, scale-up tech
@@ -96,6 +95,14 @@ public final class ClaudeSynthesizer {
           - lifestyleDTC → cohérence visuelle cross-platform, social commerce, app premium, packaging digital
           - other   → propose ce qui colle au contexte réel du client
 
+        Règles pour le scoring (sois rigoureux, base-toi sur les mesures réelles):
+          - "performance" → s'aligne sur le score Lighthouse performance si dispo, sinon ton estimation
+          - "security" → reflète directement le grade des headers (A+/A → 90-100, B → 70-85, C → 55-70, D → 40-55, F → <40)
+          - "seo" → s'aligne sur Lighthouse SEO si dispo
+          - "mobile" → tient compte de la présence d'app native iOS (mobile=20 si pas d'app, +30-40 si app présente, +10-20 selon le rating)
+          - "brand" → ton estimation depuis ce que tu sais du client
+          - "overall" → moyenne pondérée raisonnable, pas une moyenne arithmétique aveugle
+
         Tu réponds STRICTEMENT avec un JSON valide, sans backticks, sans texte avant ni après, sans markdown autour. Schéma exact:
 
         {
@@ -108,7 +115,7 @@ public final class ClaudeSynthesizer {
             "brand": int 0-100,
             "mobile": int 0-100
           },
-          "synthesis": string markdown 300-500 mots: qui ils sont, USP, business model, audience cible, maturité digitale, frictions clés, opportunités saillantes,
+          "synthesis": string markdown 300-500 mots: qui ils sont, USP, business model, audience cible, maturité digitale, frictions clés, opportunités saillantes. Cite explicitement les mesures de l'audit quand elles renforcent un point.,
           "quickWins": [
             { "title": string court, "detail": string 1-2 phrases, "effortDays": float (0.5, 1, 2, 5, etc.), "impact": "low" | "medium" | "high" }
           ] (3-5 items),
@@ -123,6 +130,73 @@ public final class ClaudeSynthesizer {
           - Tous les nombres sont des nombres bruts (pas de string "85").
           - Tous les champs sont obligatoires.
         """
+    }
+
+    private func performanceBlock(_ p: AuditReport.PerformanceMetrics?) -> String {
+        guard let p else {
+            return "Mesures Lighthouse: indisponibles (probe en échec, raisonne à partir de tes connaissances générales)."
+        }
+        return """
+        Mesures Lighthouse (mobile):
+          - performance score: \(p.performanceScore)/100
+          - SEO score: \(p.seoScore)/100
+          - accessibilité score: \(p.accessibilityScore)/100
+          - best-practices score: \(p.bestPracticesScore)/100
+          - LCP: \(p.largestContentfulPaintSeconds.map { String(format: "%.2fs", $0) } ?? "n/a")
+          - INP: \(p.interactionToNextPaintMs.map { "\($0) ms" } ?? "n/a")
+          - CLS: \(p.cumulativeLayoutShift.map { String(format: "%.3f", $0) } ?? "n/a")
+        """
+    }
+
+    private func findingsBlock(_ findings: AuditFindings?) -> String {
+        guard let findings, findings.hasAnyData else {
+            return "Sondes complémentaires: aucune donnée structurée (toutes en échec ou skip)."
+        }
+
+        var lines: [String] = ["Sondes complémentaires:"]
+
+        if let security = findings.security {
+            let present = security.presentHeaders.isEmpty ? "aucun" : security.presentHeaders.joined(separator: ", ")
+            let missing = security.missingHeaders.isEmpty ? "aucun" : security.missingHeaders.joined(separator: ", ")
+            lines.append("""
+              - Sécurité headers: grade \(security.grade) (\(security.score)/100), TLS \(security.tlsValid ? "valide" : "invalide")
+                  présents: \(present)
+                  manquants: \(missing)
+            """)
+        }
+
+        if let email = findings.email {
+            let mxLine = email.mxHosts.isEmpty
+                ? "aucun MX trouvé"
+                : email.mxHosts.prefix(3).joined(separator: ", ")
+            lines.append("""
+              - Infra email: provider \(email.provider ?? "inconnu")
+                  MX: \(mxLine)
+                  SPF: \(email.hasSPF ? "OK" : "manquant") · DMARC: \(email.hasDMARC ? "OK" : "manquant")
+            """)
+        }
+
+        if let domain = findings.domain {
+            let age = domain.ageYears.map { String(format: "%.1f", $0) + " ans" } ?? "n/a"
+            let registrar = domain.registrar ?? "inconnu"
+            lines.append("""
+              - Domaine: registrar \(registrar) · âge \(age)
+            """)
+        }
+
+        if let mobile = findings.mobile {
+            if mobile.hasIOSApp {
+                let rating = mobile.averageRating.map { String(format: "%.1f", $0) + "★" } ?? "n/a"
+                let reviews = mobile.ratingCount.map { "\($0) avis" } ?? "0 avis"
+                lines.append("""
+                  - App iOS: « \(mobile.appName ?? "?") » par \(mobile.sellerName ?? "?") (\(mobile.primaryGenre ?? "?")) — \(rating), \(reviews)
+                """)
+            } else {
+                lines.append("  - App iOS: aucune trouvée sur l'App Store (opportunité native potentielle)")
+            }
+        }
+
+        return lines.joined(separator: "\n")
     }
 
     private func stripFences(_ response: String) -> String {
@@ -171,7 +245,8 @@ private struct ClaudePayload: Decodable {
 
     func toReport(
         client: AuditClient,
-        performance: AuditReport.PerformanceMetrics?
+        performance: AuditReport.PerformanceMetrics?,
+        findings: AuditFindings?
     ) -> AuditReport {
         AuditReport(
             client: client,
@@ -185,6 +260,7 @@ private struct ClaudePayload: Decodable {
                 mobile: scoring.mobile
             ),
             performance: performance,
+            findings: findings,
             synthesis: synthesis,
             quickWins: quickWins.map {
                 AuditReport.QuickWin(
