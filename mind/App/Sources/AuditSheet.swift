@@ -223,8 +223,23 @@ struct AuditSheet: View {
 
             if !report.quickWins.isEmpty {
                 section("Quick wins") {
-                    VStack(spacing: 10) {
-                        ForEach(report.quickWins) { quickWinCard($0) }
+                    VStack(spacing: 14) {
+                        ImpactEffortMatrix(
+                            items: report.quickWins.map { win in
+                                ImpactEffortMatrix.Item(
+                                    id: win.id,
+                                    label: win.title,
+                                    effortDays: win.effortDays,
+                                    impact: impactValue(win.impact)
+                                )
+                            }
+                        )
+                        .frame(height: 220)
+                        .padding(.horizontal, 4)
+
+                        VStack(spacing: 10) {
+                            ForEach(report.quickWins) { quickWinCard($0) }
+                        }
                     }
                 }
             }
@@ -308,6 +323,14 @@ struct AuditSheet: View {
         case 80...:   return .green
         case 50..<80: return .orange
         default:      return .red
+        }
+    }
+
+    private func impactValue(_ impact: AuditReport.QuickWin.Impact) -> ImpactEffortMatrix.Item.Impact {
+        switch impact {
+        case .high:   return .high
+        case .medium: return .medium
+        case .low:    return .low
         }
     }
 
