@@ -33,6 +33,11 @@ struct NodeDetailView: View {
         .onAppear {
             node.touchAccess()
             try? context.save()
+            // Re-index the node every time the user opens it so any
+            // edits made since the last RootView backfill (title change,
+            // new content, tag added) propagate to Spotlight without
+            // waiting for the next app launch.
+            SpotlightIndexer.index(node)
         }
         .sheet(isPresented: $showClientDetail) {
             ClientDetailView(

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreSpotlight
 import AuditKit
 import DesignSystem
 import FocusKit
@@ -19,6 +20,9 @@ enum MINDTab: Hashable {
 }
 
 struct RootView: View {
+    @Environment(\.modelContext) private var context
+    @Query private var allNodes: [Node]
+
     @State private var selection: MINDTab = .home
     @State private var isCapturing: Bool = false
     @State private var selectedNode: Node?
@@ -79,6 +83,27 @@ struct RootView: View {
             OnboardingView {
                 onboardingDone = true
             }
+        }
+        .onAppear {
+            // Backfill the Spotlight index every launch. CSSearchableIndex
+            // dedupes by uniqueIdentifier, so re-indexing existing rows is
+            // a no-op overwrite — cheap, and keeps us correct even after
+            // the user adds nodes from the widget or App Intents while the
+            // app wasn't running.
+            SpotlightIndexer.indexAll(allNodes)
+        }
+        // Spotlight deep link. When the user taps a MIND row in iOS
+        // Spotlight, the system hands us a userActivity carrying the
+        // Node's UUID under CSSearchableItemActivityIdentifier. We look
+        // it up in SwiftData and open the same sheet as a tap from
+        // NotesView would.
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            guard
+                let idString = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                let nodeID = UUID(uuidString: idString),
+                let match = allNodes.first(where: { $0.id == nodeID })
+            else { return }
+            selectedNode = match
         }
     }
 
