@@ -9,22 +9,51 @@ public struct AuditFindings: Sendable, Codable, Hashable {
     public var domain: DomainFindings?
     public var mobile: MobileFindings?
 
+    // BLOC B extended findings — second-wave probes.
+    public var schema: SchemaFindings?
+    public var openGraph: OpenGraphFindings?
+    public var crawlability: CrawlabilityFindings?
+    public var compliance: ComplianceFindings?
+    public var analytics: AnalyticsFindings?
+    public var payment: PaymentFindings?
+    public var cdn: CDNFindings?
+    public var trust: TrustFindings?
+
     public init(
         security: SecurityFindings? = nil,
         email: EmailFindings? = nil,
         domain: DomainFindings? = nil,
-        mobile: MobileFindings? = nil
+        mobile: MobileFindings? = nil,
+        schema: SchemaFindings? = nil,
+        openGraph: OpenGraphFindings? = nil,
+        crawlability: CrawlabilityFindings? = nil,
+        compliance: ComplianceFindings? = nil,
+        analytics: AnalyticsFindings? = nil,
+        payment: PaymentFindings? = nil,
+        cdn: CDNFindings? = nil,
+        trust: TrustFindings? = nil
     ) {
         self.security = security
         self.email = email
         self.domain = domain
         self.mobile = mobile
+        self.schema = schema
+        self.openGraph = openGraph
+        self.crawlability = crawlability
+        self.compliance = compliance
+        self.analytics = analytics
+        self.payment = payment
+        self.cdn = cdn
+        self.trust = trust
     }
 
     /// True if at least one probe contributed something. Used by the prompt
     /// builder to decide whether to embed a findings block at all.
     public var hasAnyData: Bool {
         security != nil || email != nil || domain != nil || mobile != nil
+            || schema != nil || openGraph != nil || crawlability != nil
+            || compliance != nil || analytics != nil || payment != nil
+            || cdn != nil || trust != nil
     }
 }
 
@@ -103,5 +132,130 @@ public struct MobileFindings: Sendable, Codable, Hashable {
         self.averageRating = averageRating
         self.ratingCount = ratingCount
         self.primaryGenre = primaryGenre
+    }
+}
+
+// MARK: - BLOC B extended findings
+
+public struct SchemaFindings: Sendable, Codable, Hashable {
+    public let hasJSONLD: Bool
+    public let detectedTypes: [String]      // ["Organization", "Product", "FAQPage"]
+
+    public init(hasJSONLD: Bool, detectedTypes: [String]) {
+        self.hasJSONLD = hasJSONLD
+        self.detectedTypes = detectedTypes
+    }
+}
+
+public struct OpenGraphFindings: Sendable, Codable, Hashable {
+    public let hasTitle: Bool
+    public let hasDescription: Bool
+    public let hasImage: Bool
+    public let hasType: Bool
+    public let hasTwitterCard: Bool
+    public let completenessScore: Int       // 0–100
+
+    public init(
+        hasTitle: Bool,
+        hasDescription: Bool,
+        hasImage: Bool,
+        hasType: Bool,
+        hasTwitterCard: Bool,
+        completenessScore: Int
+    ) {
+        self.hasTitle = hasTitle
+        self.hasDescription = hasDescription
+        self.hasImage = hasImage
+        self.hasType = hasType
+        self.hasTwitterCard = hasTwitterCard
+        self.completenessScore = completenessScore
+    }
+}
+
+public struct CrawlabilityFindings: Sendable, Codable, Hashable {
+    public let hasRobotsTxt: Bool
+    public let allowsAllCrawlers: Bool
+    public let hasSitemap: Bool
+    public let sitemapURLCount: Int?
+
+    public init(
+        hasRobotsTxt: Bool,
+        allowsAllCrawlers: Bool,
+        hasSitemap: Bool,
+        sitemapURLCount: Int? = nil
+    ) {
+        self.hasRobotsTxt = hasRobotsTxt
+        self.allowsAllCrawlers = allowsAllCrawlers
+        self.hasSitemap = hasSitemap
+        self.sitemapURLCount = sitemapURLCount
+    }
+}
+
+public struct ComplianceFindings: Sendable, Codable, Hashable {
+    public let hasCookieBanner: Bool
+    public let cookieProvider: String?      // "Cookiebot", "Axeptio", "Didomi", "OneTrust", "tarteaucitron", or nil
+    public let hasPrivacyLink: Bool         // detected /privacy /confidentialite link
+    public let hasTermsLink: Bool
+
+    public init(
+        hasCookieBanner: Bool,
+        cookieProvider: String?,
+        hasPrivacyLink: Bool,
+        hasTermsLink: Bool
+    ) {
+        self.hasCookieBanner = hasCookieBanner
+        self.cookieProvider = cookieProvider
+        self.hasPrivacyLink = hasPrivacyLink
+        self.hasTermsLink = hasTermsLink
+    }
+}
+
+public struct AnalyticsFindings: Sendable, Codable, Hashable {
+    public let providers: [String]          // ["Google Analytics 4", "Plausible", "Mixpanel", ...]
+    public let hasErrorTracking: Bool       // Sentry / Bugsnag detected
+
+    public var hasAnyAnalytics: Bool { !providers.isEmpty }
+
+    public init(providers: [String], hasErrorTracking: Bool) {
+        self.providers = providers
+        self.hasErrorTracking = hasErrorTracking
+    }
+}
+
+public struct PaymentFindings: Sendable, Codable, Hashable {
+    public let processors: [String]         // ["Stripe", "Lemon Squeezy", "Paddle", "PayPal", "GoCardless"]
+    public let hasPayWall: Bool             // pricing page detected
+
+    public var hasMonetization: Bool { !processors.isEmpty || hasPayWall }
+
+    public init(processors: [String], hasPayWall: Bool) {
+        self.processors = processors
+        self.hasPayWall = hasPayWall
+    }
+}
+
+public struct CDNFindings: Sendable, Codable, Hashable {
+    public let provider: String?            // "Cloudflare", "Fastly", "Vercel", "Netlify", "AWS CloudFront", nil
+    public let serverHeader: String?
+
+    public init(provider: String?, serverHeader: String?) {
+        self.provider = provider
+        self.serverHeader = serverHeader
+    }
+}
+
+public struct TrustFindings: Sendable, Codable, Hashable {
+    public let trustpilotScore: Double?     // 0.0–5.0
+    public let trustpilotReviewCount: Int?
+    public let trustpilotProfileURL: URL?
+
+    public init(
+        trustpilotScore: Double?,
+        trustpilotReviewCount: Int?,
+        trustpilotProfileURL: URL?
+    ) {
+        self.trustpilotScore = trustpilotScore
+        self.trustpilotReviewCount = trustpilotReviewCount
+        self.trustpilotProfileURL = trustpilotProfileURL
     }
 }
