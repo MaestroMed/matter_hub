@@ -4496,6 +4496,150 @@
         }
       }
     },
+    "pipeline.tab.title": {
+      "comment": "v0.30 · Tab bar title for the Pipeline Kanban CRM tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+      }
+    },
+    "pipeline.stage.prospect": {
+      "comment": "v0.30 · Pipeline Kanban stage label — first column, untouched leads.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Prospect" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Prospect" } }
+      }
+    },
+    "pipeline.stage.contacted": {
+      "comment": "v0.30 · Pipeline Kanban stage label — outreach sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Contacted" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Contacté" } }
+      }
+    },
+    "pipeline.stage.qualified": {
+      "comment": "v0.30 · Pipeline Kanban stage label — reply received, fit confirmed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Qualified" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Qualifié" } }
+      }
+    },
+    "pipeline.stage.audit": {
+      "comment": "v0.30 · Pipeline Kanban stage label — audit in progress.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Audit" } }
+      }
+    },
+    "pipeline.stage.pitch": {
+      "comment": "v0.30 · Pipeline Kanban stage label — pitch in progress.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pitch" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pitch" } }
+      }
+    },
+    "pipeline.stage.won": {
+      "comment": "v0.30 · Pipeline Kanban stage label — deal closed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Won" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Signé" } }
+      }
+    },
+    "pipeline.stage.lost": {
+      "comment": "v0.30 · Pipeline Kanban stage label — deal closed-lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lost" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Perdu" } }
+      }
+    },
+    "pipeline.empty.column": {
+      "comment": "v0.30 · Empty-state copy inside a pipeline column with no clients.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Drop a client here" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Glisse un client ici" } }
+      }
+    },
+    "pipeline.action.dropped": {
+      "comment": "v0.30 · Toast confirming a client card landed in a new stage.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Moved to %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déplacé vers %@" } }
+      }
+    },
+    "pipeline.lost.alert.title": {
+      "comment": "v0.30 · Alert title shown when a client is dropped into the Lost column.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Why was this deal lost?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pourquoi ce client est-il perdu ?" } }
+      }
+    },
+    "pipeline.lost.alert.placeholder": {
+      "comment": "v0.30 · Placeholder in the Lost reason text field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reason (kept for analytics)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Raison (gardée pour les stats)" } }
+      }
+    },
+    "pipeline.won.toast.title": {
+      "comment": "v0.30 · Toast title shown when a client is dropped into the Won column.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bravo!" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bravo !" } }
+      }
+    },
+    "pipeline.won.invoice.title": {
+      "comment": "v0.30 · Sheet title for the placeholder Stripe invoice helper opened on Won.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stripe invoice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Facture Stripe" } }
+      }
+    },
+    "pipeline.won.invoice.amount.placeholder": {
+      "comment": "v0.30 · Placeholder inside the Stripe invoice amount field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Amount in €" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Montant en €" } }
+      }
+    },
+    "pipeline.won.invoice.copy": {
+      "comment": "v0.30 · CTA on the Stripe invoice sheet — copies a placeholder Payment Link to clipboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Copy Stripe Payment Link" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Copier le lien Stripe Payment Link" } }
+      }
+    },
+    "home.pipeline.title": {
+      "comment": "v0.30 · HomeView card headline above the 6-pill pipeline summary row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+      }
+    },
+    "home.pipeline.empty": {
+      "comment": "v0.30 · HomeView pipeline summary card empty-state line.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Drop a client on the Pipeline tab to get started." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Glisse un client sur l'onglet Pipeline pour commencer." } }
+      }
+    },
     "battle.title": {
       "comment": "v0.24 · BattleSheet title — the headline shown at the top of the Audit Battle Mode sheet.",
       "extractionState": "manual",

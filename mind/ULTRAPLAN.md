@@ -652,7 +652,23 @@ cancelled, Home shows today's touches with three actions per row.
 
 ### v0.29.1 — Live Activities for audits ⏳ (deferred from v0.29)
 
-### v0.30 — Continuity handoff between devices ⏳
+### v0.30 — Pipeline Kanban (CRM view) ✅
+Shipped 2026-05-20: 7-column kanban + PipelineStage enum on Node (CloudKit-safe), drag-drop persists stage + dispatches stage-specific actions (FollowUpSequence / AuditSheet / OutreachSheet / Stripe invoice / Lost reason), HomeView 6-pill summary card, deep link `mind://pipeline`, 19 PipelineStageTests pass.
+**What** (pivoted from "Continuity handoff" — that ships later as
+v0.30.1): the actual CRM. A 7-column horizontal kanban
+(Prospect → Contacté → Qualifié → Audit → Pitch → Won / Lost) where
+each client / prospect Node sits in a column. Drag-drop between
+columns triggers stage-specific auto-actions (start a v0.29
+FollowUpSequence on Contacté, pre-seed AuditSheet on Audit, pre-seed
+OutreachSheet on Pitch, confetti haptic + Stripe invoice template on
+Won, reason capture on Lost). New `pipelineStage` field on Node
+(CloudKit-safe optional). Tab integration: new Pipeline tab in the
+iPhone bar; HomeView gains a 6-pill summary row.
+**Acceptance**: Pipeline tab renders 7 columns from the live Node
+graph, drag-drop persists the stage change to SwiftData, the
+stage-specific auto-action presents the correct sheet / alert.
+
+### v0.30.1 — Continuity handoff between devices ⏳ (deferred from v0.30)
 **What**: Start an audit on iPhone, switch to Mac → audit picks up on
 Mac via NSUserActivity. Start a focus on Watch, see it on iPhone.
 **Acceptance**: handoff icon appears on the receiving device, tapping

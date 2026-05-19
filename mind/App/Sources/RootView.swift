@@ -21,6 +21,7 @@ enum MINDTab: Hashable {
     case notes
     case graph
     case clients
+    case pipeline
     case settings
 }
 
@@ -113,6 +114,16 @@ struct RootView: View {
         // screen so the sheet actually presents.
         .onOpenURL { url in
             guard let scheme = url.scheme, scheme.lowercased() == "mind" else { return }
+            // v0.30 — Pipeline tab deep link: `mind://pipeline`. Lets the
+            // user (or scripted tooling — e.g. the agent's vision-
+            // verification path) land directly on the kanban without
+            // having to walk the tab bar. No path segment supported
+            // yet; future extension could route to a specific column.
+            if url.host?.lowercased() == "pipeline" {
+                selection = .pipeline
+                MINDTelemetry.info("pipeline.deepLink.opened")
+                return
+            }
             // v0.29 — Follow-up deep link: `mind://followUp/<seqID>/<touchID>`.
             // Posts a notification with both ids so HomeView can
             // resolve the prospect Node and route into the matching
@@ -193,14 +204,19 @@ struct RootView: View {
                         LiquidTab(icon: "doc.text.fill", tag: MINDTab.notes),
                     ],
                     trailing: [
-                        // v0.15 — Graph tab swaps out the Clients slot in
-                        // the bottom tab bar. Clients remain reachable as
-                        // indigo nodes inside the graph; tapping one opens
-                        // NodeDetailView, which routes into ClientDetailView
-                        // when the kind is .client. Keeps the bar at 4
-                        // visible slots so the Liquid pill geometry stays
-                        // intact.
-                        LiquidTab(icon: "point.3.filled.connected.trianglepath.dotted", tag: MINDTab.graph),
+                        // v0.30 — Pipeline tab takes the Graph slot on
+                        // the iPhone tab bar. The Pipeline Kanban is
+                        // the CRM-grade surface Mehdi reaches for daily
+                        // (drag-drop triage triggers stage-specific
+                        // auto-actions), so it earns the bottom-bar
+                        // real estate. Graph stays a first-class
+                        // destination via the iPad sidebar (regular-
+                        // width layouts list every MINDTab case) and
+                        // can still be re-promoted to the iPhone bar
+                        // later via a Settings preference if usage data
+                        // suggests it. Pill icon: square.stack.3d.up.fill
+                        // (matches the kanban-column metaphor).
+                        LiquidTab(icon: "square.stack.3d.up.fill", tag: MINDTab.pipeline),
                         LiquidTab(icon: "gearshape.fill", tag: MINDTab.settings),
                     ],
                     onCapture: { isCapturing = true }
@@ -365,7 +381,7 @@ struct RootView: View {
     private var content: some View {
         switch selection {
         case .home:
-            HomeView()
+            HomeView(onOpenPipeline: { selection = .pipeline })
         case .notes:
             NotesView { node in
                 selectedNode = node
@@ -376,6 +392,8 @@ struct RootView: View {
             }
         case .clients:
             ClientsView()
+        case .pipeline:
+            PipelineView()
         case .settings:
             SettingsView()
         }
@@ -390,7 +408,12 @@ extension MINDTab {
     /// though the iPhone bar swapped it out for Graph — the regular
     /// layout has the screen real-estate to surface both.
     static var allCasesOrdered: [MINDTab] {
-        [.home, .notes, .graph, .clients, .settings]
+        // v0.30 — Pipeline lands between Clients and Settings in the
+        // iPad sidebar so the entire CRM stack (Clients → Pipeline)
+        // sits together; the iPhone bar surfaces Pipeline directly
+        // (Graph is reachable via this sidebar list on regular-width
+        // layouts).
+        [.home, .notes, .graph, .clients, .pipeline, .settings]
     }
 
     var title: String {
@@ -399,6 +422,7 @@ extension MINDTab {
         case .notes:    return "Notes"
         case .graph:    return "Graph"
         case .clients:  return "Clients"
+        case .pipeline: return "Pipeline"
         case .settings: return "Settings"
         }
     }
@@ -409,6 +433,7 @@ extension MINDTab {
         case .notes:    return "doc.text.fill"
         case .graph:    return "point.3.filled.connected.trianglepath.dotted"
         case .clients:  return "person.text.rectangle.fill"
+        case .pipeline: return "square.stack.3d.up.fill"
         case .settings: return "gearshape.fill"
         }
     }
@@ -419,12 +444,24 @@ extension MINDTab {
         case .notes:    return LiquidPalette.iris
         case .graph:    return LiquidPalette.aqua
         case .clients:  return .orange
+        case .pipeline: return .orange
         case .settings: return .gray
         }
     }
 }
 
 private struct HomeView: View {
+    /// v0.30 — Closure forwarded from `RootView` so the new pipeline
+    /// summary card on Home can route the user straight into the
+    /// Pipeline Kanban tab. Passed in rather than read from a binding
+    /// because RootView already owns `selection` and HomeView shouldn't
+    /// know about MINDTab — keeps the card surface decoupled.
+    let onOpenPipeline: () -> Void
+
+    init(onOpenPipeline: @escaping () -> Void = {}) {
+        self.onOpenPipeline = onOpenPipeline
+    }
+
     @Environment(\.modelContext) private var context
     /// v0.20 — Used by the beta welcome banner to open the TestFlight
     /// universal feedback URL. iOS routes the tap into the in-app
@@ -727,6 +764,8 @@ private struct HomeView: View {
                 tasksCard
 
                 lifeModulesRow
+
+                pipelineSummaryCard
 
                 auditCard
 
@@ -2082,6 +2121,120 @@ private struct HomeView: View {
         guard let url = URL(string: node.content),
               let host = url.host(percentEncoded: false) else { return nil }
         return host.replacingOccurrences(of: "www.", with: "")
+    }
+
+    /// v0.30 — Tap-to-open Pipeline Kanban summary. Renders a 6-pill
+    /// row with the count of clients sitting in each non-Lost stage
+    /// (Prospect / Contacted / Qualified / Audit / Pitch / Won). Tap
+    /// anywhere on the card to route into the Pipeline tab via the
+    /// closure `RootView` passes in. Empty-state line nudges the
+    /// user to drag their first client onto the kanban.
+    private var pipelineSummaryCard: some View {
+        let clients = allNodes.filter { $0.kindRaw == "client" }
+        let buckets = HomeView.pipelineCounts(in: clients)
+        let totalNonTerminal = buckets.prospect + buckets.contacted + buckets.qualified + buckets.audit + buckets.pitch
+
+        return LiquidCard(cornerRadius: 22) {
+            Button {
+                LiquidHaptics.select()
+                onOpenPipeline()
+            } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "square.stack.3d.up.fill")
+                            .font(.system(.title3, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.orange)
+                        Text("home.pipeline.title")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    if clients.isEmpty {
+                        Text("home.pipeline.empty")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                pipelinePill(count: buckets.prospect,  labelKey: "pipeline.stage.prospect",  tint: LiquidPalette.sky)
+                                pipelinePill(count: buckets.contacted, labelKey: "pipeline.stage.contacted", tint: LiquidPalette.aqua)
+                                pipelinePill(count: buckets.qualified, labelKey: "pipeline.stage.qualified", tint: LiquidPalette.lavender)
+                                pipelinePill(count: buckets.audit,     labelKey: "pipeline.stage.audit",     tint: .purple)
+                                pipelinePill(count: buckets.pitch,     labelKey: "pipeline.stage.pitch",     tint: .orange)
+                                pipelinePill(count: buckets.won,       labelKey: "pipeline.stage.won",       tint: LiquidPalette.iris)
+                            }
+                        }
+                        Text(verbatim: "\(totalNonTerminal) in flight · \(buckets.won) won")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private func pipelinePill(count: Int, labelKey: LocalizedStringKey, tint: Color) -> some View {
+        HStack(spacing: 6) {
+            Text("\(count)")
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                .foregroundStyle(tint)
+                .monospacedDigit()
+            Text(labelKey)
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background {
+            Capsule(style: .continuous)
+                .fill(tint.opacity(0.12))
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(tint.opacity(0.35), lineWidth: 1)
+                }
+        }
+    }
+
+    /// Pure helper aggregating client-Node pipeline stages into a flat
+    /// per-stage count tuple. Exposed `internal static` so future
+    /// tests / widgets / Today extensions can call it without a view.
+    /// Nil pipelineStage rolls into the Prospect bucket (matches the
+    /// PipelineView fallback rule).
+    static func pipelineCounts(in clients: [Node]) -> PipelineBuckets {
+        var buckets = PipelineBuckets()
+        for client in clients {
+            switch client.pipelineStage {
+            case .none, .some(.prospect): buckets.prospect += 1
+            case .some(.contacted):       buckets.contacted += 1
+            case .some(.qualified):       buckets.qualified += 1
+            case .some(.audit):           buckets.audit += 1
+            case .some(.pitch):           buckets.pitch += 1
+            case .some(.won):             buckets.won += 1
+            case .some(.lost):            buckets.lost += 1
+            }
+        }
+        return buckets
+    }
+
+    struct PipelineBuckets: Equatable {
+        var prospect: Int = 0
+        var contacted: Int = 0
+        var qualified: Int = 0
+        var audit: Int = 0
+        var pitch: Int = 0
+        var won: Int = 0
+        var lost: Int = 0
     }
 
     private var auditCard: some View {
