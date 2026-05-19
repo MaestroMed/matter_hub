@@ -63,6 +63,13 @@ public enum HTMLTemplates {
         let bodyHTML = [
             heroSection(report: report, brand: brand),
             scoringSection(report: report, brand: brand),
+            // v0.25 — ROI hero card sits between the scoring band
+            // and the battle section so the FIRST big-number the
+            // client sees after their site's score is the
+            // estimated revenue impact. Renders an empty string
+            // when no QW has a non-nil estimate (legacy portals
+            // stay byte-identical).
+            roiHeroSection(report: report),
             battleHTML,
             synthesisSection(report: report),
             visionSection(report: report),
@@ -162,6 +169,113 @@ public enum HTMLTemplates {
           </div>
         </section>
         """
+    }
+
+    // MARK: - v0.25 — ROI Hero
+
+    /// Giant hero card showing the total estimated monthly revenue
+    /// impact, with an `IntersectionObserver`-triggered count-up
+    /// animation (0 → total over ~1.4s) handled by the vanilla JS
+    /// shipped in `inlineJS()`. Mounted only when at least one
+    /// QuickWin has a non-nil `estimatedMonthlyRevenueImpactEUR`,
+    /// so a portal generated before the estimator returns (or
+    /// before v0.25 itself) renders byte-identically to the v0.24
+    /// baseline.
+    public static func roiHeroSection(report: AuditReport) -> String {
+        let total = monthlyTotal(for: report.quickWins)
+        guard total > 0 else { return "" }
+        let annualised = total * 12
+        let confidenceTag = aggregateConfidenceTag(for: report.quickWins)
+        let confidenceLabel = confidenceTag.map(localizedConfidenceLabel(_:)) ?? ""
+        let confidenceColor: String = {
+            switch confidenceTag {
+            case .high:    return "#5EE9D8"
+            case .medium:  return "#F4C16B"
+            case .low:     return "rgba(255,255,255,0.55)"
+            case .none:    return "rgba(255,255,255,0.45)"
+            }
+        }()
+        let confidenceHTML: String = {
+            guard let tag = confidenceTag else { return "" }
+            _ = tag
+            return """
+            <div class="roi__confidence" style="--c-color:\(confidenceColor)">
+              <span class="roi__confidence-dot" aria-hidden="true"></span>
+              <span>\(escape(confidenceLabel))</span>
+            </div>
+            """
+        }()
+
+        // Pre-formatted French amount baked into the HTML so the
+        // page still reads correctly when JS is disabled. The JS
+        // count-up swaps the inner text on every frame; the final
+        // resting value matches the static string verbatim.
+        let staticTotal = formatEUR(total)
+        let staticAnnualised = formatEUR(annualised)
+        let annualisedLabel = "ROI estimé sur 12 mois : \(staticAnnualised)/an"
+
+        return """
+        <section class="roi reveal" data-reveal="up">
+          <div class="section__header">
+            <div class="section__eyebrow">02 — ROI</div>
+            <h2 class="section__title">Impact financier estimé</h2>
+            <p class="section__lead">Cumul mensuel projeté si l'ensemble des quick wins est livré.</p>
+          </div>
+          <div class="roi__card">
+            <div class="roi__total">
+              <span class="roi__sign">+</span><span class="roi__amount" data-roi-target="\(total)">\(staticTotal)</span><span class="roi__per">/mois</span>
+            </div>
+            <div class="roi__annualized">\(escape(annualisedLabel))</div>
+            \(confidenceHTML)
+          </div>
+        </section>
+        """
+    }
+
+    /// Aggregate confidence using the same min-by-rank rule as the
+    /// AuditSheet (`.low` < `.medium` < `.high`). Returns nil when
+    /// no QW has both an impact AND a confidence — the hero card
+    /// hides the pill in that case rather than implying "no data
+    /// means high confidence".
+    private static func aggregateConfidenceTag(
+        for wins: [AuditReport.QuickWin]
+    ) -> AuditReport.ConfidenceLevel? {
+        let withImpact = wins.filter { ($0.estimatedMonthlyRevenueImpactEUR ?? 0) > 0 }
+        let levels = withImpact.compactMap(\.confidence)
+        guard !levels.isEmpty else { return nil }
+        let rank: [AuditReport.ConfidenceLevel: Int] = [.low: 0, .medium: 1, .high: 2]
+        return levels.min { (rank[$0] ?? 1) < (rank[$1] ?? 1) }
+    }
+
+    private static func localizedConfidenceLabel(
+        _ level: AuditReport.ConfidenceLevel
+    ) -> String {
+        // FR-only inside the portal HTML — the client-facing
+        // surface stays in the consultant's language (Mehdi's FR
+        // audience).
+        switch level {
+        case .low:    return "confiance : faible"
+        case .medium: return "confiance : modérée"
+        case .high:   return "confiance : élevée"
+        }
+    }
+
+    private static func monthlyTotal(for wins: [AuditReport.QuickWin]) -> Int {
+        wins.reduce(0) { acc, win in
+            acc + max(0, win.estimatedMonthlyRevenueImpactEUR ?? 0)
+        }
+    }
+
+    /// FR-grouped EUR amount, no decimals, NBSP thousands
+    /// separator. Mirrors `AuditSheet.roiAmountString` so the
+    /// portal value reads exactly like the in-app value.
+    static func formatEUR(_ amount: Int) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = Locale(identifier: "fr_FR")
+        f.groupingSeparator = "\u{00A0}"
+        f.maximumFractionDigits = 0
+        return (f.string(from: NSNumber(value: amount)) ?? "\(amount)") + "\u{00A0}€"
     }
 
     public static func synthesisSection(report: AuditReport) -> String {
@@ -588,12 +702,30 @@ public enum HTMLTemplates {
             }
         }()
         let effort = formatEffort(win.effortDays)
+        // v0.25 — Per-QW ROI badge. Renders the FR-formatted
+        // monthly estimate inline as an iris-tinted pill so the
+        // client's eye lands on the €€€ before the qualitative
+        // impact label. Omitted when nil so a partial estimator
+        // return doesn't leave placeholder pills on un-estimated
+        // QWs.
+        let roiHTML: String = {
+            guard let monthly = win.estimatedMonthlyRevenueImpactEUR,
+                  monthly > 0
+            else { return "" }
+            return """
+            <span class="win__roi" aria-label="ROI estimé : \(formatEUR(monthly)) par mois">
+              <span class="win__roi-amount">+\(formatEUR(monthly))</span>
+              <span class="win__roi-per">/mois</span>
+            </span>
+            """
+        }()
         return """
         <article class="win">
           <div class="win__head">
             <span class="win__index">#\(index)</span>
             <span class="win__pill win__pill--\(win.impact.rawValue)">\(impactLabel)</span>
           </div>
+          \(roiHTML)
           <h3 class="win__title">\(title)</h3>
           <p class="win__detail">\(detail)</p>
           <div class="win__meta">
@@ -905,12 +1037,27 @@ public enum HTMLTemplates {
         .battle__dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
         .battle__chip-name{font-weight:600;color:var(--ink);}
         .battle__chip-score{color:var(--ink-dim);font-variant-numeric:tabular-nums;}
+        /* v0.25 — ROI hero card + per-QW ROI badge */
+        .roi{max-width:var(--max-w-prose);}
+        .roi__card{position:relative;background:linear-gradient(160deg,rgba(94,233,216,0.14) 0%,rgba(107,93,211,0.18) 100%);border:1px solid rgba(168,230,224,0.32);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:var(--radius-lg);padding:56px 32px;text-align:center;overflow:hidden;}
+        .roi__card::before{content:"";position:absolute;inset:-40%;background:radial-gradient(50% 50% at 50% 50%,rgba(94,233,216,0.28) 0%,transparent 70%);pointer-events:none;}
+        .roi__total{position:relative;display:flex;align-items:baseline;justify-content:center;gap:6px;font-variant-numeric:tabular-nums;}
+        .roi__sign{font-size:clamp(36px,5vw,52px);font-weight:800;color:var(--accent-2);}
+        .roi__amount{font-size:clamp(64px,12vw,120px);line-height:1;font-weight:900;letter-spacing:-0.04em;background:linear-gradient(180deg,#fff 0%,var(--accent-2) 130%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+        .roi__per{font-size:clamp(20px,2.4vw,28px);font-weight:600;color:var(--ink-dim);margin-left:6px;}
+        .roi__annualized{position:relative;margin-top:18px;font-size:clamp(15px,1.6vw,18px);color:var(--ink-dim);}
+        .roi__confidence{position:relative;display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.16);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--c-color);}
+        .roi__confidence-dot{width:8px;height:8px;border-radius:50%;background:var(--c-color);}
+        .win__roi{display:inline-flex;align-items:baseline;gap:3px;margin:0 0 14px;padding:6px 12px;border-radius:999px;background:rgba(94,233,216,0.16);border:1px solid rgba(94,233,216,0.45);color:var(--accent-2);font-variant-numeric:tabular-nums;}
+        .win__roi-amount{font-size:15px;font-weight:700;letter-spacing:-0.005em;}
+        .win__roi-per{font-size:11px;font-weight:600;letter-spacing:0.04em;opacity:0.85;}
         /* Responsive */
         @media (max-width:640px){
           .hero{padding:60px 20px;}
           section{padding:64px 20px;}
           .pitch__inner{padding:36px 24px;}
           .battle__grid{grid-template-columns:1fr;}
+          .roi__card{padding:40px 22px;}
         }
         """
     }
@@ -929,6 +1076,43 @@ public enum HTMLTemplates {
           'use strict';
           var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           var revealEls = document.querySelectorAll('.reveal');
+
+          // v0.25 — FR-grouped EUR formatter mirroring the Swift
+          // helper. Intl.NumberFormat is supported back to IE11 so
+          // we don't need a polyfill.
+          var euroFmt = new Intl.NumberFormat('fr-FR', {
+            maximumFractionDigits: 0
+          });
+          function formatEUR(n){
+            return euroFmt.format(n).replace(/\\s/g, '\\u00A0') + '\\u00A0€';
+          }
+
+          // v0.25 — Count-up animation for the ROI hero amount.
+          // Reads the target from data-roi-target, ramps from 0 to
+          // target over ~1400ms with an ease-out curve. Skipped
+          // when prefers-reduced-motion is set; the static FR
+          // string baked into the markup remains.
+          function animateRoiCountUp(){
+            if (reduced) return;
+            var el = document.querySelector('.roi__amount[data-roi-target]');
+            if (!el) return;
+            var target = parseInt(el.getAttribute('data-roi-target'), 10);
+            if (isNaN(target) || target <= 0) return;
+            var duration = 1400;
+            var start = null;
+            function frame(ts){
+              if (start === null) start = ts;
+              var progress = Math.min(1, (ts - start) / duration);
+              // Ease-out cubic so the value lands rather than
+              // overshoots.
+              var eased = 1 - Math.pow(1 - progress, 3);
+              var value = Math.round(target * eased);
+              el.textContent = formatEUR(value);
+              if (progress < 1) window.requestAnimationFrame(frame);
+            }
+            window.requestAnimationFrame(frame);
+          }
+
           if (reduced) {
             revealEls.forEach(function(el){ el.classList.add('reveal--in'); });
           } else if ('IntersectionObserver' in window) {
@@ -936,6 +1120,13 @@ public enum HTMLTemplates {
               entries.forEach(function(entry){
                 if (entry.isIntersecting) {
                   entry.target.classList.add('reveal--in');
+                  // v0.25 — When the ROI section enters the
+                  // viewport, kick the count-up animation. Doing
+                  // it inside the same observer means it runs at
+                  // most once (we unobserve after firing).
+                  if (entry.target.classList.contains('roi')) {
+                    animateRoiCountUp();
+                  }
                   io.unobserve(entry.target);
                 }
               });
@@ -943,6 +1134,9 @@ public enum HTMLTemplates {
             revealEls.forEach(function(el){ io.observe(el); });
           } else {
             revealEls.forEach(function(el){ el.classList.add('reveal--in'); });
+            // No IO support → fire the count-up immediately so the
+            // page still shows the animation on first load.
+            animateRoiCountUp();
           }
           // Hero parallax — translate the gradient layer at 0.35x
           // scroll velocity. requestAnimationFrame coalesces scroll

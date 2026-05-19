@@ -306,4 +306,37 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("home.battleCard.title",           lang: "en"), "Battle Mode")
         XCTAssertEqual(localized("home.battleCard.title",           lang: "fr"), "Mode Battle")
     }
+
+    /// v0.25 — ROI Calculator strings. Locks every FR + EN key
+    /// surfaced by the AuditSheet hero card + the per-QW inline
+    /// ROI badge + the methodology modal so a careless catalogue
+    /// edit can't ship a portal where the "+€18 700/mo" hero falls
+    /// back to a raw key on FR. The 8 keys map 1:1 to the v0.25
+    /// task list in ULTRAPLAN.
+    func test_roiCalculatorStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("roi.hero.total.label",      lang: "en"), "ESTIMATED MONTHLY ROI")
+        XCTAssertEqual(localized("roi.hero.total.label",      lang: "fr"), "ROI MENSUEL ESTIMÉ")
+
+        XCTAssertEqual(localized("roi.hero.annualized.label", lang: "en"), "Projected over 12 months: %@")
+        XCTAssertEqual(localized("roi.hero.annualized.label", lang: "fr"), "Projeté sur 12 mois : %@")
+
+        XCTAssertEqual(localized("roi.confidence.low",        lang: "en"), "low confidence")
+        XCTAssertEqual(localized("roi.confidence.low",        lang: "fr"), "confiance faible")
+        XCTAssertEqual(localized("roi.confidence.medium",     lang: "en"), "moderate confidence")
+        XCTAssertEqual(localized("roi.confidence.medium",     lang: "fr"), "confiance modérée")
+        XCTAssertEqual(localized("roi.confidence.high",       lang: "en"), "high confidence")
+        XCTAssertEqual(localized("roi.confidence.high",       lang: "fr"), "confiance élevée")
+
+        XCTAssertEqual(localized("roi.per.month.suffix",      lang: "en"), "/mo")
+        XCTAssertEqual(localized("roi.per.month.suffix",      lang: "fr"), "/mois")
+
+        XCTAssertEqual(localized("roi.methodology.button",    lang: "en"), "Methodology")
+        XCTAssertEqual(localized("roi.methodology.button",    lang: "fr"), "Méthodologie")
+
+        XCTAssertEqual(localized("roi.qw.badge.format",       lang: "en"), "+%1$@ %2$@")
+        XCTAssertEqual(localized("roi.qw.badge.format",       lang: "fr"), "+%1$@ %2$@")
+
+        XCTAssertNotNil(localized("roi.methodology.body", lang: "en"))
+        XCTAssertNotNil(localized("roi.methodology.body", lang: "fr"))
+    }
 }

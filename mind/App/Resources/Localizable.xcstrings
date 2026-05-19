@@ -4383,6 +4383,78 @@
         "en": { "stringUnit": { "state": "translated", "value": "Audit 4 sites side-by-side. Radar + podium." } },
         "fr": { "stringUnit": { "state": "translated", "value": "Audit 4 sites côte à côte. Radar + podium." } }
       }
+    },
+    "roi.hero.total.label": {
+      "comment": "v0.25 · Eyebrow above the giant ROI total on the AuditSheet hero card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ESTIMATED MONTHLY ROI" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ROI MENSUEL ESTIMÉ" } }
+      }
+    },
+    "roi.hero.annualized.label": {
+      "comment": "v0.25 · Subtitle under the ROI hero amount. %@ = FR-formatted annualised total.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Projected over 12 months: %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Projeté sur 12 mois : %@" } }
+      }
+    },
+    "roi.confidence.low": {
+      "comment": "v0.25 · Confidence pill label on the ROI hero card — low confidence (zero grounded signals).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "low confidence" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "confiance faible" } }
+      }
+    },
+    "roi.confidence.medium": {
+      "comment": "v0.25 · Confidence pill label on the ROI hero card — medium confidence (one grounded signal).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "moderate confidence" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "confiance modérée" } }
+      }
+    },
+    "roi.confidence.high": {
+      "comment": "v0.25 · Confidence pill label on the ROI hero card — high confidence (two+ grounded signals).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "high confidence" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "confiance élevée" } }
+      }
+    },
+    "roi.per.month.suffix": {
+      "comment": "v0.25 · Suffix appended after every ROI amount (hero card + per-QW badge).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "/mo" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "/mois" } }
+      }
+    },
+    "roi.methodology.button": {
+      "comment": "v0.25 · CTA on the ROI hero card that opens the methodology modal.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Methodology" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Méthodologie" } }
+      }
+    },
+    "roi.methodology.body": {
+      "comment": "v0.25 · Body copy inside the ROI methodology modal — explains the formula.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Each Quick Win is estimated as conversion lift × estimated monthly traffic × estimated ARPU, capped at €30 000 per win. Confidence reflects how many signals (industry, traffic, ARPU) are grounded vs. inferred from industry priors." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chaque Quick Win est estimé via levier de conversion × trafic mensuel estimé × ARPU estimé, plafonné à 30 000 € par win. Le niveau de confiance reflète combien de signaux (industrie, trafic, ARPU) sont avérés vs. extrapolés des moyennes du secteur." } }
+      }
+    },
+    "roi.qw.badge.format": {
+      "comment": "v0.25 · Format string for the per-QW ROI inline badge. %1$@ = formatted amount, %2$@ = per-month suffix.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "+%1$@ %2$@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "+%1$@ %2$@" } }
+      }
     }
   }
 }

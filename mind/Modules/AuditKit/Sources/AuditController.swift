@@ -136,6 +136,25 @@ public final class AuditController {
     /// `OpenAIAPIKeyStore.read()` returned a non-empty key.
     public var mockupSource: RedesignMockupSource?
 
+    /// v0.25 — Optional ROI estimator. When non-nil and the
+    /// synthesised report has at least one quick win, the
+    /// controller fires a detached task after the report lands and
+    /// folds the per-QW ROI estimates onto
+    /// `report.quickWins[i].estimatedMonthlyRevenueImpactEUR /
+    /// .confidence`. Nil = the ROI hero card + per-QW badges stay
+    /// hidden (no Anthropic key, or the host explicitly opted
+    /// out). Defaults to `.shared` so the AuditSheet path doesn't
+    /// need to remember to wire it on every run — the network call
+    /// itself soft-fails to an empty dict on a missing key.
+    public var roiEstimator: ROIEstimator? = ROIEstimator.shared
+
+    /// v0.25 — Optional client context (industry / traffic / ARPU)
+    /// passed verbatim into the ROI estimator prompt. Defaults to
+    /// `.unknown`, which makes the estimator fall back to industry
+    /// priors. Host UI can mutate this on the singleton before
+    /// `run(for:)` based on user input or persisted preferences.
+    public var roiClientContext: ClientContext = .unknown
+
     /// Cached probe results for the current run. Retry merges new
     /// results on top of these so a re-run only touches failed probes.
     private var lastPerformance: AuditReport.PerformanceMetrics?
@@ -311,6 +330,18 @@ public final class AuditController {
             // populates progressively as the PNGs arrive.
             if let source = self.mockupSource {
                 kickOffMockupGeneration(source: source, report: synthesized)
+            }
+            // v0.25 — Same pattern for ROI: fire-and-forget. The
+            // Quick Wins render immediately on completion; the
+            // per-QW ROI badges + the hero card pop in as soon
+            // as the estimator returns. Soft-fails to "no badges"
+            // so a missing Anthropic key never punishes the user.
+            if let estimator = self.roiEstimator {
+                kickOffROIEstimation(
+                    estimator: estimator,
+                    context: self.roiClientContext,
+                    report: synthesized
+                )
             }
         } catch is CancellationError {
             self.phase = .idle
@@ -490,6 +521,56 @@ public final class AuditController {
                     "redesignMockup.generation.aborted",
                     data: [
                         "host": host,
+                        "reason": error.localizedDescription,
+                    ]
+                )
+            }
+        }
+    }
+
+    /// v0.25 — Kick off a detached Task that asks the configured
+    /// `ROIEstimator` for per-QW ROI estimates, then folds them
+    /// into `self.report?.quickWins[i]` via UUID matching. Soft-
+    /// fails the whole batch — a missing-key throw or a network
+    /// blackout simply leaves the QWs without ROI badges and the
+    /// hero card hidden. The fresh-audit guard (compares
+    /// `generatedAt`) prevents a slow-returning estimate from
+    /// poisoning a more recent report.
+    private func kickOffROIEstimation(
+        estimator: ROIEstimator,
+        context: ClientContext,
+        report synthesized: AuditReport
+    ) {
+        let host = synthesized.client.url.host(percentEncoded: false)
+            ?? synthesized.client.url.absoluteString
+        let snapshot = synthesized
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let estimates = try await estimator.estimate(
+                    report: snapshot,
+                    clientContext: context
+                )
+                guard !estimates.isEmpty else { return }
+                await MainActor.run {
+                    guard let current = self.report,
+                          current.generatedAt == snapshot.generatedAt
+                    else { return }
+                    var updated = current.quickWins
+                    for idx in updated.indices {
+                        guard let est = estimates[updated[idx].id] else { continue }
+                        updated[idx].estimatedMonthlyRevenueImpactEUR =
+                            est.monthlyRevenueImpactEUR
+                        updated[idx].confidence = est.confidence
+                    }
+                    self.report?.quickWins = updated
+                }
+            } catch {
+                MINDTelemetry.warning(
+                    "roi.estimation.failed",
+                    data: [
+                        "host": host,
+                        "stage": "kickoff",
                         "reason": error.localizedDescription,
                     ]
                 )

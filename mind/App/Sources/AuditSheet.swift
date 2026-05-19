@@ -55,6 +55,12 @@ struct AuditSheet: View {
     // "Vision: votre site refait" carousel.
     @State private var selectedMockup: RedesignMockup?
 
+    // v0.25 — ROI methodology modal toggle. Mounted by the hero
+    // "Total ROI estimé" card's tap-gesture so the user can read
+    // exactly how each number was derived before pitching the
+    // client.
+    @State private var roiMethodologyShown: Bool = false
+
     @FocusState private var urlFocused: Bool
 
     init(initialURL: String? = nil) {
@@ -595,6 +601,13 @@ struct AuditSheet: View {
             visionSection(for: report)
 
             if !report.quickWins.isEmpty {
+                // v0.25 — Hero "Total ROI estimé" card. Only mounts
+                // when at least one QW has a non-nil ROI estimate
+                // (the estimator landed). Hidden otherwise so the
+                // layout doesn't surface an empty "+0 €/mo" hero.
+                if ROIPromptBuilder.hasAnyEstimate(in: report.quickWins) {
+                    roiHeroCard(for: report)
+                }
                 section("Quick wins") {
                     VStack(spacing: 14) {
                         ImpactEffortMatrix(
@@ -957,7 +970,14 @@ struct AuditSheet: View {
                     Text(win.title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     Spacer()
-                    impactBadge(win.impact)
+                    // v0.25 — ROI line sits ABOVE the impact pill in
+                    // the same trailing column when available, so the
+                    // eye lands on "+2 400 €/mo" before the impact
+                    // pill confirms the qualitative tier.
+                    VStack(alignment: .trailing, spacing: 4) {
+                        roiInlineLabel(for: win)
+                        impactBadge(win.impact)
+                    }
                 }
                 Text(win.detail)
                     .font(.system(.caption, design: .rounded))
@@ -973,6 +993,160 @@ struct AuditSheet: View {
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    // MARK: - v0.25 — ROI inline label + hero card
+
+    /// Inline ROI line shown above the impact pill on every QW row
+    /// when the estimator returned a value. Localised + FR-grouped
+    /// (uses `1 000` separator) via `roiAmountString(_:)`. Hidden
+    /// when no estimate is present so a slow ROI return doesn't
+    /// leave a placeholder pill on the card.
+    @ViewBuilder
+    private func roiInlineLabel(for win: AuditReport.QuickWin) -> some View {
+        if let monthly = win.estimatedMonthlyRevenueImpactEUR, monthly > 0 {
+            let amount = AuditSheet.roiAmountString(monthly)
+            let suffix = String(localized: "roi.per.month.suffix", bundle: .main)
+            let format = String(localized: "roi.qw.badge.format", bundle: .main)
+            let label = String(format: format, amount, suffix)
+            HStack(spacing: 4) {
+                Image(systemName: "eurosign.circle.fill")
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                Text(label)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+            .foregroundStyle(LiquidPalette.iris)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background {
+                Capsule().fill(LiquidPalette.iris.opacity(0.14))
+            }
+            .overlay {
+                Capsule().stroke(LiquidPalette.iris.opacity(0.55), lineWidth: 1)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(amount) \(suffix)")
+        }
+    }
+
+    /// Giant "+18 700 €/mo" hero card sitting above the Quick Wins
+    /// section header. Tap → methodology modal. The card always
+    /// renders the FR-grouped total in the chosen accent (iris) so
+    /// it's the loudest visual beat in the completed view.
+    @ViewBuilder
+    private func roiHeroCard(for report: AuditReport) -> some View {
+        let monthly = ROIPromptBuilder.monthlyTotalEUR(for: report.quickWins)
+        let annualised = ROIPromptBuilder.annualisedTotalEUR(for: report.quickWins)
+        let confidence = ROIPromptBuilder.aggregateConfidence(for: report.quickWins)
+        let suffix = String(localized: "roi.per.month.suffix", bundle: .main)
+        let heroAmount = AuditSheet.roiAmountString(monthly)
+        let annualisedAmount = AuditSheet.roiAmountString(annualised)
+        let annualisedFormat = String(localized: "roi.hero.annualized.label", bundle: .main)
+        let annualisedLine = String(format: annualisedFormat, annualisedAmount)
+
+        LiquidCard(cornerRadius: 22) {
+            VStack(spacing: 8) {
+                Text("roi.hero.total.label", bundle: .main)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("+\(heroAmount)")
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(LiquidPalette.iris)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                    Text(suffix)
+                        .font(.system(.title3, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .contentTransition(.numericText())
+
+                Text(annualisedLine)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                if let confidence {
+                    roiConfidencePill(confidence)
+                        .padding(.top, 4)
+                }
+
+                Button {
+                    roiMethodologyShown = true
+                    LiquidHaptics.tap()
+                    MINDTelemetry.info("roi.methodology.opened")
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                        Text("roi.methodology.button", bundle: .main)
+                    }
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(LiquidPalette.iris)
+                .padding(.top, 6)
+            }
+            .padding(22)
+            .frame(maxWidth: .infinity)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("+\(heroAmount) \(suffix). \(annualisedLine)")
+        .sheet(isPresented: $roiMethodologyShown) {
+            ROIMethodologySheet(
+                monthlyTotal: monthly,
+                annualisedTotal: annualised,
+                confidence: confidence,
+                quickWins: report.quickWins
+            )
+            .presentationDetents([.medium, .large])
+        }
+    }
+
+    @ViewBuilder
+    private func roiConfidencePill(_ level: AuditReport.ConfidenceLevel) -> some View {
+        let key: String = {
+            switch level {
+            case .low:    return "roi.confidence.low"
+            case .medium: return "roi.confidence.medium"
+            case .high:   return "roi.confidence.high"
+            }
+        }()
+        let color: Color = {
+            switch level {
+            case .low:    return .gray
+            case .medium: return .orange
+            case .high:   return .green
+            }
+        }()
+        Text(String(localized: String.LocalizationValue(key), bundle: .main))
+            .font(.system(.caption2, design: .rounded, weight: .bold))
+            .tracking(0.4)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 3)
+            .background {
+                Capsule().fill(color.opacity(0.85))
+            }
+    }
+
+    /// FR-grouped formatter for EUR amounts. Uses non-breaking
+    /// space as the thousands separator (`"18 700"`) to match Mehdi's
+    /// French convention. The euro sign + per-month suffix are
+    /// appended by callers because the hero card and the inline
+    /// badge use different typographic treatments.
+    static func roiAmountString(_ amount: Int) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = Locale(identifier: "fr_FR")
+        f.groupingSeparator = "\u{00A0}"
+        f.maximumFractionDigits = 0
+        return (f.string(from: NSNumber(value: amount)) ?? "\(amount)") + "\u{00A0}€"
     }
 
     /// v0.12 — Mini "Push to Linear" trailing button. Hidden unless

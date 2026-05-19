@@ -30,7 +30,11 @@ public struct AuditReport: Sendable, Codable, Hashable {
     public let synthesis: String
 
     /// 3–5 short-cycle wins the prospect could ship in a few weeks.
-    public let quickWins: [QuickWin]
+    ///
+    /// v0.25 — Mutable so `AuditController.kickOffROIEstimation`
+    /// can fold per-QW ROI estimates into each `QuickWin` after
+    /// the synthesis lands. Same pattern as `mockups` (v0.23).
+    public var quickWins: [QuickWin]
 
     /// 3–6 high-value strategic bets with rough timeline + budget.
     public let strategicBets: [StrategicBet]
@@ -195,6 +199,20 @@ public struct AuditReport: Sendable, Codable, Hashable {
         public let effortDays: Double          // 0.5 = half-day, etc.
         public let impact: Impact
 
+        /// v0.25 — Optional ROI estimate produced asynchronously by
+        /// the ROIEstimator after synthesis lands. Nil until the
+        /// estimator returns (or forever, if no Anthropic key is
+        /// configured / the estimator soft-fails). The AuditSheet
+        /// row + the portal HTML render an ROI badge only when this
+        /// is non-nil.
+        public var estimatedMonthlyRevenueImpactEUR: Int?
+
+        /// v0.25 — Confidence level paired with the ROI estimate.
+        /// Surfaced as a small `(confiance: élevée)` annotation
+        /// under the ROI line. Nil mirrors the
+        /// `estimatedMonthlyRevenueImpactEUR` nil state.
+        public var confidence: ConfidenceLevel?
+
         public enum Impact: String, Sendable, Codable, CaseIterable {
             case low
             case medium
@@ -206,14 +224,65 @@ public struct AuditReport: Sendable, Codable, Hashable {
             title: String,
             detail: String,
             effortDays: Double,
-            impact: Impact
+            impact: Impact,
+            estimatedMonthlyRevenueImpactEUR: Int? = nil,
+            confidence: ConfidenceLevel? = nil
         ) {
             self.id = id
             self.title = title
             self.detail = detail
             self.effortDays = effortDays
             self.impact = impact
+            self.estimatedMonthlyRevenueImpactEUR = estimatedMonthlyRevenueImpactEUR
+            self.confidence = confidence
         }
+
+        // v0.25 — Backward-compatible Codable. Missing
+        // `estimatedMonthlyRevenueImpactEUR` / `confidence` decode
+        // to nil so QuickWins serialised before v0.25 (CloudKit
+        // payloads, cached audits, Notion / Linear builders) keep
+        // round-tripping cleanly.
+        private enum CodingKeys: String, CodingKey {
+            case id, title, detail, effortDays, impact,
+                 estimatedMonthlyRevenueImpactEUR, confidence
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            self.id          = try c.decode(UUID.self, forKey: .id)
+            self.title       = try c.decode(String.self, forKey: .title)
+            self.detail      = try c.decode(String.self, forKey: .detail)
+            self.effortDays  = try c.decode(Double.self, forKey: .effortDays)
+            self.impact      = try c.decode(Impact.self, forKey: .impact)
+            self.estimatedMonthlyRevenueImpactEUR =
+                try c.decodeIfPresent(Int.self, forKey: .estimatedMonthlyRevenueImpactEUR)
+            self.confidence  =
+                try c.decodeIfPresent(ConfidenceLevel.self, forKey: .confidence)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(id, forKey: .id)
+            try c.encode(title, forKey: .title)
+            try c.encode(detail, forKey: .detail)
+            try c.encode(effortDays, forKey: .effortDays)
+            try c.encode(impact, forKey: .impact)
+            try c.encodeIfPresent(estimatedMonthlyRevenueImpactEUR,
+                                  forKey: .estimatedMonthlyRevenueImpactEUR)
+            try c.encodeIfPresent(confidence, forKey: .confidence)
+        }
+    }
+
+    /// v0.25 — Confidence level paired with an ROI estimate.
+    /// `.low` → wide uncertainty (industry guess, no traffic data),
+    /// `.medium` → grounded in 1 reliable signal (traffic OR ARPU),
+    /// `.high` → grounded in 2+ reliable signals (industry + traffic
+    /// + ARPU). Used by the AuditSheet hero card to display a
+    /// per-confidence breakdown in the methodology modal.
+    public enum ConfidenceLevel: String, Sendable, Codable, CaseIterable {
+        case low
+        case medium
+        case high
     }
 
     public struct StrategicBet: Sendable, Codable, Hashable, Identifiable {
