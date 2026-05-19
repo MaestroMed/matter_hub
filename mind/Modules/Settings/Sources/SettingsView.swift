@@ -363,6 +363,22 @@ public struct SettingsView: View {
             LiquidCard(cornerRadius: 20) {
                 VStack(alignment: .leading, spacing: 14) {
                     dangerRow(
+                        icon: "arrow.counterclockwise.circle.fill",
+                        title: "Restart onboarding",
+                        detail: "Re-shows the 4-page welcome flow on next app launch. Doesn't touch your data — only flips the @AppStorage flag.",
+                        action: {
+                            LiquidHaptics.tap()
+                            // Clear @AppStorage flag through UserDefaults
+                            // since SettingsView isn't the owner of the
+                            // flag. RootView reads it on next render.
+                            UserDefaults.standard.set(false, forKey: "mind.onboarding.completed")
+                            dangerZoneToast = "Onboarding reset. Force-quit MIND and relaunch to see the flow."
+                        }
+                    )
+
+                    Divider().background(.white.opacity(0.2))
+
+                    dangerRow(
                         icon: "magnifyingglass.circle.fill",
                         title: "Reset Spotlight index",
                         detail: "Wipe every MIND row from iOS Spotlight. Data stays intact.",
