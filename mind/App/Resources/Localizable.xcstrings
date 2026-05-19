@@ -1166,6 +1166,22 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled contact" } },
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contact sans nom" } }
       }
+    },
+    "share.mail.added.toast" : {
+      "comment" : "v0.14 — toast surfaced on next foreground after a mail share lands in the graph.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Email added to MIND" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "E-mail ajouté à MIND" } }
+      }
+    },
+    "share.mail.empty.fallback" : {
+      "comment" : "v0.14 — fallback Node title when a shared email has no Subject header.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled email" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "E-mail sans sujet" } }
+      }
     }
   }
 }

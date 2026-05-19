@@ -224,11 +224,12 @@ Deferred to v0.13.1: in-app Contacts picker (Settings → "Importer un
 contact") — the share sheet path covers the headline acceptance, an
 in-app picker is a convenience layer.
 
-### v0.14 — Mail capture (Share Extension) ⏳
+### v0.14 — Mail capture (Share Extension) ✅
 **What**: Extend the share extension to handle email content. User
 shares an email → MIND creates a `mail` Node with subject as title,
 body as content, sender's email extracted to tags. **Acceptance**:
 sharing from Mail.app creates a clean Node with all fields.
+Shipped 2026-05-19: pure RFC-822 MailParser routes Mail.app shares into a `.mail` Node via the share extension; tolerant decoder defaults unknown kinds to `.link` for forward compat.
 
 ### v0.15 — Knowledge graph visualization (interactive) ⏳
 **What**: New tab `Graph` between Notes and Clients. Force-directed

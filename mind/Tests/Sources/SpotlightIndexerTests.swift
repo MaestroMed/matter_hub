@@ -98,6 +98,15 @@ final class SpotlightIndexerTests: XCTestCase {
         XCTAssertEqual(SpotlightIndexer.contentType(for: .file), .data)
     }
 
+    /// v0.14 — mail Nodes map to the `emailMessage` UTType so the
+    /// system renders the envelope glyph in Spotlight rows. Anchors
+    /// the contract so a future refactor of NodeKind doesn't quietly
+    /// drop the case to the default `.plainText`.
+    func test_contentType_maps_mail_to_emailMessage() {
+        XCTAssertEqual(SpotlightIndexer.contentType(for: .mail), .emailMessage,
+                       "Mail nodes should surface the envelope glyph in Spotlight")
+    }
+
     // MARK: - Helpers
 
     private func makeNode(

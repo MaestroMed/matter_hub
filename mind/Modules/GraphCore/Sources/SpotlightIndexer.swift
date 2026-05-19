@@ -135,6 +135,13 @@ public enum SpotlightIndexer {
             return .data
         case .audit:
             return .pdf
+        case .mail:
+            // v0.14 — `.mail` is a Share Extension-captured email. The
+            // system has a dedicated `emailMessage` UTType that renders
+            // the envelope glyph in Spotlight rows next to the result.
+            // Deployment target is iOS 26 so the type is always
+            // present — no fallback needed.
+            return .emailMessage
         }
     }
 }

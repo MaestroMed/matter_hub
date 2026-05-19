@@ -124,4 +124,16 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("share.contact.empty.fallback", lang: "en"), "Untitled contact")
         XCTAssertEqual(localized("share.contact.empty.fallback", lang: "fr"), "Contact sans nom")
     }
+
+    /// v0.14 — Mail capture surfaces a toast on the next foreground
+    /// after an email share lands in the graph, and uses a localized
+    /// fallback when the email has no Subject header. Both
+    /// translations must exist so the FR build doesn't fall back to
+    /// the EN string.
+    func test_shareMailStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("share.mail.added.toast", lang: "en"), "Email added to MIND")
+        XCTAssertEqual(localized("share.mail.added.toast", lang: "fr"), "E-mail ajouté à MIND")
+        XCTAssertEqual(localized("share.mail.empty.fallback", lang: "en"), "Untitled email")
+        XCTAssertEqual(localized("share.mail.empty.fallback", lang: "fr"), "E-mail sans sujet")
+    }
 }

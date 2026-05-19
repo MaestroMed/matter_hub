@@ -77,6 +77,45 @@ final class ShareViewController: SLComposeServiceViewController {
             let urls = await collectURLs(from: items)
             let texts = await collectText(from: items)
 
+            // v0.14 — Mail.app share. iOS's Mail surfaces a shared
+            // message as a `public.plain-text` item (plus an optional
+            // `message://` URL the user can't open in another app).
+            // We sniff the raw text for the canonical envelope
+            // headers (`From:` + `Subject:`); if either matches we
+            // route this through the mail branch and skip the
+            // generic `.link` fallback so the resulting Node is a
+            // `mail` with subject/sender/body rather than a vanilla
+            // capture. We also bail-out on the `public.message-rfc822`
+            // item type when iOS surfaces it (rare on iOS Mail.app
+            // but common when sharing from third-party clients).
+            let isMailItemType = items.contains { item in
+                (item.attachments ?? []).contains { provider in
+                    provider.hasItemConformingToTypeIdentifier("public.message-rfc822")
+                }
+            }
+            let rawMailText = texts.first(where: { looksLikeMail($0) })
+            if isMailItemType || rawMailText != nil {
+                let body = rawMailText
+                    ?? texts.first
+                    ?? ""
+                if let payload = ShareInbox.Payload.mailPayload(
+                    rawText: body,
+                    userComment: comment
+                ) {
+                    _ = ShareInbox.enqueue(payload)
+                    await MainActor.run {
+                        self.extensionContext?.completeRequest(
+                            returningItems: [],
+                            completionHandler: nil
+                        )
+                    }
+                    return
+                }
+                // mailPayload returned nil (e.g. an empty body after
+                // trimming) — fall through to the generic link/text
+                // branch so the user still gets *something* captured.
+            }
+
             // Stitch the user's free-text comment onto whatever the
             // host app surfaced (e.g. Safari posts a URL + the page
             // title as plain text — both go into the body).
@@ -95,6 +134,30 @@ final class ShareViewController: SLComposeServiceViewController {
                 )
             }
         }
+    }
+
+    /// Heuristic used to route a plain-text share through the mail
+    /// branch (v0.14). Conservative on purpose: a single `From:` /
+    /// `Subject:` / `Date:` / `To:` header at the start of the text
+    /// is enough to qualify, but a random "Subject" word inside the
+    /// body of a normal text share won't trigger a false positive.
+    ///
+    /// We scan only the first eight lines (envelope headers in an
+    /// RFC 822 message are always at the top) and require at least
+    /// one of the four canonical headers to land on its own line.
+    private func looksLikeMail(_ text: String) -> Bool {
+        let normalized = text.replacingOccurrences(of: "\r\n", with: "\n")
+        let firstLines = normalized
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .prefix(8)
+        for raw in firstLines {
+            let line = String(raw).trimmingCharacters(in: .whitespaces)
+            let lower = line.lowercased()
+            if lower.hasPrefix("from:") || lower.hasPrefix("subject:") {
+                return true
+            }
+        }
+        return false
     }
 
     /// Sibling of `didSelectPost` — called when the user taps Cancel.

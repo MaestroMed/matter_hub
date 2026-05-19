@@ -135,6 +135,16 @@ struct MINDApp: App {
                 data: ["count": "\(contactCount)"]
             )
         }
+        // v0.14 — same count breadcrumb for mail shares so a parser
+        // regression in the extension shows up alongside the per-
+        // payload outcomes below.
+        let mailCount = payloads.filter { $0.kind == .mail }.count
+        if mailCount > 0 {
+            MINDTelemetry.info(
+                "share.mail.parsed",
+                data: ["count": "\(mailCount)"]
+            )
+        }
 
         for payload in payloads {
             switch payload.kind {
@@ -142,6 +152,8 @@ struct MINDApp: App {
                 createCaptureNode(from: payload, in: context)
             case .contact:
                 createPersonNode(from: payload, in: context)
+            case .mail:
+                createMailNode(from: payload, in: context)
             }
         }
 
@@ -159,6 +171,12 @@ struct MINDApp: App {
                 // is a different signal than a save-fail on a link.
                 MINDTelemetry.warning(
                     "share.contact.failed",
+                    data: ["reason": "save", "error": String(describing: error)]
+                )
+            }
+            if mailCount > 0 {
+                MINDTelemetry.warning(
+                    "share.mail.failed",
                     data: ["reason": "save", "error": String(describing: error)]
                 )
             }
@@ -229,6 +247,56 @@ struct MINDApp: App {
             "share.contact.imported",
             data: [
                 "hasEmail": (payload.attendees?.isEmpty == false) ? "1" : "0",
+                "emailDomain": payload.primaryEmailDomain ?? "none",
+            ]
+        )
+    }
+
+    /// Builds a `mail` Node from a `.mail` share (v0.14). Title is
+    /// the email subject (with a localized "no subject" fallback
+    /// when the parser couldn't find one); content is the parsed
+    /// body (with the user's free-text share-sheet comment prepended
+    /// when present); tags carry the sender's email domain (`acme.com`
+    /// from `jane@acme.com`) so a NotesView search surfaces the mail
+    /// when the user is browsing prospects from that company. The
+    /// raw sender address is also added as a tag so a Spotlight
+    /// search by full email lands on the right row.
+    @MainActor
+    private func createMailNode(
+        from payload: ShareInbox.Payload,
+        in context: ModelContext
+    ) {
+        var tags: [String] = ["mail"]
+        if let domain = payload.primaryEmailDomain {
+            tags.append(domain)
+        }
+        if let sender = payload.attendees?.first, !sender.isEmpty {
+            tags.append(sender)
+        }
+
+        let resolvedTitle: String = {
+            if let title = payload.title,
+               !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return title
+            }
+            return String(localized: "share.mail.empty.fallback")
+        }()
+
+        let node = Node(
+            kind: .mail,
+            title: resolvedTitle,
+            content: payload.contentBody,
+            tags: tags,
+            sourceURL: nil
+        )
+        context.insert(node)
+        node.refreshEmbedding()
+
+        MINDTelemetry.info(
+            "share.mail.imported",
+            data: [
+                "hasSubject": (payload.title?.isEmpty == false) ? "1" : "0",
+                "hasSender": (payload.attendees?.isEmpty == false) ? "1" : "0",
                 "emailDomain": payload.primaryEmailDomain ?? "none",
             ]
         )

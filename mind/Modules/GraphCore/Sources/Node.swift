@@ -16,6 +16,7 @@ public enum NodeKind: String, Codable, CaseIterable, Sendable {
     case client   // an organization / brand / prospect being tracked
     case audit    // a full digital audit report attached to a client
     case meeting  // a calendar event captured into the graph (CalendarKit, v0.8)
+    case mail     // an email captured via the Share Extension (v0.14)
 }
 
 @Model

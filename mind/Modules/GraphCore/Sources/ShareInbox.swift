@@ -1,5 +1,253 @@
 import Foundation
 
+/// Pure parser used by the Share Extension's mail branch (v0.14) to
+/// split a raw shared email into a subject, a sender email, and a
+/// body. Framework-free so the host's unit tests can exercise every
+/// branch without booting the extension process or importing any
+/// Mail.app-private types.
+///
+/// Mail.app's "Share" sheet posts the email as a single
+/// `public.plain-text` item shaped like an RFC 822 envelope:
+///
+/// ```
+/// From: Jane Doe <jane@acme.com>
+/// Subject: Welcome to the beta
+/// Date: Mon, 13 May 2026 14:30:00 +0200
+/// To: john@example.com
+///
+/// Hi John, …
+/// ```
+///
+/// The parser is line-oriented and forgiving: missing headers
+/// degrade to `nil` rather than failing, and any text before the
+/// first blank line that doesn't look like a header is treated as
+/// part of the body so a "share selection" (no envelope at all)
+/// still surfaces useful content.
+public enum MailParser {
+    /// Result of parsing a single raw mail share. Any field can be
+    /// `nil`/empty — the consumer applies its own fallbacks.
+    public struct Parsed: Equatable, Sendable {
+        public let subject: String?
+        public let senderEmail: String?
+        public let senderDisplayName: String?
+        public let body: String
+
+        public init(
+            subject: String? = nil,
+            senderEmail: String? = nil,
+            senderDisplayName: String? = nil,
+            body: String = ""
+        ) {
+            self.subject = subject
+            self.senderEmail = senderEmail
+            self.senderDisplayName = senderDisplayName
+            self.body = body
+        }
+    }
+
+    /// Split `rawText` into headers + body, then extract the
+    /// recognised headers (`Subject:`, `From:`). The blank-line
+    /// separator is the canonical RFC 822 split; when no blank line
+    /// is found we still try to identify a few leading header lines
+    /// (the first N lines that match `Header: value`) so a "no
+    /// trailing blank line" share doesn't lose its subject.
+    public static func parse(rawText: String) -> Parsed {
+        let normalized = rawText
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return Parsed() }
+
+        // Find the first blank line — that's the headers/body boundary.
+        // When present, everything before is candidate headers, everything
+        // after is the body. When absent, scan from the top while the
+        // current line still parses as a header.
+        let lines = normalized.split(separator: "\n", omittingEmptySubsequences: false)
+            .map { String($0) }
+
+        var headerEnd: Int? = nil
+        for (i, line) in lines.enumerated() {
+            if line.trimmingCharacters(in: .whitespaces).isEmpty {
+                headerEnd = i
+                break
+            }
+        }
+
+        let headerLines: [String]
+        let bodyLines: [String]
+        if let end = headerEnd {
+            let candidateHeaders = Array(lines.prefix(end))
+            // Guard against false positives: if the lines before the
+            // blank don't actually contain ANY header-shaped line
+            // (e.g. `Hey,\n\nbody…`), they aren't an envelope —
+            // treat the whole input as body so the user never loses
+            // the salutation. A single header-shaped line is enough
+            // to qualify as an envelope.
+            if candidateHeaders.contains(where: { isHeaderLine($0) }) {
+                headerLines = candidateHeaders
+                // Body starts after the blank line.
+                bodyLines = Array(lines.dropFirst(end + 1))
+            } else {
+                headerLines = []
+                bodyLines = lines
+            }
+        } else {
+            // No blank line found — treat the leading run of
+            // header-shaped lines as headers, the rest as body.
+            var headerCount = 0
+            for line in lines {
+                if isHeaderLine(line) {
+                    headerCount += 1
+                } else {
+                    break
+                }
+            }
+            // If literally every line looks like a header (rare —
+            // share selection of just a few headers), treat the lot
+            // as headers and emit an empty body so the consumer can
+            // fall back to its own assembly.
+            headerLines = Array(lines.prefix(headerCount))
+            bodyLines = Array(lines.dropFirst(headerCount))
+        }
+
+        // Fold RFC 822 continuation lines (a header continued on the
+        // next line starts with whitespace) so `Subject: foo\n bar`
+        // becomes the single field `Subject: foo bar` before we
+        // dispatch on the header name.
+        let foldedHeaders = foldContinuations(headerLines)
+
+        var subject: String? = nil
+        var senderEmail: String? = nil
+        var senderDisplay: String? = nil
+        for header in foldedHeaders {
+            guard let colon = header.firstIndex(of: ":") else { continue }
+            let name = header[..<colon]
+                .trimmingCharacters(in: .whitespaces)
+                .lowercased()
+            let value = header[header.index(after: colon)...]
+                .trimmingCharacters(in: .whitespaces)
+            switch name {
+            case "subject":
+                if !value.isEmpty { subject = value }
+            case "from":
+                let (email, display) = splitFromHeader(value)
+                if let email, !email.isEmpty { senderEmail = email }
+                if let display, !display.isEmpty { senderDisplay = display }
+            default:
+                continue
+            }
+        }
+
+        let body = bodyLines
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return Parsed(
+            subject: subject,
+            senderEmail: senderEmail,
+            senderDisplayName: senderDisplay,
+            body: body
+        )
+    }
+
+    // MARK: - Internals
+
+    /// `Subject: foo` parses as a header. `Hi John,` doesn't. We
+    /// guard against false-positives like `URL:` inside a body by
+    /// also requiring the colon to land before any space — RFC 822
+    /// header names are token strings (no whitespace) so a header
+    /// always has its `:` before the first space.
+    static func isHeaderLine(_ line: String) -> Bool {
+        guard let colon = line.firstIndex(of: ":") else { return false }
+        let name = line[..<colon]
+        // Name must be non-empty and contain no whitespace — that's
+        // the RFC 822 token-string definition. Continuation lines
+        // (start with whitespace) aren't headers in themselves but
+        // are folded into the previous header by `foldContinuations`.
+        if name.isEmpty { return false }
+        for char in name {
+            if char.isWhitespace { return false }
+        }
+        // Reject obvious URLs-as-prefix (`https://...`) — the colon
+        // is part of the scheme, not a header separator.
+        let lower = name.lowercased()
+        if lower == "http" || lower == "https" || lower == "mailto" || lower == "tel" {
+            return false
+        }
+        return true
+    }
+
+    /// RFC 822 allows a header value to wrap onto the next line if
+    /// that next line begins with whitespace. Fold those so each
+    /// element of the returned array is a single complete header.
+    static func foldContinuations(_ lines: [String]) -> [String] {
+        var result: [String] = []
+        for line in lines {
+            if let first = line.first, first == " " || first == "\t", !result.isEmpty {
+                // Continuation — append (with a single space) to the
+                // last accumulated header.
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                result[result.count - 1] += " " + trimmed
+            } else {
+                result.append(line)
+            }
+        }
+        return result
+    }
+
+    /// `Jane Doe <jane@acme.com>` → (`jane@acme.com`, `Jane Doe`).
+    /// `jane@acme.com` → (`jane@acme.com`, nil).
+    /// `"Jane, Doe" <jane@acme.com>` → strips the surrounding quotes.
+    /// Returns nils when neither pattern matches.
+    static func splitFromHeader(_ value: String) -> (email: String?, display: String?) {
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return (nil, nil) }
+
+        // Angle-bracket form: <email> at the end with optional
+        // display name before it.
+        if let openIdx = trimmed.lastIndex(of: "<"),
+           let closeIdx = trimmed.lastIndex(of: ">"),
+           openIdx < closeIdx {
+            let inside = trimmed[trimmed.index(after: openIdx)..<closeIdx]
+                .trimmingCharacters(in: .whitespaces)
+            let email = inside.isEmpty ? nil : inside
+            var display: String? = nil
+            let before = trimmed[..<openIdx].trimmingCharacters(in: .whitespaces)
+            if !before.isEmpty {
+                // Strip surrounding quotes if present.
+                if before.hasPrefix("\"") && before.hasSuffix("\"") && before.count >= 2 {
+                    display = String(before.dropFirst().dropLast())
+                        .trimmingCharacters(in: .whitespaces)
+                } else {
+                    display = before
+                }
+            }
+            return (email, display)
+        }
+
+        // No brackets — if the whole value looks like an email,
+        // treat it as the address with no display name.
+        if trimmed.contains("@"), !trimmed.contains(" ") {
+            return (trimmed, nil)
+        }
+
+        // Last resort: scan for the first @-bearing token, treat
+        // everything else as display name. Covers `jane@acme.com
+        // (Jane Doe)` and similar permissive forms.
+        let tokens = trimmed.split(separator: " ").map(String.init)
+        if let emailToken = tokens.first(where: { $0.contains("@") }) {
+            let display = tokens
+                .filter { $0 != emailToken }
+                .joined(separator: " ")
+                .trimmingCharacters(in: .whitespaces)
+            return (emailToken, display.isEmpty ? nil : display)
+        }
+
+        // Display-name-only — preserve it so the consumer can still
+        // attribute the share to "Jane" even without an address.
+        return (nil, trimmed)
+    }
+}
+
 /// Cross-process queue used by `MINDShareExtension` to hand captured
 /// payloads (URLs + text) over to the host MIND app.
 ///
@@ -29,9 +277,13 @@ public enum ShareInbox {
     /// - `link`: URL + optional comment (Safari, Mail, Notes, …).
     /// - `contact`: vCard imported from Contacts.app — the resulting
     ///   Node is a `person` rather than a `capture`.
+    /// - `mail`: email captured from Mail.app — the resulting Node is
+    ///   a `mail` with the subject as title, body as content, and the
+    ///   sender's email domain as a tag (v0.14).
     public enum Kind: String, Codable, Sendable {
         case link
         case contact
+        case mail
     }
 
     /// One captured share — URL and/or text, plus a timestamp. We keep
@@ -105,7 +357,18 @@ public enum ShareInbox {
             self.url = try container.decodeIfPresent(URL.self, forKey: .url)
             self.text = try container.decodeIfPresent(String.self, forKey: .text)
             self.capturedAt = try container.decode(Date.self, forKey: .capturedAt)
-            self.kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .link
+            // v0.14 — tolerant raw-string decode so an extension that
+            // ships a future `kind` value the host doesn't know yet
+            // (e.g. a Mail extension talking to an older v0.12 host)
+            // degrades gracefully to `.link` instead of failing the
+            // whole drain pass. Older queues without the `kind` key
+            // continue to land here as `.link` too.
+            if let raw = try container.decodeIfPresent(String.self, forKey: .kind),
+               let parsed = Kind(rawValue: raw) {
+                self.kind = parsed
+            } else {
+                self.kind = .link
+            }
             self.title = try container.decodeIfPresent(String.self, forKey: .title)
             self.content = try container.decodeIfPresent(String.self, forKey: .content)
             self.attendees = try container.decodeIfPresent([String].self, forKey: .attendees)
@@ -184,6 +447,75 @@ public enum ShareInbox {
                 .lowercased()
                 .trimmingCharacters(in: .whitespaces)
             return domain.isEmpty ? nil : domain
+        }
+
+        /// Pure factory used by the Share Extension's Mail branch
+        /// (v0.14). Kept here, framework-free, so the host's unit
+        /// tests can exercise subject/sender/body extraction without
+        /// importing any iOS-only headers. The Share Extension feeds
+        /// in the raw text it lifted off the `public.plain-text`
+        /// item provider (Mail.app's "Share" exposes the email as
+        /// plain text shaped like an RFC 822 message — `From:` /
+        /// `Subject:` / `Date:` headers, a blank line, then the body).
+        ///
+        /// Title fallback chain: explicit `Subject:` header → first
+        /// non-empty body line → "(Sans sujet)" via the host's
+        /// localized fallback (the helper returns `nil` for the
+        /// `title` field in the no-subject case and lets the
+        /// `titleCandidate` accessor + host drainer pick the right
+        /// localised string).
+        ///
+        /// Content is the body of the email, with the leading
+        /// headers and signature trimmed. The user's free-text
+        /// comment (typed in the share sheet) is prepended on its
+        /// own paragraph so a "FYI" note lands above the quoted
+        /// email when rendered in MarkdownView.
+        ///
+        /// Returns `nil` when the input is empty after trimming —
+        /// nothing to capture means no Node.
+        public static func mailPayload(
+            rawText: String,
+            userComment: String = "",
+            capturedAt: Date = .now
+        ) -> Payload? {
+            let trimmedRaw = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedRaw.isEmpty else { return nil }
+
+            let parsed = MailParser.parse(rawText: trimmedRaw)
+            let trimmedComment = userComment
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Body assembly: user comment on top (when present), then
+            // a blank line, then the parsed body. When the parser
+            // couldn't separate headers from body (no blank line) we
+            // fall through to the entire raw text so the user never
+            // loses content to a parse miss.
+            var bodyParts: [String] = []
+            if !trimmedComment.isEmpty { bodyParts.append(trimmedComment) }
+            let parsedBody = parsed.body.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !parsedBody.isEmpty {
+                bodyParts.append(parsedBody)
+            } else if parsed.subject == nil && parsed.senderEmail == nil {
+                // No headers detected at all — keep the raw text
+                // intact rather than emit an empty Node body.
+                bodyParts.append(trimmedRaw)
+            }
+            let content = bodyParts.joined(separator: "\n\n")
+
+            // Attendees carries the sender email (when present) so
+            // the host can tag the resulting Node with the company
+            // domain — same convention as the contact branch.
+            let attendees: [String]? = parsed.senderEmail.map { [$0] }
+
+            return Payload(
+                url: nil,
+                text: nil,
+                capturedAt: capturedAt,
+                kind: .mail,
+                title: parsed.subject,
+                content: content.isEmpty ? nil : content,
+                attendees: attendees
+            )
         }
 
         /// Pure factory used by the Share Extension's vCard branch
