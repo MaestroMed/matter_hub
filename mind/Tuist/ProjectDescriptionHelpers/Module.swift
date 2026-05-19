@@ -13,6 +13,7 @@ public enum Module: String, CaseIterable {
     case visualKit = "VisualKit"
     case auditKit = "AuditKit"
     case calendarKit = "CalendarKit"
+    case healthInsights = "HealthInsights"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -46,6 +47,12 @@ public enum Module: String, CaseIterable {
                 // GraphCore.sharedContainer for the "Wipe all data"
                 // action and SpotlightIndexer for "Reset Spotlight".
                 .target(name: Module.graphCore.rawValue),
+                // v0.9 — Settings owns the HealthInsights opt-in toggle
+                // and calls HealthReader.requestAccess() when the user
+                // enables it. Depending on HealthInsights here means we
+                // never reach across module boundaries from RootView to
+                // trigger the authorization sheet.
+                .target(name: Module.healthInsights.rawValue),
             ]
         case .chat:
             return [
@@ -86,6 +93,19 @@ public enum Module: String, CaseIterable {
             // the card can mint a .meeting Node from a tap, and on
             // DesignSystem so any future in-module UI can reuse Liquid
             // Glass tokens without reaching across the layering boundary.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.designSystem.rawValue),
+            ]
+        case .healthInsights:
+            // HealthKit reader + pure WeeklySummary value type for the
+            // HomeView "Cette semaine" card (v0.9). Depends on GraphCore
+            // so a future tap → Node flow stays consistent with
+            // CalendarKit, and on DesignSystem for the same layering
+            // reason. The HealthKit framework itself is linked from the
+            // module's source via `import HealthKit`, gated behind
+            // `#if canImport(HealthKit)` so the module still compiles
+            // on platforms without it.
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.designSystem.rawValue),

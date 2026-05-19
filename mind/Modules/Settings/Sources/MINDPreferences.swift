@@ -18,6 +18,7 @@ public final class MINDPreferences {
         static let focusDurationMinutes      = "mind.pref.focusDurationMinutes"
         static let auditNotificationsEnabled = "mind.pref.auditNotificationsEnabled"
         static let sentryDSN                 = "mind.pref.sentryDSN"
+        static let healthInsightsEnabled     = "mind.pref.healthInsightsEnabled"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -59,6 +60,18 @@ public final class MINDPreferences {
         }
     }
 
+    /// HealthKit weekly insights opt-in (v0.9). False by default so the
+    /// home card stays hidden and HealthKit is never queried until the
+    /// user explicitly enables it from Settings. Flipping this on does
+    /// NOT prompt for permission — Settings calls
+    /// `HealthReader.requestAccess()` separately so the sequence stays
+    /// "user taps Settings → user taps toggle → permission sheet appears".
+    public var healthInsightsEnabled: Bool {
+        didSet {
+            defaults.set(healthInsightsEnabled, forKey: Key.healthInsightsEnabled)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -76,6 +89,12 @@ public final class MINDPreferences {
         self.auditNotificationsEnabled = storedNotifs ?? true
 
         self.sentryDSN = suite.string(forKey: Key.sentryDSN) ?? ""
+
+        // HealthKit is opt-out by default — Apple's HIG explicitly asks
+        // health-data apps to surface a deliberate toggle rather than
+        // prompt at first launch. Nil → false, false → false, true → true.
+        let storedHealth = suite.object(forKey: Key.healthInsightsEnabled) as? Bool
+        self.healthInsightsEnabled = storedHealth ?? false
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -104,6 +123,15 @@ public final class MINDPreferences {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         let value = suite.string(forKey: Key.sentryDSN)?.trimmingCharacters(in: .whitespacesAndNewlines)
         return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// Non-Observable accessor for HealthInsights / HomeView paths that
+    /// want to check the opt-in without holding the @MainActor instance.
+    public static func currentHealthInsightsEnabled(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> Bool {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        return suite.object(forKey: Key.healthInsightsEnabled) as? Bool ?? false
     }
 }
 

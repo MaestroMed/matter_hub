@@ -6,6 +6,7 @@ import CalendarKit
 import DesignSystem
 import FocusKit
 import GraphCore
+import HealthInsights
 import Notes
 import Chat
 import Settings
@@ -355,6 +356,11 @@ private struct HomeView: View {
     /// are no events today; the card hides itself in either case so the
     /// rest of HomeView keeps its rhythm.
     @State private var todayEvents: [CalendarEvent] = []
+    /// v0.9 — 7-day health aggregate (steps, sleep, active minutes) for
+    /// the "Cette semaine" card. Stays `.empty` when the user hasn't
+    /// opted in via Settings, when HealthKit is unavailable, or when no
+    /// samples were logged. `isMeaningful` is the render gate.
+    @State private var weeklyHealth: WeeklySummary = .empty
 
     private var habitsTodayCount: Int {
         HabitsView.checkedTodayCount(in: allNodes)
@@ -434,6 +440,10 @@ private struct HomeView: View {
 
                 if !thisWeekSessions.isEmpty {
                     focusWeekCard
+                }
+
+                if weeklyHealth.isMeaningful {
+                    healthWeekCard
                 }
 
                 tasksCard
@@ -538,7 +548,135 @@ private struct HomeView: View {
             // which is the natural moment to grant.
             _ = await CalendarReader.shared.requestAccess()
             todayEvents = await CalendarReader.shared.todayEvents()
+
+            // v0.9 — load the weekly health summary only when the user
+            // has explicitly opted in via Settings. We never call
+            // requestAccess() here: that would defeat the explicit-opt-in
+            // contract of the toggle. If the user toggled on Settings,
+            // permission has already been requested at that moment.
+            if prefs.healthInsightsEnabled {
+                weeklyHealth = await HealthReader.shared.weeklySummary()
+            }
         }
+    }
+
+    // MARK: - "Cette semaine" health card (v0.9 — HealthInsights)
+
+    /// Three-stat compact card rendered after the Focus week summary
+    /// when the user has opted into HealthKit and there is at least one
+    /// non-zero metric. Layout mirrors `statsCard` for visual continuity
+    /// — three columns, monospaced digits, a coloured icon per metric.
+    /// Stays read-only: the card is informational, not interactive.
+    /// Tapping doesn't open anything because there is no "health detail"
+    /// view yet; we'll add one in a later version if the metric merits it.
+    private var healthWeekCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(.green.opacity(0.20))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "heart.fill")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.green)
+                    }
+                    Text("home.healthWeek.header")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(1)
+                    Spacer()
+                }
+
+                HStack(spacing: 0) {
+                    healthStatColumn(
+                        icon: "figure.walk",
+                        value: Self.formatSteps(weeklyHealth.totalSteps),
+                        label: "home.healthWeek.steps",
+                        tint: LiquidPalette.iris
+                    )
+                    healthStatDivider
+                    healthStatColumn(
+                        icon: "bed.double.fill",
+                        value: Self.formatSleepHours(weeklyHealth.avgSleepHours),
+                        label: "home.healthWeek.sleep",
+                        tint: .purple
+                    )
+                    healthStatDivider
+                    healthStatColumn(
+                        icon: "flame.fill",
+                        value: Self.formatActiveMinutes(weeklyHealth.activeMinutes),
+                        label: "home.healthWeek.active",
+                        tint: .orange
+                    )
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func healthStatColumn(
+        icon: String,
+        value: String,
+        label: String.LocalizationValue,
+        tint: Color
+    ) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(.callout, design: .rounded, weight: .semibold))
+                .foregroundStyle(tint)
+            Text(value)
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
+                .contentTransition(.numericText())
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+            Text(String(localized: label).uppercased())
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var healthStatDivider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.25))
+            .frame(width: 1, height: 36)
+    }
+
+    /// Formats `12345` as "12,3k" so the column never overflows the
+    /// stat width on accessibility text sizes. Below 1000 we render
+    /// the raw integer with locale-aware grouping.
+    private static func formatSteps(_ total: Int) -> String {
+        if total >= 1000 {
+            let kilos = Double(total) / 1000
+            return String(format: "%.1fk", kilos)
+        }
+        return total.formatted()
+    }
+
+    /// Renders the average sleep window as `7h32` (mixed unit, no decimal
+    /// — matches how Apple Health displays summaries in the iOS Health
+    /// app). Hours < 1 fall through to "—" so we don't lie with zero.
+    private static func formatSleepHours(_ hours: Double) -> String {
+        guard hours > 0 else { return "—" }
+        let wholeHours = Int(hours)
+        let minutes = Int((hours - Double(wholeHours)) * 60)
+        return "\(wholeHours)h\(String(format: "%02d", minutes))"
+    }
+
+    /// "210 min" for any non-zero value, "—" otherwise. Keeps the
+    /// column compact at any Dynamic Type size.
+    private static func formatActiveMinutes(_ minutes: Int) -> String {
+        guard minutes > 0 else { return "—" }
+        return "\(minutes) min"
     }
 
     // MARK: - "Aujourd'hui" card (v0.8 — CalendarKit)

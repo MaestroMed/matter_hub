@@ -26,6 +26,13 @@ let appTarget: Target = .target(
         // legacy key for write-only paths we may add later.
         "NSCalendarsFullAccessUsageDescription": "MIND lit ton agenda pour surfacer les rendez-vous du jour sur l'accueil et créer un nœud par réunion en un tap.",
         "NSCalendarsUsageDescription": "MIND lit ton agenda pour surfacer les rendez-vous du jour sur l'accueil et créer un nœud par réunion en un tap.",
+        // v0.9 — HealthKit weekly insights. Apple requires BOTH read and
+        // write usage strings even though we only read, otherwise the
+        // App Store reviewer rejects the build. The FR copy explicitly
+        // says "aucune donnée ne quitte ton appareil" so the user
+        // knows the permission is local-only.
+        "NSHealthShareUsageDescription": "MIND lit ton activité physique (pas, sommeil, minutes actives) sur 7 jours pour afficher un résumé hebdomadaire à côté de tes stats Focus. Aucune donnée ne quitte ton appareil.",
+        "NSHealthUpdateUsageDescription": "MIND lit ton activité physique (pas, sommeil, minutes actives) sur 7 jours pour afficher un résumé hebdomadaire à côté de tes stats Focus. Aucune donnée ne quitte ton appareil.",
         "UIBackgroundModes": ["audio", "processing", "fetch"],
         "BGTaskSchedulerPermittedIdentifiers": ["app.mind.ios.refresh"],
         "ITSAppUsesNonExemptEncryption": false,
@@ -66,6 +73,10 @@ let testTarget: Target = .target(
         // v0.8 — CalendarEventTests cover the pure value type + Array
         // helpers used by the HomeView "Aujourd'hui" card.
         .target(name: Module.calendarKit.rawValue),
+        // v0.9 — WeeklySummaryTests lock the pure value type used by
+        // the HomeView "Cette semaine" health card. HealthReader itself
+        // is exercised end-to-end via the simulator screenshot.
+        .target(name: Module.healthInsights.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

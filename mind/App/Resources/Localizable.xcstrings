@@ -522,6 +522,38 @@
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Focus cette semaine" } }
       }
     },
+    "home.healthWeek.header" : {
+      "comment" : "Header of the HomeView 'Cette semaine' health card (v0.9 — HealthInsights).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This week" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Santé cette semaine" } }
+      }
+    },
+    "home.healthWeek.steps" : {
+      "comment" : "Label under the steps figure on the v0.9 health card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Steps" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas" } }
+      }
+    },
+    "home.healthWeek.sleep" : {
+      "comment" : "Label under the average sleep figure on the v0.9 health card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sleep" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sommeil" } }
+      }
+    },
+    "home.healthWeek.active" : {
+      "comment" : "Label under the active-minutes figure on the v0.9 health card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actif" } }
+      }
+    },
     "home.today.header" : {
       "comment" : "Header of the HomeView 'Aujourd'hui' card (v0.8 — CalendarKit).",
       "extractionState" : "manual",

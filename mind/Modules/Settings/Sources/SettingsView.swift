@@ -3,6 +3,7 @@ import SwiftData
 import CloudKit
 import DesignSystem
 import GraphCore
+import HealthInsights
 import Intelligence
 import VisualKit
 
@@ -162,6 +163,40 @@ public struct SettingsView: View {
                             }
                             Spacer()
                             LiquidToggle(isOn: $prefs.auditNotificationsEnabled)
+                        }
+
+                        Divider().background(.white.opacity(0.2))
+
+                        // v0.9 — HealthKit opt-in. Toggle on triggers the
+                        // permission prompt. Toggle off only flips the
+                        // local flag; iOS doesn't expose a way to
+                        // revoke from the app, the user has to go to
+                        // Réglages → Santé → MIND to revoke entirely.
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Données santé")
+                                    .font(.system(.body, design: .rounded, weight: .medium))
+                                Text("Active la lecture pas / sommeil / minutes actives sur 7 jours pour la carte « Cette semaine » de l'accueil.")
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            LiquidToggle(isOn: Binding(
+                                get: { prefs.healthInsightsEnabled },
+                                set: { newValue in
+                                    prefs.healthInsightsEnabled = newValue
+                                    if newValue {
+                                        // Kick the authorization sheet on
+                                        // toggle-on. requestAccess() is
+                                        // idempotent — already-granted
+                                        // permissions short-circuit and
+                                        // the user sees nothing.
+                                        Task {
+                                            _ = await HealthReader.shared.requestAccess()
+                                        }
+                                    }
+                                }
+                            ))
                         }
 
                         Divider().background(.white.opacity(0.2))

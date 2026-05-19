@@ -130,11 +130,30 @@ calendar permission prompt firing on first launch with the exact French
 copy, validating both the EventKit request path and the Info.plist
 string.
 
-### v0.9 — HealthKit weekly insights ⏳
+### v0.9 — HealthKit weekly insights ✅
 **What**: New module HealthKit. Pulls last 7 days of sleep, steps,
 active minutes. Surfaces on HomeView in "Cette semaine" card under
 Focus stats. **Acceptance**: weekly summary card shows values, permission
 flow handled, opt-in via Settings.
+Shipped 2026-05-19: new `HealthInsights` module wraps `HKHealthStore` via
+an actor that soft-fails to `WeeklySummary.empty` when permission is
+denied / HealthKit unavailable; pure `WeeklySummary` value type with
+`.empty` / `isMeaningful` helpers gates a new HomeView "Cette semaine"
+card (3 columns — steps, sleep avg, active minutes). Strict opt-in: a
+new toggle in Settings → Préférences flips `healthInsightsEnabled` (FR
+default `false`) and triggers `HealthReader.requestAccess()` only on
+toggle-on. `NSHealthShareUsageDescription` +
+`NSHealthUpdateUsageDescription` added in `Project.swift` with FR copy,
+`com.apple.developer.healthkit` entitlement enabled, and
+`NSPrivacyCollectedDataTypeHealth` entry declared in
+`PrivacyInfo.xcprivacy` (not linked, not tracking, AppFunctionality
+purpose) so App Store review passes cleanly. 6 new tests in
+`Tests/Sources/HealthReaderTests.swift` cover init, `.empty`,
+`isMeaningful`, and Equatable. 159 tests, 0 failures (was 153 in v0.8).
+Screenshot at `mind/screenshots/v0.9.png` shows the host app launching
+clean — the card is intentionally hidden because the Simulator
+HealthKit is empty + opt-in is off, which is exactly the documented
+soft-fail contract.
 
 ### v0.10 — Reminders bidirectional sync ⏳
 **What**: Tasks in MIND mirror to iOS Reminders and vice versa. Use
