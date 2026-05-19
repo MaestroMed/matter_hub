@@ -77,7 +77,10 @@ public enum SpotlightIndexer {
     /// snippet (matched second), keywords (tags), kind label, and a
     /// content type that influences which result-row icon Spotlight
     /// uses.
-    private static func makeSearchableItem(for node: Node) -> CSSearchableItem {
+    ///
+    /// `internal` (not `private`) so the test target can verify the
+    /// mapping without touching the real CSSearchableIndex singleton.
+    static func makeSearchableItem(for node: Node) -> CSSearchableItem {
         let attrs = CSSearchableItemAttributeSet(contentType: contentType(for: node.kind))
 
         attrs.title = node.title
@@ -111,8 +114,9 @@ public enum SpotlightIndexer {
 
     /// Picks a UTType that roughly matches the node kind so Spotlight
     /// renders an appropriate fallback icon when the app isn't yet
-    /// providing a custom thumbnail.
-    private static func contentType(for kind: NodeKind) -> UTType {
+    /// providing a custom thumbnail. `internal` for the same reason
+    /// as `makeSearchableItem`.
+    static func contentType(for kind: NodeKind) -> UTType {
         switch kind {
         case .note, .journal, .idea, .capture:
             return .plainText
