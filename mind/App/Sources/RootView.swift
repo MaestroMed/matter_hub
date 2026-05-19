@@ -340,12 +340,14 @@ private struct HomeView: View {
     @State private var isAuditing: Bool = false
     @State private var isChatting: Bool = false
     @State private var selectedClient: Node?
+    @State private var selectedNote: Node?
     @State private var showFocusHistory: Bool = false
     @State private var showTasks: Bool = false
     @State private var showAmbient: Bool = false
     @State private var showHabits: Bool = false
     @State private var showJournal: Bool = false
     @State private var showGoals: Bool = false
+    @State private var showSearch: Bool = false
 
     private var habitsTodayCount: Int {
         HabitsView.checkedTodayCount(in: allNodes)
@@ -408,6 +410,8 @@ private struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 greeting
+
+                quickSearchPill
 
                 if !resumableClients.isEmpty {
                     ResumeCarousel(clients: resumableClients) { client in
@@ -490,6 +494,26 @@ private struct HomeView: View {
         }
         .sheet(isPresented: $isChatting) {
             ChatView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showSearch) {
+            // Reuse the full-featured NotesView. Its search field auto-
+            // focuses on appearance when reached via this entry point,
+            // so the user can start typing immediately. Tapping a result
+            // routes through `selectedNote`, then opens NodeDetailView
+            // — same flow as the Notes tab.
+            NotesView { node in
+                selectedNote = node
+                showSearch = false
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(item: $selectedNote) { node in
+            NodeDetailView(node: node)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -586,7 +610,52 @@ private struct HomeView: View {
                     }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Ambient mode")
         }
+    }
+
+    /// One-tap entry into the semantic search sheet from anywhere on
+    /// Home. Faster than tab-switching to Notes and tapping the search
+    /// field there. Shows a hint count ("82 nodes searchable") so the
+    /// user sees the corpus they're searching against.
+    private var quickSearchPill: some View {
+        Button {
+            LiquidHaptics.tap()
+            showSearch = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                Text("Cherche dans ton graphe…")
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if !allNodes.isEmpty {
+                    Text("\(allNodes.count)")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background {
+                            Capsule().fill(.white.opacity(0.4))
+                        }
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule(style: .continuous)
+                            .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                    }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Search the graph")
     }
 
     private var deepFocusCard: some View {
