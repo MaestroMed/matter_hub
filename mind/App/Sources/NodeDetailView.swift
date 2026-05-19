@@ -3,6 +3,7 @@ import SwiftData
 import DesignSystem
 import GraphCore
 import Notes
+import OutreachKit
 
 /// Polymorphic full-screen rendering of any Node in the graph. Triggered
 /// from NotesView (and later from search). The body adapts to the kind:
@@ -16,6 +17,11 @@ struct NodeDetailView: View {
     let node: Node
 
     @State private var showClientDetail: Bool = false
+    /// v0.26 — Drives the OutreachSheet presentation from the client
+    /// body's "Générer outreach" button. Only meaningful when the
+    /// node is `.client` kind; default-body / audit-body branches
+    /// never read this flag.
+    @State private var showOutreach: Bool = false
     /// v0.18 — Singleton voice player drives the Listen button + the
     /// mini playback bar. SwiftUI's `@State` plus the player's
     /// `@Observable` macro reactively re-renders the icon when
@@ -67,6 +73,28 @@ struct NodeDetailView: View {
             ClientDetailView(
                 client: node,
                 audits: ClientsView.audits(for: node)
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showOutreach) {
+            // v0.26 — Pre-seed the prospect context from this Node so
+            // the form lands populated with the client name + host
+            // (URL stored in `content` for client kind) and any
+            // attached audit. The user can then tweak the recent
+            // trigger / industry / voice tone before hitting
+            // "Générer 5 variantes".
+            OutreachSheet(
+                prospect: ProspectContext(
+                    clientName: node.title,
+                    host: clientHost ?? node.content,
+                    auditReport: nil,
+                    recentTrigger: nil,
+                    industry: nil,
+                    primaryContactName: nil,
+                    primaryContactRole: nil
+                )
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
@@ -255,6 +283,36 @@ struct NodeDetailView: View {
                                 .stroke(LiquidGradient.glassStroke, lineWidth: 1)
                         }
                 }
+            }
+            .buttonStyle(.plain)
+            // v0.26 — Outreach engine entry point. Sits below the
+            // audit history CTA so the user moves from "I want to
+            // see what we know about this prospect" → "I want to
+            // reach out" in two visually adjacent affordances.
+            Button {
+                LiquidHaptics.select()
+                showOutreach = true
+            } label: {
+                HStack {
+                    Image(systemName: "envelope.badge.shield.half.filled")
+                    Text("node.action.outreach")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.tertiary)
+                }
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(LiquidGradient.primary)
+                        .overlay {
+                            Capsule(style: .continuous)
+                                .stroke(.white.opacity(0.35), lineWidth: 1)
+                        }
+                }
+                .shadow(color: LiquidPalette.iris.opacity(0.35), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
         }

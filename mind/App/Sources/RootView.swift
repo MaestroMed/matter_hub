@@ -12,6 +12,7 @@ import Notes
 import Chat
 import Settings
 import Capture
+import OutreachKit
 
 // Settings module exports MINDPreferences which we re-use here.
 
@@ -386,6 +387,11 @@ private struct HomeView: View {
     /// audited in parallel, results rendered as a 4-way radar + per-
     /// metric podium.
     @State private var isBattling: Bool = false
+    /// v0.26 — AI Sales Email Generator sheet. Triggered from the
+    /// audit card's tertiary "Outreach engine" row. Form → 5
+    /// shimmer skeletons → 5 LiquidCard variants with Copier /
+    /// Ouvrir dans Mail / Aimer actions.
+    @State private var isOutreaching: Bool = false
     @State private var selectedClient: Node?
     @State private var selectedNote: Node?
     @State private var showFocusHistory: Bool = false
@@ -657,6 +663,19 @@ private struct HomeView: View {
         }
         .sheet(isPresented: $isBattling) {
             BattleSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $isOutreaching) {
+            // v0.26 — Open the OutreachSheet with an empty prospect
+            // context. The form takes the user from "I just want to
+            // draft an outreach" to 5 variants in one screen. When
+            // the user wants the audit pre-attached, they enter the
+            // sheet via NodeDetailView (client kind) or the
+            // ClientCard swipe action instead, both of which mint a
+            // fully-populated ProspectContext upstream.
+            OutreachSheet()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -1415,6 +1434,49 @@ private struct HomeView: View {
                                 .minimumScaleFactor(0.85)
                                 .lineLimit(2)
                             Text("home.battleCard.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+
+                // v0.26 — Tertiary CTA: AI Sales Email Generator.
+                // Mounted under the Battle Mode row so the natural
+                // reading order is single-audit → multi-audit
+                // benchmark → outreach. The iris-tinted envelope
+                // glyph signals "send" without burning the primary
+                // CTA's pure-iris fill.
+                Divider()
+                    .background(LiquidPalette.iris.opacity(0.18))
+
+                Button {
+                    LiquidHaptics.select()
+                    isOutreaching = true
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.iris.opacity(0.20))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "envelope.badge.shield.half.filled")
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("home.outreachCard.title", bundle: .main)
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .minimumScaleFactor(0.85)
+                                .lineLimit(2)
+                            Text("home.outreachCard.subtitle", bundle: .main)
                                 .font(.system(.caption, design: .rounded))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)

@@ -513,11 +513,29 @@ space, focus timer becomes a glowing sphere, audit reports float
 as readable panels. **Acceptance**: app runs on Vision Pro
 simulator, basic interactions work.
 
-### v0.26 — CarPlay capture ⏳
+### v0.26 — AI Sales Email Generator ✅
+Shipped 2026-05-19: new `OutreachKit` module + `OutreachSheet` UI + 3 entry points (NodeDetailView client body, HomeView audit card tertiary row, ClientCard context menu) + 14 pure tests + FR/EN strings.
+**What** (pivoted 2026-05-19 from "CarPlay capture" — CarPlay
+deferred to v0.26.1 once Apple entitlement lands): outreach engine
+that turns any client/prospect Node into 5 cold email variants
+written in Mehdi's voice. Each variant is personalised on the
+prospect's audit findings + recent activity + industry, tagged with
+an angle (ROI / Quick win / Concurrent / Funding / Question), and
+exportable to Mail.app via a `mailto:` deep link. **Acceptance**:
+new `OutreachKit` module ships with `OutreachEmailGenerator` actor +
+pure `OutreachPromptBuilder` + pure `OutreachMailto` URL builder;
+new `OutreachSheet` SwiftUI screen renders 5 variant cards with
+Copy / Open-in-Mail / Like actions; entry points wired from
+`NodeDetailView` (client kind), `HomeView` audit card tertiary
+row, and `ClientCard` swipe; 15 FR/EN localizable keys; 13 pure
+tests in `OutreachKitTests` (8 prompt-builder + 5 mailto); iOS
+Simulator screenshot validates the app launches clean.
+
+### v0.26.1 — CarPlay capture ⏳
 **What**: CarPlay scene with a single big "Capture by voice" button.
 Same SFSpeech flow as iPhone. Useful for hands-free note-taking
 while driving. **Acceptance**: app appears in CarPlay menu, voice
-capture creates Node.
+capture creates Node. Blocked on Apple CarPlay entitlement request.
 
 ### v0.27 — Lock Screen widgets ⏳
 **What**: Lock Screen widgets (circular, rectangular, inline) for

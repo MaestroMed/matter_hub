@@ -132,6 +132,14 @@ let testTarget: Target = .target(
         // HTML template byte budget, and the determinism of the
         // canonical encoder. AuditKit is already linked transitively.
         .target(name: Module.liveBroadcastKit.rawValue),
+        // v0.26 — OutreachKitTests lock the pure
+        // `OutreachPromptBuilder` (prompt body anchors, voice tone
+        // injection, audit grounding, deterministic output) and the
+        // `OutreachMailto` URL escaping contract (subject + body +
+        // recipient nil + accents + 5000+ char body). The
+        // `OutreachEmailGenerator` actor's HTTP path is exercised
+        // end-to-end via the simulator screenshot.
+        .target(name: Module.outreachKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

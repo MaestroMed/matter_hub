@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import DesignSystem
 import GraphCore
+import OutreachKit
 
 struct ClientsView: View {
     @Query(sort: \Node.createdAt, order: .reverse) private var allNodes: [Node]
@@ -12,6 +13,11 @@ struct ClientsView: View {
     /// with the chosen URL so they go from blank → audit running in
     /// one tap.
     @State private var demoAuditURL: DemoAuditTarget?
+    /// v0.26 — Set when the user picks "Outreach" from a client
+    /// card's context menu. Drives the OutreachSheet presentation
+    /// pre-populated with that client's identity. Distinct from
+    /// `selected` so the two sheets don't conflict on dismissal.
+    @State private var outreachClient: Node?
 
     private var clients: [Node] {
         allNodes.filter { $0.kindRaw == "client" }
@@ -46,6 +52,23 @@ struct ClientsView: View {
                                 )
                             }
                             .buttonStyle(.plain)
+                            // v0.26 — Long-press a client card to
+                            // jump straight into the OutreachSheet.
+                            // Context menu is the lightest-touch
+                            // affordance here — no chrome added to
+                            // the card itself, and the discovery
+                            // moment matches iOS standard
+                            // (long-press = secondary actions).
+                            .contextMenu {
+                                Button {
+                                    outreachClient = client
+                                } label: {
+                                    Label(
+                                        String(localized: "node.action.outreach"),
+                                        systemImage: "envelope.badge.shield.half.filled"
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -69,6 +92,36 @@ struct ClientsView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(item: $outreachClient) { client in
+            // v0.26 — Pre-seed the prospect context from the
+            // tapped client Node. URL lives in `content` for client
+            // kind; host derived from it powers the prompt
+            // grounding so Claude knows which prospect we mean.
+            OutreachSheet(
+                prospect: ProspectContext(
+                    clientName: client.title,
+                    host: ClientsView.host(of: client) ?? client.content,
+                    auditReport: nil,
+                    recentTrigger: nil,
+                    industry: nil,
+                    primaryContactName: nil,
+                    primaryContactRole: nil
+                )
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
+        }
+    }
+
+    /// Best-effort host extraction from a client Node's stored URL.
+    /// Returns nil when the URL string is empty / malformed; the
+    /// OutreachSheet caller then falls back to the raw content
+    /// string so the form lands populated either way.
+    static func host(of client: Node) -> String? {
+        guard let url = URL(string: client.content),
+              let host = url.host(percentEncoded: false) else { return nil }
+        return host.replacingOccurrences(of: "www.", with: "")
     }
 
     // MARK: - Subviews

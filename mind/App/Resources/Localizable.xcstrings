@@ -4455,6 +4455,222 @@
         "en": { "stringUnit": { "state": "translated", "value": "+%1$@ %2$@" } },
         "fr": { "stringUnit": { "state": "translated", "value": "+%1$@ %2$@" } }
       }
+    },
+    "outreach.title": {
+      "comment": "v0.26 · OutreachSheet large header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Outreach engine" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Moteur d'outreach" } }
+      }
+    },
+    "outreach.subtitle": {
+      "comment": "v0.26 · OutreachSheet subtitle under the large header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "5 cold email variants in your voice, grounded in the audit." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "5 variantes d'email à froid dans ta voix, ancrées dans l'audit." } }
+      }
+    },
+    "outreach.field.recipientName": {
+      "comment": "v0.26 · Placeholder for the recipient name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recipient name" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nom du destinataire" } }
+      }
+    },
+    "outreach.field.recipientEmail": {
+      "comment": "v0.26 · Placeholder for the recipient email field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recipient email" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Email du destinataire" } }
+      }
+    },
+    "outreach.voice.friendly": {
+      "comment": "v0.26 · Voice tone pill — friendly / amical.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Friendly" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Amical" } }
+      }
+    },
+    "outreach.voice.direct": {
+      "comment": "v0.26 · Voice tone pill — direct, no fluff.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Direct" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Direct" } }
+      }
+    },
+    "outreach.voice.formal": {
+      "comment": "v0.26 · Voice tone pill — formal business register.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Formal" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Formel" } }
+      }
+    },
+    "outreach.field.trigger": {
+      "comment": "v0.26 · Label for the optional recent-trigger text field (funding, hire, launch).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recent trigger (optional)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Trigger récent (facultatif)" } }
+      }
+    },
+    "outreach.cta.generate": {
+      "comment": "v0.26 · Primary CTA on the OutreachSheet form — generates the 5 variants.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generate 5 variants" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Générer 5 variantes" } }
+      }
+    },
+    "outreach.generating.label": {
+      "comment": "v0.26 · Inline status text while the 5 shimmer skeleton cards are visible.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Drafting in your voice…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rédaction dans ta voix…" } }
+      }
+    },
+    "outreach.variant.angle.roi": {
+      "comment": "v0.26 · Angle pill — leads with a € ROI number.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ROI" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ROI" } }
+      }
+    },
+    "outreach.variant.angle.quickWin": {
+      "comment": "v0.26 · Angle pill — names a concrete fix the prospect could ship this week.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Quick win" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Quick win" } }
+      }
+    },
+    "outreach.variant.angle.competitor": {
+      "comment": "v0.26 · Angle pill — contrasts the prospect with a named competitor.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Competitor" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Concurrent" } }
+      }
+    },
+    "outreach.variant.angle.funding": {
+      "comment": "v0.26 · Angle pill — references a recent trigger (funding round, hire, launch).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Funding" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Funding" } }
+      }
+    },
+    "outreach.variant.angle.question": {
+      "comment": "v0.26 · Angle pill — opens with a sharp question, no pitch in the first paragraph.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Question" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Question" } }
+      }
+    },
+    "outreach.action.copy": {
+      "comment": "v0.26 · Per-variant card action — copies subject + body to UIPasteboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Copy" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Copier" } }
+      }
+    },
+    "outreach.action.openInMail": {
+      "comment": "v0.26 · Per-variant card action — opens iOS Mail via mailto: URL.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open in Mail" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir dans Mail" } }
+      }
+    },
+    "outreach.action.like": {
+      "comment": "v0.26 · Per-variant heart toggle accessibility label — marks the winning variant.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Like variant" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aimer la variante" } }
+      }
+    },
+    "outreach.regenerate": {
+      "comment": "v0.26 · Footer button — regenerates the 5 variants with the same form values.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Regenerate" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Régénérer" } }
+      }
+    },
+    "outreach.new": {
+      "comment": "v0.26 · Footer button — resets the form for a new prospect.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New prospect" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouveau prospect" } }
+      }
+    },
+    "outreach.action.expand": {
+      "comment": "v0.26 · Per-variant CTA to expand the collapsed body preview.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "See full email" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voir l'email entier" } }
+      }
+    },
+    "outreach.action.collapse": {
+      "comment": "v0.26 · Per-variant CTA to collapse the expanded body back to 3 lines.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Collapse" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réduire" } }
+      }
+    },
+    "outreach.error.noProspect": {
+      "comment": "v0.26 · Inline error on the form when no client name + no host are provided.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add a prospect name or URL first." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ajoute un nom de prospect ou une URL d'abord." } }
+      }
+    },
+    "outreach.error.emptyResponse": {
+      "comment": "v0.26 · Inline error when the LLM round-trip returns zero parseable variants.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No variants could be parsed — try regenerating." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune variante exploitable — essaie de régénérer." } }
+      }
+    },
+    "home.outreachCard.title": {
+      "comment": "v0.26 · HomeView audit card — tertiary row title for the outreach engine.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Outreach engine" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Moteur d'outreach" } }
+      }
+    },
+    "home.outreachCard.subtitle": {
+      "comment": "v0.26 · HomeView audit card — tertiary row subtitle for the outreach engine.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "5 cold email variants in your voice from any prospect." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "5 variantes d'email à froid à partir de n'importe quel prospect." } }
+      }
+    },
+    "node.action.outreach": {
+      "comment": "v0.26 · NodeDetailView client body — CTA to generate outreach.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generate outreach" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Générer outreach" } }
+      }
     }
   }
 }

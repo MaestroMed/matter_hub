@@ -19,6 +19,7 @@ public enum Module: String, CaseIterable {
     case linearKit = "LinearKit"
     case clientPortalKit = "ClientPortalKit"
     case liveBroadcastKit = "LiveBroadcastKit"
+    case outreachKit = "OutreachKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -204,6 +205,34 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),
+            ]
+        case .outreachKit:
+            // v0.26 — AI Sales Email Generator. Generates 5 cold
+            // email variants per prospect via the cloud LLM bridge,
+            // each tagged with an angle (ROI / Quick win / Concurrent
+            // / Funding / Question), and exports the chosen variant
+            // to Mail.app via a `mailto:` URL.
+            //
+            // Depends on AuditKit because the prospect context folds
+            // the `AuditReport` quick wins + hidden risks into the
+            // prompt grounding, AND because the production
+            // `CloudIntelligenceHandle.live` bridge already lives in
+            // AuditKit (introduced by v0.25's ROIEstimator). Reusing
+            // that handle means we never re-roll the MainActor hop
+            // around `CloudIntelligence` — a single regression in
+            // the bridge fixes both the ROI estimator and the email
+            // generator. Depends on GraphCore for `MINDTelemetry`
+            // breadcrumbs (`outreach.generation.started` /
+            // `outreach.generation.completed` /
+            // `outreach.generation.failed`). Depends on Intelligence
+            // for `CloudIntelligence` itself — the `CloudIntelligenceHandle`
+            // type lives in AuditKit but the underlying actor lives
+            // in Intelligence, and the live factory references the
+            // Intelligence type directly.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.auditKit.rawValue),
+                .target(name: Module.intelligence.rawValue),
             ]
         }
     }
