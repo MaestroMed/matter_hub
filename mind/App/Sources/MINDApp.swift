@@ -19,6 +19,7 @@ struct MINDApp: App {
 
     init() {
         bootstrapSentry()
+        bootstrapBackgroundRefresh()
     }
 
     var body: some Scene {
@@ -39,10 +40,47 @@ struct MINDApp: App {
                 refreshGraphFromCloud()
             case .background:
                 MINDTelemetry.info("lifecycle.background")
+                // Ask iOS to wake MIND in ~6h so the CloudKit mirror
+                // pulls any captures made on the user's other devices
+                // even if they don't reopen this app today.
+                BackgroundRefreshScheduler.scheduleNext()
             case .inactive:
                 break
             @unknown default:
                 break
+            }
+        }
+    }
+
+    /// Registers the `BGAppRefreshTask` handler with iOS so the system
+    /// can wake MIND silently every ~6h to pull CloudKit changes. The
+    /// handler does a single `mainContext.save()` (cheap when there's
+    /// nothing pending) which nudges NSPersistentCloudKitContainer to
+    /// check the remote zone, then immediately schedules the next
+    /// wake before reporting completion.
+    ///
+    /// Must run during `App.init` (before the first `.active`
+    /// scenePhase) — registering later raises
+    /// `BGTaskSchedulerErrorDomain` 1.
+    private func bootstrapBackgroundRefresh() {
+        BackgroundRefreshScheduler.register { task in
+            Task { @MainActor in
+                let context = GraphCore.sharedContainer.mainContext
+                if context.hasChanges {
+                    do {
+                        try context.save()
+                        MINDTelemetry.info("graph.background.save")
+                    } catch {
+                        MINDTelemetry.error(
+                            "graph.background.save.failed",
+                            data: ["error": String(describing: error)]
+                        )
+                    }
+                }
+                // Always reschedule before reporting completion —
+                // otherwise the wake cycle dies after one fire.
+                BackgroundRefreshScheduler.scheduleNext()
+                task.setTaskCompleted(true)
             }
         }
     }

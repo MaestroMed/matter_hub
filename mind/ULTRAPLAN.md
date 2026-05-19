@@ -33,12 +33,13 @@ The first cohort = Mehdi + 5 hand-picked friends running iPhone 15
 Pro or newer on iOS 26+. Goal of this chapter: hit "comfortably
 usable solo" on TestFlight.
 
-### v0.2 — Background fetch + AuditController tests ⏳
+### v0.2 — Background fetch + AuditController tests ✅
 **What**: BackgroundTasks framework registration so the app can wake
 periodically (every ~6h) and pull CloudKit changes silently. New
 `AuditControllerTests` cover happy path / cancellation / failure for
 the phase state machine. **Acceptance**: BGAppRefreshTask registered,
 6 new tests pass, audit phase state diagram covered.
+Shipped 2026-05-19: BGAppRefreshTask `app.mind.ios.refresh` registered in MINDApp.init via BackgroundRefreshScheduler (GraphCore), scheduled on scenePhase=.background, 6 AuditController state-machine tests added (101 total, 0 failures).
 
 ### v0.3 — Share Extension iOS ⏳
 **What**: New `MINDShareExtension` Tuist target with

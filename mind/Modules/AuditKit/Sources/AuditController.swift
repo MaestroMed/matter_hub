@@ -40,15 +40,24 @@ public final class AuditController {
         self.notifier = notifier ?? AuditNotifier()
     }
 
-    public var isRunning: Bool {
+    public var isRunning: Bool { Self.isRunning(for: phase) }
+
+    /// Friendly progress label for the UI; safe to bind to a Text view.
+    public var progressLabel: String { Self.progressLabel(for: phase) }
+
+    /// Pure-function view of `isRunning` so the state machine can be
+    /// exercised in unit tests without needing to drive the controller
+    /// through a full audit run.
+    public nonisolated static func isRunning(for phase: Phase) -> Bool {
         switch phase {
         case .idle, .completed, .failed: return false
         case .probing, .synthesizing:    return true
         }
     }
 
-    /// Friendly progress label for the UI; safe to bind to a Text view.
-    public var progressLabel: String {
+    /// Pure-function view of `progressLabel` so the FR copy can be
+    /// asserted in tests phase-by-phase.
+    public nonisolated static func progressLabel(for phase: Phase) -> String {
         switch phase {
         case .idle:         return "Prêt à auditer"
         case .probing:      return "13 sondes en parallèle (perf, sécu, SEO, brand, infra, trust)…"
