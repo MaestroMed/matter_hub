@@ -274,6 +274,56 @@ public struct SettingsView: View {
 
                         Divider().background(.white.opacity(0.2))
 
+                        // v0.17 — Daily morning brief opt-in + hour
+                        // picker. Toggle-on requests the
+                        // UNUserNotificationCenter permission and
+                        // schedules a daily local notification at the
+                        // chosen wall-clock hour. Toggle-off cancels
+                        // the schedule. Changing the hour while
+                        // enabled re-schedules immediately so the next
+                        // morning fires at the new time without
+                        // requiring the user to relaunch.
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("settings.brief.enable", bundle: .main)
+                                        .font(.system(.body, design: .rounded, weight: .medium))
+                                    Text("settings.brief.subtitle", bundle: .main)
+                                        .font(.system(.caption, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                LiquidToggle(isOn: Binding(
+                                    get: { prefs.dailyBriefEnabled },
+                                    set: { newValue in
+                                        prefs.dailyBriefEnabled = newValue
+                                        if newValue {
+                                            Task {
+                                                let granted = await DailyBriefScheduler.requestAuthorization()
+                                                if granted {
+                                                    await DailyBriefScheduler.schedule(
+                                                        hour: prefs.dailyBriefHour
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            DailyBriefScheduler.cancel()
+                                        }
+                                    }
+                                ))
+                            }
+
+                            if prefs.dailyBriefEnabled {
+                                HStack(spacing: 8) {
+                                    ForEach([6, 7, 8, 9], id: \.self) { hour in
+                                        briefHourPill(hour: hour)
+                                    }
+                                }
+                            }
+                        }
+
+                        Divider().background(.white.opacity(0.2))
+
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Durée Deep Focus")
                                 .font(.system(.body, design: .rounded, weight: .medium))
@@ -1167,6 +1217,39 @@ public struct SettingsView: View {
             }
         } label: {
             Text("\(minutes)m")
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(isSelected ? .white : LiquidPalette.iris)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background {
+                    Capsule().fill(isSelected
+                                   ? AnyShapeStyle(LiquidGradient.primary)
+                                   : AnyShapeStyle(LiquidPalette.lavender.opacity(0.35)))
+                }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// v0.17 — Picker pill for the daily morning brief hour. Selects
+    /// the wall-clock hour (0..23 local) at which `DailyBriefScheduler`
+    /// fires the daily local notification. Changing the hour while
+    /// the brief is enabled re-schedules immediately so the next
+    /// morning fires at the new time.
+    @ViewBuilder
+    private func briefHourPill(hour: Int) -> some View {
+        let isSelected = prefs.dailyBriefHour == hour
+        Button {
+            withAnimation(LiquidMetrics.spring) {
+                prefs.dailyBriefHour = hour
+            }
+            if prefs.dailyBriefEnabled {
+                Task {
+                    await DailyBriefScheduler.schedule(hour: hour)
+                }
+            }
+        } label: {
+            Text("\(hour)h")
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(isSelected ? .white : LiquidPalette.iris)

@@ -247,12 +247,13 @@ a weekly digest: "5 things you captured this week", "1 audit completed",
 expandable detail view.
 Shipped 2026-05-19: pure `WeeklyDigestBuilder.compute(nodes:focusSessions:asOf:)` + `WeeklyDigest` value type in App, async `OnDeviceIntelligence.weeklyNarrative(_:)` extension hitting LanguageModelSession with FR instructions (soft-fails to nil), HomeView LiquidCard with three monospaced columns + italic narrative (Sun/Mon-only gate, DEBUG override for vision verify), `WeeklyDigestSheet` with summary card + per-day captures + focus session list (tap → NodeDetailView), 11 new xcstrings keys FR/EN, 3 telemetry breadcrumbs (`digest.rendered`, `digest.narrative.generated`, `digest.detail.opened`), 8 pure tests locking the builder contract (empty / window filter / focus sum / highlight sort+cap / audit separation / reference cutoff slide / blank-title skip / withNarrative).
 
-### v0.17 — Daily morning brief ⏳
+### v0.17 — Daily morning brief ✅
 **What**: Every morning at 7am (user-configurable), generate a brief
 combining today's calendar + open tasks + last 3 captures + a focus
 suggestion. Push notification with summary, tap → full brief view.
 **Acceptance**: notification fires at the set time, brief is concrete
 and actionable.
+Shipped 2026-05-19: pure `DailyBriefBuilder.compute(today:tasks:recentCaptures:lastWeekFocusHours:asOf:)` returns a `DailyBrief` (date / calendarEventCount / openTaskCount / recentCaptureTitles / focusSuggestionMinutes / headline) with 4-branch FR/EN headline rules + focus minutes clamped to [15, 90] (pomodoro 25 default on zero history), `@MainActor DailyBriefScheduler` in the Settings module registers a daily `UNCalendarNotificationTrigger` (id `app.mind.ios.dailyBrief`) wired into `MINDApp.init()` + `.active` scenePhase, `dailyBriefEnabled` / `dailyBriefHour` opt-in toggle + 6h/7h/8h/9h picker in Settings → Préférences, HomeView "Brief du matin" card (5h-11h window, DEBUG always-on for vision verify) + `DailyBriefSheet` (hero headline, today's events, open tasks tap-to-toggle, recent captures, focus suggestion + "Démarrer maintenant" CTA), `mind://brief` URL scheme + RootView `.onOpenURL` posting `.mindOpenDailyBrief` notification, 21 new FR/EN xcstrings keys (`brief.headline.*` / `brief.notification.*` / `brief.detail.*` / `settings.brief.*` / `brief.sheet.start.focus`), 5 telemetry breadcrumbs (`brief.scheduled` / `brief.opened` / `brief.deepLink.opened` / `brief.focus.started.from.brief` / `brief.rendered`), 11 pure tests locking every headline branch + the focus-clamp + the no-history pomodoro fallback + the recent-capture cap + the defensive completed-task filter.
 
 ### v0.18 — Voice cloning for read-back (AVSpeechSynthesizer + Apple's neural voices) ⏳
 **What**: On any Node, "Listen" button that reads the content with

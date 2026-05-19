@@ -44,6 +44,18 @@ let appTarget: Target = .target(
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true,
         "NSSupportsLiveActivitiesFrequentUpdates": true,
+        // v0.17 — Register the `mind://` URL scheme so iOS routes
+        // `mind://brief` (fired from the daily morning brief
+        // notification) into `RootView.onOpenURL`, which flips the
+        // DailyBriefSheet on Home. Single scheme keeps the
+        // deep-link surface minimal — future routes (`mind://focus`,
+        // `mind://capture`) reuse the same scheme.
+        "CFBundleURLTypes": [
+            [
+                "CFBundleURLName": "app.mind.ios.deeplink",
+                "CFBundleURLSchemes": ["mind"],
+            ],
+        ],
     ]),
     sources: ["App/Sources/**"],
     resources: ["App/Resources/**"],

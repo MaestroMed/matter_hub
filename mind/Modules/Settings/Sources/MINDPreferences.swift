@@ -22,6 +22,12 @@ public final class MINDPreferences {
         static let remindersSyncEnabled      = "mind.pref.remindersSyncEnabled"
         static let notionDatabaseID          = "mind.pref.notionDatabaseID"
         static let linearDefaultTeamID       = "mind.pref.linearDefaultTeamID"
+        // v0.17 — Daily morning brief (local push at user-configurable
+        // wake-up hour). `dailyBriefEnabled` gates the schedule + the
+        // HomeView card visibility window; `dailyBriefHour` is 0..23
+        // in the user's local timezone (default 7 = 7am).
+        static let dailyBriefEnabled         = "mind.pref.dailyBriefEnabled"
+        static let dailyBriefHour            = "mind.pref.dailyBriefHour"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -112,6 +118,37 @@ public final class MINDPreferences {
         }
     }
 
+    /// Daily morning brief opt-in (v0.17). False by default so the
+    /// notification permission is never requested and no local
+    /// notification is scheduled until the user explicitly enables it
+    /// from Settings → Préférences → "Réveil matinal". Toggling on
+    /// triggers the `UNUserNotificationCenter.requestAuthorization`
+    /// prompt and schedules a daily `UNCalendarNotificationTrigger`
+    /// at the `dailyBriefHour` wall-clock time. The HomeView card also
+    /// uses this gate: when off, the morning brief card stays hidden
+    /// even during the visibility window.
+    public var dailyBriefEnabled: Bool {
+        didSet {
+            defaults.set(dailyBriefEnabled, forKey: Key.dailyBriefEnabled)
+        }
+    }
+
+    /// Hour (0..23, local timezone) at which the daily morning brief
+    /// notification fires (v0.17). Defaults to 7 — early enough that
+    /// it lands before most users start their workday but not so early
+    /// that it wakes them up. Clamped to the valid range so a bad
+    /// UserDefaults edit can't break the scheduler.
+    public var dailyBriefHour: Int {
+        didSet {
+            let clamped = max(0, min(23, dailyBriefHour))
+            if clamped != dailyBriefHour {
+                dailyBriefHour = clamped
+                return
+            }
+            defaults.set(clamped, forKey: Key.dailyBriefHour)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -150,6 +187,13 @@ public final class MINDPreferences {
         // configured; the AuditSheet "Push to Linear" CTA + the bulk
         // export button both check for non-empty before rendering.
         self.linearDefaultTeamID = suite.string(forKey: Key.linearDefaultTeamID) ?? ""
+
+        // v0.17 — Daily morning brief. Off by default (no permission
+        // sheet at first launch), 7am as the default wake-up hour.
+        let storedDailyBrief = suite.object(forKey: Key.dailyBriefEnabled) as? Bool
+        self.dailyBriefEnabled = storedDailyBrief ?? false
+        let storedBriefHour = suite.object(forKey: Key.dailyBriefHour) as? Int
+        self.dailyBriefHour = storedBriefHour ?? 7
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -221,9 +265,37 @@ public final class MINDPreferences {
         let value = suite.string(forKey: Key.linearDefaultTeamID)?.trimmingCharacters(in: .whitespacesAndNewlines)
         return (value?.isEmpty == false) ? value : nil
     }
+
+    /// v0.17 — Non-Observable accessor for the daily-brief opt-in. Lets
+    /// `DailyBriefScheduler.scheduleIfEnabled()` (called from MINDApp
+    /// on launch + `.active` scenePhase) check the flag without holding
+    /// a reference to the @MainActor `Preferences` instance.
+    public static func currentDailyBriefEnabled(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> Bool {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        return suite.object(forKey: Key.dailyBriefEnabled) as? Bool ?? false
+    }
+
+    /// v0.17 — Non-Observable accessor for the daily-brief hour.
+    /// Clamped to 0..23 to defend against a hand-edited UserDefaults
+    /// returning a nonsensical value.
+    public static func currentDailyBriefHour(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> Int {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let stored = suite.object(forKey: Key.dailyBriefHour) as? Int ?? 7
+        return max(0, min(23, stored))
+    }
 }
 
 public extension MINDPreferences {
     /// Preset Pomodoro-style durations exposed by the Settings picker.
     static let focusDurationPresets: [Int] = [15, 25, 45, 60, 90]
+
+    /// v0.17 — Wake-up hour options surfaced in the Settings picker
+    /// for the daily morning brief. Kept short — 4 buttons fits one
+    /// row at AX1, and the 6/7/8/9 window covers ~99% of when people
+    /// want a morning wake-up nudge.
+    static let dailyBriefHourPresets: [Int] = [6, 7, 8, 9]
 }

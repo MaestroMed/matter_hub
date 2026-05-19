@@ -21,6 +21,14 @@ struct MINDApp: App {
     init() {
         bootstrapSentry()
         bootstrapBackgroundRefresh()
+        // v0.17 — Re-register the daily morning brief notification on
+        // every cold launch. Idempotent (UNUserNotificationCenter
+        // dedupes by identifier), so the cost is one no-op pending-
+        // request mutation when the user hasn't enabled it. The
+        // `.active` scenePhase handler below repeats the call so an
+        // hour change made in Settings while the app was backgrounded
+        // takes effect immediately on the next foreground.
+        DailyBriefScheduler.scheduleIfEnabled()
     }
 
     var body: some Scene {
@@ -41,6 +49,12 @@ struct MINDApp: App {
                 refreshGraphFromCloud()
                 drainShareInbox()
                 runRemindersSyncIfEnabled()
+                // v0.17 — Keep the daily brief schedule in sync with
+                // the latest Settings values every foreground. Picks
+                // up an hour change without requiring a relaunch and
+                // re-establishes the trigger after iOS permission was
+                // granted from the Settings.app between sessions.
+                DailyBriefScheduler.scheduleIfEnabled()
             case .background:
                 MINDTelemetry.info("lifecycle.background")
                 // Ask iOS to wake MIND in ~6h so the CloudKit mirror

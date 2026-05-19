@@ -100,6 +100,22 @@ struct RootView: View {
             else { return }
             selectedNode = match
         }
+        // v0.17 — Deep link `mind://brief` opens the DailyBriefSheet.
+        // Fired by tapping the daily morning brief local notification
+        // (after a future UNUserNotificationCenterDelegate hooks the
+        // userInfo dict) or by an "Open Brief" shortcut. Switching the
+        // selected tab to .home guarantees the HomeView host that owns
+        // `showDailyBrief` is on screen so the sheet actually presents.
+        .onOpenURL { url in
+            guard let scheme = url.scheme, scheme.lowercased() == "mind" else { return }
+            guard url.host?.lowercased() == "brief" else { return }
+            selection = .home
+            MINDTelemetry.info("brief.deepLink.opened")
+            // Post a NotificationCenter signal so HomeView (the actual
+            // owner of `showDailyBrief`) flips its sheet bool. HomeView
+            // subscribes to this in its `.onAppear`/`.task` block.
+            NotificationCenter.default.post(name: .mindOpenDailyBrief, object: nil)
+        }
     }
 
     // MARK: - Compact (iPhone portrait, the brand-defining layout)
@@ -377,6 +393,14 @@ private struct HomeView: View {
     /// later. nil hides the card entirely.
     @State private var weeklyDigest: WeeklyDigest?
     @State private var showWeeklyDigest: Bool = false
+    /// v0.17 — Daily morning brief surfaced as a non-disruptive Home
+    /// card from 5h to 11h local. Computed synchronously from
+    /// `todayEvents` + `allNodes` + `focusSessions` once they've all
+    /// loaded. nil hides the card entirely. Opt-in via Settings (the
+    /// toggle also schedules the daily local notification at the user's
+    /// chosen hour).
+    @State private var dailyBrief: DailyBrief?
+    @State private var showDailyBrief: Bool = false
     /// v0.8 — events fetched from the user's primary calendar(s) for the
     /// "Aujourd'hui" card. Stays empty when permission is denied or there
     /// are no events today; the card hides itself in either case so the
@@ -444,6 +468,35 @@ private struct HomeView: View {
         return isWeeklyDigestVisibleDay && digest.isMeaningful
     }
 
+    /// v0.17 — Morning render window: hours 5..11 local. The notification
+    /// fires at the user's chosen hour (`prefs.dailyBriefHour`, default
+    /// 7); we then keep the Home card around until 11h so the user has
+    /// a few hours to land on the app after the buzz and still see the
+    /// brief in context. Outside the window the card hides itself.
+    ///
+    /// `#if DEBUG` flips the gate to "always visible" so the agent's
+    /// vision-verification screenshot captures the card at any hour.
+    /// Release builds keep the 5h-11h window intact.
+    private var isDailyBriefVisibleHour: Bool {
+        #if DEBUG
+        return true
+        #else
+        let hour = Calendar.current.component(.hour, from: .now)
+        return hour >= 5 && hour < 11
+        #endif
+    }
+
+    /// Gate combining the toggle, the hour window, and a non-nil brief.
+    /// A user who never opts in sees no card; an opted-in user who
+    /// genuinely has zero meetings + zero open tasks + zero recent
+    /// captures still sees the brief — the headline "Journée calme.
+    /// Profite." is the actionable signal in that case.
+    private var shouldShowDailyBrief: Bool {
+        guard dailyBrief != nil else { return false }
+        guard prefs.dailyBriefEnabled else { return false }
+        return isDailyBriefVisibleHour
+    }
+
     private var noteCount: Int {
         allNodes.filter { $0.kindRaw == "note" }.count
     }
@@ -503,6 +556,10 @@ private struct HomeView: View {
 
                 if shouldShowWeeklyDigest, let digest = weeklyDigest {
                     weeklyDigestCard(digest)
+                }
+
+                if shouldShowDailyBrief, let brief = dailyBrief {
+                    dailyBriefCard(brief)
                 }
 
                 tasksCard
@@ -613,6 +670,21 @@ private struct HomeView: View {
                 .presentationBackground(.ultraThinMaterial)
             }
         }
+        .sheet(isPresented: $showDailyBrief) {
+            if let brief = dailyBrief {
+                DailyBriefSheet(
+                    brief: brief,
+                    nodes: allNodes,
+                    events: todayEvents
+                ) { node in
+                    selectedNote = node
+                    showDailyBrief = false
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+            }
+        }
         .task {
             // v0.8 — load today's calendar events on appear. Soft-fails
             // to [] when permission is denied / undetermined so the card
@@ -683,6 +755,69 @@ private struct HomeView: View {
                     data: ["chars": "\(narrative.count)"]
                 )
             }
+
+            // v0.17 — Build the daily morning brief from the in-memory
+            // SwiftData / EventKit snapshots. Cheap pure-function call,
+            // re-runs every time .task fires (foreground re-entry).
+            // The brief renders even when "not meaningful" — the
+            // headline branch covers the calm-day case.
+            let openTaskNodes = allNodes.filter {
+                $0.kindRaw == NodeKind.task.rawValue && $0.completedAt == nil
+            }
+            let recentCaptureNodes = allNodes.filter {
+                $0.kindRaw == NodeKind.capture.rawValue
+                    || $0.kindRaw == NodeKind.note.rawValue
+            }
+            let lastWeekFocusHours = thisWeekTotalSeconds / 3600.0
+            var brief = DailyBriefBuilder.compute(
+                today: todayEvents,
+                tasks: openTaskNodes,
+                recentCaptures: recentCaptureNodes,
+                lastWeekFocusHours: lastWeekFocusHours,
+                asOf: .now
+            )
+            #if DEBUG
+            // When the graph is empty on a freshly installed Simulator,
+            // synthesize a sample brief so the agent's vision check
+            // captures the actual card geometry instead of the empty
+            // state. Release builds never touch this branch.
+            if brief.calendarEventCount == 0
+                && brief.openTaskCount == 0
+                && brief.recentCaptureTitles.isEmpty {
+                brief = DailyBrief(
+                    date: Date.now,
+                    calendarEventCount: 2,
+                    openTaskCount: 3,
+                    recentCaptureTitles: [
+                        "Brief Verdenomia",
+                        "Idée MIND v0.17",
+                        "Réunion AZ Construction",
+                    ],
+                    focusSuggestionMinutes: 45,
+                    headline: DailyBriefBuilder.headlineString(meetings: 2, tasks: 3)
+                )
+            }
+            #endif
+            dailyBrief = brief
+            if shouldShowDailyBrief {
+                MINDTelemetry.info(
+                    "brief.rendered",
+                    data: [
+                        "meetings": "\(brief.calendarEventCount)",
+                        "tasks": "\(brief.openTaskCount)",
+                        "captures": "\(brief.recentCaptureTitles.count)",
+                        "focusMin": "\(brief.focusSuggestionMinutes)",
+                    ]
+                )
+            }
+        }
+        // v0.17 — Deep-link bridge. RootView's `.onOpenURL` decodes
+        // `mind://brief` and posts this notification because the
+        // `showDailyBrief` @State lives here, not on RootView. The
+        // listener flips the sheet bool the next runloop tick after
+        // the URL arrives.
+        .onReceive(NotificationCenter.default.publisher(for: .mindOpenDailyBrief)) { _ in
+            showDailyBrief = true
         }
     }
 
@@ -809,6 +944,109 @@ private struct HomeView: View {
             return "\(h)h\(String(format: "%02d", m))"
         }
         return "\(m) min"
+    }
+
+    // MARK: - "Brief du matin" card (v0.17 — DailyBrief)
+
+    /// Liquid Glass card surfaced 5h-11h local when the user has opted
+    /// into the daily morning brief. Header shows the localized
+    /// headline (one of 4 templates based on meeting/task counts);
+    /// three monospaced columns show meetings / open tasks / suggested
+    /// focus minutes; tapping opens `DailyBriefSheet` with the per-
+    /// section breakdown. The lightbulb icon distinguishes it visually
+    /// from the v0.16 weekly digest (sparkles icon).
+    @ViewBuilder
+    private func dailyBriefCard(_ brief: DailyBrief) -> some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                LiquidHaptics.tap()
+                MINDTelemetry.info("brief.detail.opened")
+                showDailyBrief = true
+            } label: {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.aqua.opacity(0.45))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "sun.max.fill")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        Text("home.brief.title")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    HStack(spacing: 0) {
+                        dailyBriefColumn(
+                            value: "\(brief.calendarEventCount)",
+                            labelKey: "brief.detail.summary.meetings",
+                            tint: LiquidPalette.iris
+                        )
+                        dailyBriefDivider
+                        dailyBriefColumn(
+                            value: "\(brief.openTaskCount)",
+                            labelKey: "brief.detail.summary.tasks",
+                            tint: .purple
+                        )
+                        dailyBriefDivider
+                        dailyBriefColumn(
+                            value: "\(brief.focusSuggestionMinutes)m",
+                            labelKey: "brief.detail.summary.focus",
+                            tint: .green
+                        )
+                    }
+
+                    Text(brief.headline)
+                        .font(.system(.subheadline, design: .rounded))
+                        .italic()
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.9)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private func dailyBriefColumn(
+        value: String,
+        labelKey: String.LocalizationValue,
+        tint: Color
+    ) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+                .contentTransition(.numericText())
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            Text(String(localized: labelKey).uppercased())
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var dailyBriefDivider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.25))
+            .frame(width: 1, height: 32)
     }
 
     // MARK: - "Cette semaine" health card (v0.9 — HealthInsights)
@@ -1589,4 +1827,12 @@ private struct HomeView: View {
         default:      return String(localized: "greeting.subtitle.night")
         }
     }
+}
+
+extension Notification.Name {
+    /// v0.17 — Posted by `RootView.onOpenURL` when iOS hands us a
+    /// `mind://brief` deep link (typically from the morning notification
+    /// tap). Observed by HomeView's `.onReceive` to flip its
+    /// `showDailyBrief` sheet on so the brief presents.
+    static let mindOpenDailyBrief = Notification.Name("app.mind.ios.openDailyBrief")
 }

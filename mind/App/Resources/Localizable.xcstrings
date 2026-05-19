@@ -3134,6 +3134,366 @@
           }
         }
       }
+    },
+    "home.brief.title": {
+      "comment": "Header of the v0.17 daily morning brief card on HomeView, shown 5h-11h local.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning brief"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brief du matin"
+          }
+        }
+      }
+    },
+    "brief.headline.calmDay": {
+      "comment": "Headline shown on the v0.17 brief card when the user has 0 meetings and 0 open tasks today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A calm day. Enjoy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journée calme. Profite."
+          }
+        }
+      }
+    },
+    "brief.headline.meetings": {
+      "comment": "Headline branch for v0.17 brief when there are %d meetings and 0 tasks today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d meetings ahead today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d rendez-vous aujourd'hui."
+          }
+        }
+      }
+    },
+    "brief.headline.tasks": {
+      "comment": "Headline branch for v0.17 brief when there are %d open tasks and 0 meetings today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks to close out."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tâches à clôturer."
+          }
+        }
+      }
+    },
+    "brief.headline.both": {
+      "comment": "Headline branch for v0.17 brief when the user has both meetings and open tasks today. First %d is the task count, second is the meeting count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks, %d meetings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tâches, %d rendez-vous."
+          }
+        }
+      }
+    },
+    "brief.notification.title": {
+      "comment": "Title of the v0.17 daily morning brief local notification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning brief"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brief du matin"
+          }
+        }
+      }
+    },
+    "brief.notification.body": {
+      "comment": "Body of the v0.17 daily morning brief local notification. Generic enough not to leak the user's data into the system tray — the brief itself is rendered inside the app.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open MIND to see what's on today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre MIND pour voir ce qui t'attend."
+          }
+        }
+      }
+    },
+    "brief.detail.title": {
+      "comment": "Title of the v0.17 daily morning brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, in detail"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd'hui, en détail"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.header": {
+      "comment": "Section header above the meetings / tasks / focus counters on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synthèse"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.meetings": {
+      "comment": "Column label under the meeting count on the v0.17 brief card and sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meetings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RDV"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.tasks": {
+      "comment": "Column label under the open task count on the v0.17 brief card and sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tâches"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.focus": {
+      "comment": "Column label under the suggested focus minutes on the v0.17 brief card and sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        }
+      }
+    },
+    "brief.detail.events.header": {
+      "comment": "Section header above the events list on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today's meetings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendez-vous du jour"
+          }
+        }
+      }
+    },
+    "brief.detail.tasks.header": {
+      "comment": "Section header above the open task list on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tasks"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tâches ouvertes"
+          }
+        }
+      }
+    },
+    "brief.detail.captures.header": {
+      "comment": "Section header above the recent captures list on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent captures"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures récentes"
+          }
+        }
+      }
+    },
+    "brief.detail.suggestion.header": {
+      "comment": "Header of the focus suggestion call-out on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested focus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus suggéré"
+          }
+        }
+      }
+    },
+    "brief.detail.suggestion.body": {
+      "comment": "Body of the focus suggestion call-out on the v0.17 brief detail sheet. %d is the suggested minutes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aim for one %d-minute Deep Focus session today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vise une session Deep Focus de %d minutes aujourd'hui."
+          }
+        }
+      }
+    },
+    "settings.brief.enable": {
+      "comment": "Title of the v0.17 daily morning brief toggle row in Settings → Préférences.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning brief"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brief du matin"
+          }
+        }
+      }
+    },
+    "settings.brief.subtitle": {
+      "comment": "Subtitle of the v0.17 morning brief toggle row in Settings → Préférences.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wake up to a quick summary of today's meetings, open tasks and a focus suggestion."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reçois chaque matin un résumé éclair de tes rendez-vous, tâches ouvertes et une suggestion de focus."
+          }
+        }
+      }
+    },
+    "brief.sheet.start.focus": {
+      "comment": "v0.17 — CTA on the daily brief sheet that starts a Deep Focus session with the suggested duration and dismisses the sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrer maintenant"
+          }
+        }
+      }
     }
   }
 }
