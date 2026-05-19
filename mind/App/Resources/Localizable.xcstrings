@@ -2,6 +2,24 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
+    "about.beta.badge": {
+      "comment": "v0.20 · BETA capsule pinned at the top of the Settings → About card on pre-1.0 builds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BETA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BÊTA"
+          }
+        }
+      }
+    },
     "ambient.accessibility": {
       "comment": "HomeView greeting · accessibility label for the moon button that opens Ambient.",
       "extractionState": "manual",
@@ -1551,6 +1569,78 @@
         }
       }
     },
+    "home.beta.banner.cta": {
+      "comment": "v0.20 · Primary CTA on the HomeView beta welcome banner — opens the TestFlight in-app feedback flow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send feedback"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donner ton feedback"
+          }
+        }
+      }
+    },
+    "home.beta.banner.dismiss": {
+      "comment": "v0.20 · Secondary CTA on the HomeView beta welcome banner — flips the per-device dismissed flag so the banner never reappears.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
+    "home.beta.banner.subtitle": {
+      "comment": "v0.20 · One-line subtitle under the HomeView beta welcome banner headline.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thanks for testing. Tap below to send screenshots + device info via TestFlight."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merci de tester. Tape ci-dessous pour envoyer des captures + infos appareil via TestFlight."
+          }
+        }
+      }
+    },
+    "home.beta.banner.title": {
+      "comment": "v0.20 · Headline of the dismissible welcome banner on HomeView for TestFlight beta builds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're in the MIND beta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu es dans la beta de MIND"
+          }
+        }
+      }
+    },
     "home.brief.title": {
       "comment": "Header of the v0.17 daily morning brief card on HomeView, shown 5h-11h local.",
       "extractionState": "manual",
@@ -2822,6 +2912,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bienvenue dans MIND"
+          }
+        }
+      }
+    },
+    "settings.beta.feedback.button": {
+      "comment": "v0.20 · Title of the Settings Beta-section row that opens the TestFlight in-app feedback flow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send feedback via TestFlight"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer un feedback via TestFlight"
+          }
+        }
+      }
+    },
+    "settings.beta.feedback.subtitle": {
+      "comment": "v0.20 · Subtitle of the Settings Beta-section feedback row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot + device info auto-attached."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture + infos appareil ajoutées automatiquement."
+          }
+        }
+      }
+    },
+    "settings.beta.join.button": {
+      "comment": "v0.20 · Title of the Settings Beta-section row that opens the public TestFlight join URL — useful when a tester wants to forward the link to a colleague.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join the beta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejoindre la beta"
+          }
+        }
+      }
+    },
+    "settings.beta.join.subtitle": {
+      "comment": "v0.20 · Subtitle of the Settings Beta-section join row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the public TestFlight link with a colleague."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partage le lien TestFlight public avec un collègue."
+          }
+        }
+      }
+    },
+    "settings.beta.section": {
+      "comment": "v0.20 · Header of the beta-only Settings section that holds the TestFlight feedback + join rows.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta"
           }
         }
       }

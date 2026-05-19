@@ -12,6 +12,11 @@ import RemindersKit
 import VisualKit
 
 public struct SettingsView: View {
+    /// v0.20 — Used by the Beta section to open the TestFlight
+    /// universal feedback URL and the public join link without
+    /// pulling UIKit into the Settings module.
+    @Environment(\.openURL) private var openURL
+
     @State private var apiKey: String = ""
     @State private var keySaved: Bool = false
     @State private var openAIKey: String = ""
@@ -341,13 +346,30 @@ public struct SettingsView: View {
 
                 iCloudSection
 
+                // v0.20 — Beta-only section: lives just above About so a
+                // tester landing on Settings sees "Beta" pinned at the top
+                // of the metadata block. Hidden on stable (>= 1.0.0)
+                // builds via `Self.isBetaBuild`.
+                if Self.isBetaBuild {
+                    betaSection
+                }
+
                 section(localized: "settings.section.about") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        infoRow(label: "Version", value: Self.appVersion)
-                        infoRow(label: "Build", value: Self.appBuild)
-                        infoRow(label: "Bundle", value: Self.appBundleID)
-                        infoRow(label: "iOS target", value: "26.0")
-                        infoRow(label: "Made for", value: "Mehdi 👋")
+                    VStack(alignment: .leading, spacing: 12) {
+                        // v0.20 — BETA capsule pinned at the top of the
+                        // About card when the running binary is pre-1.0.
+                        // Iris-tinted, white text, uppercase tracking —
+                        // matches the rest of the Liquid Glass tone.
+                        if Self.isBetaBuild {
+                            betaBadge
+                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            infoRow(label: "Version", value: Self.appVersion)
+                            infoRow(label: "Build", value: Self.appBuild)
+                            infoRow(label: "Bundle", value: Self.appBundleID)
+                            infoRow(label: "iOS target", value: "26.0")
+                            infoRow(label: "Made for", value: "Mehdi 👋")
+                        }
                     }
                 }
 
@@ -1094,7 +1116,7 @@ public struct SettingsView: View {
     /// from what's actually shipping in the binary. Fallback strings
     /// keep the row usable in tests / previews where the bundle isn't
     /// the production bundle.
-    private static var appVersion: String {
+    static var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
 
@@ -1104,6 +1126,168 @@ public struct SettingsView: View {
 
     private static var appBundleID: String {
         Bundle.main.bundleIdentifier ?? "app.mind.ios"
+    }
+
+    // MARK: - Beta build detection (v0.20)
+
+    /// True when the currently-running binary is a pre-1.0 build —
+    /// i.e. a TestFlight beta. Drives the BETA badge in the About
+    /// section, the Beta section with the "Send feedback" + "Join the
+    /// beta" rows, and the dismissible welcome banner on HomeView.
+    ///
+    /// Reads `CFBundleShortVersionString` once via `Bundle.main` and
+    /// hands the raw value to the pure `isBetaVersion(_:)` helper so
+    /// the version-compare logic stays unit-testable without any
+    /// Bundle mocking.
+    public static var isBetaBuild: Bool {
+        isBetaVersion(appVersion)
+    }
+
+    /// Pure semantic-version compare used by `isBetaBuild`. A build is
+    /// a beta whenever its short version string is **strictly less
+    /// than** `1.0.0` (e.g. `0.20.0`, `0.999.999`, `0.0.1` — every
+    /// pre-release we ship). `1.0.0` and above flip every beta-only
+    /// surface off.
+    ///
+    /// Malformed input (missing patch, non-numeric segments, empty
+    /// string, `"—"` fallback from `appVersion`) returns `true`. The
+    /// safer default for a dev / preview / test bundle that doesn't
+    /// carry a real version is to **show** the beta UI: a missed
+    /// "you're in the beta" badge in a production build is louder
+    /// than an unexpected "beta" tag in a developer's simulator.
+    public static func isBetaVersion(_ version: String) -> Bool {
+        let trimmed = version.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "—" else { return true }
+        let parts = trimmed.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count >= 1, let major = Int(parts[0]) else { return true }
+        // Major == 0 is always beta, regardless of minor / patch.
+        // Major >= 1 ships when the version is exactly 1.0.0 or above —
+        // anything shaped like "1.x" is a stable release.
+        return major < 1
+    }
+
+    // MARK: - Beta URLs (v0.20)
+
+    /// Universal TestFlight feedback URL. iOS intercepts this scheme
+    /// inside a beta build and routes the tap into the in-app
+    /// "Send feedback" flow (screenshot + device info auto-attached).
+    /// Stable across versions — no need for the App Store Connect
+    /// app ID, the OS resolves it from the running bundle.
+    public static let testFlightFeedbackURL = URL(
+        string: "https://testflight.apple.com/v3/contact-developer"
+    )!
+
+    /// Public-link join URL. The trailing path component is the
+    /// public TestFlight code Mehdi fills in on App Store Connect.
+    /// `MINDBETA` is a placeholder — the real code lands in the same
+    /// `testflight.apple.com/join/<code>` shape so the constant stays
+    /// stable when the real code is dropped in.
+    public static let testFlightJoinURL = URL(
+        string: "https://testflight.apple.com/join/MINDBETA"
+    )!
+
+    // MARK: - Beta UI (v0.20)
+
+    /// Small uppercase capsule pinned at the top of the About card on
+    /// beta builds. Iris-on-white tone — same gradient family the
+    /// Liquid system uses for primary CTAs, so the badge reads as
+    /// "official MIND tag" rather than "warning sticker".
+    @ViewBuilder
+    private var betaBadge: some View {
+        HStack(spacing: 8) {
+            Text("about.beta.badge", bundle: .main)
+                .font(.system(.caption2, design: .rounded, weight: .heavy))
+                .tracking(1.4)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(LiquidPalette.iris)
+                }
+            Spacer()
+        }
+    }
+
+    /// Beta-only Settings section with two rows:
+    ///   1. "Send feedback via TestFlight" — opens the universal
+    ///      TestFlight feedback URL. iOS intercepts it inside a beta
+    ///      build and routes the tap into the in-app feedback flow
+    ///      (screenshot + device info auto-attached). On a stable
+    ///      build the link 404s — but this whole section hides itself
+    ///      under `isBetaBuild` so that never ships.
+    ///   2. "Join the beta" — opens the public TestFlight join URL.
+    ///      Useful when a tester wants to forward the link to a
+    ///      colleague directly from the app.
+    @ViewBuilder
+    private var betaSection: some View {
+        section(localized: "settings.beta.section") {
+            VStack(alignment: .leading, spacing: 12) {
+                Button {
+                    openBetaFeedback()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.bubble.fill")
+                            .foregroundStyle(LiquidPalette.iris)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.beta.feedback.button", bundle: .main)
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                                .foregroundStyle(.primary)
+                            Text("settings.beta.feedback.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(.footnote, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Divider().background(.white.opacity(0.2))
+
+                Button {
+                    openBetaJoin()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "person.badge.plus")
+                            .foregroundStyle(LiquidPalette.iris)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.beta.join.button", bundle: .main)
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                                .foregroundStyle(.primary)
+                            Text("settings.beta.join.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(.footnote, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func openBetaFeedback() {
+        MINDTelemetry.info("beta.feedback.opened")
+        LiquidHaptics.tap()
+        openURL(Self.testFlightFeedbackURL)
+    }
+
+    private func openBetaJoin() {
+        MINDTelemetry.info("beta.join.opened")
+        LiquidHaptics.tap()
+        openURL(Self.testFlightJoinURL)
     }
 
     private var header: some View {

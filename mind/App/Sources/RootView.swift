@@ -371,6 +371,10 @@ extension MINDTab {
 
 private struct HomeView: View {
     @Environment(\.modelContext) private var context
+    /// v0.20 — Used by the beta welcome banner to open the TestFlight
+    /// universal feedback URL. iOS routes the tap into the in-app
+    /// feedback flow when the binary is a beta.
+    @Environment(\.openURL) private var openURL
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
     @Query private var focusSessions: [FocusSessionRecord]
     @State private var focus = FocusController.shared
@@ -386,6 +390,11 @@ private struct HomeView: View {
     @State private var showJournal: Bool = false
     @State private var showGoals: Bool = false
     @State private var showSearch: Bool = false
+    /// v0.20 — Per-device "Plus tard" flag for the beta welcome banner.
+    /// Stored in standard UserDefaults via @AppStorage so the user only
+    /// sees the banner once until they reinstall. Resets to false on
+    /// fresh installs, which is the intended onboarding moment.
+    @AppStorage("mind.beta.banner.dismissed") private var betaBannerDismissed: Bool = false
     /// v0.16 — On-device weekly digest surfaced as a non-disruptive
     /// Home card on Sunday evenings and Monday mornings. Computed
     /// synchronously from `allNodes` + `focusSessions` on `.task`, then
@@ -531,6 +540,14 @@ private struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 greeting
+
+                // v0.20 — Welcome banner for TestFlight betas. One-time,
+                // dismissible per device. Renders only when the running
+                // binary is pre-1.0 AND the user hasn't already tapped
+                // "Plus tard" on a previous launch.
+                if SettingsView.isBetaBuild && !betaBannerDismissed {
+                    betaBanner
+                }
 
                 quickSearchPill
 
@@ -1387,6 +1404,95 @@ private struct HomeView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("ambient.accessibility"))
+        }
+    }
+
+    /// v0.20 — Welcome banner for TestFlight betas. Liquid Glass card
+    /// with a flask glyph, a 1-line "you're in the beta" headline,
+    /// a primary CTA that opens the TestFlight feedback URL, and a
+    /// secondary "Plus tard" button that flips `betaBannerDismissed`
+    /// so the banner never reappears on this device. The whole card
+    /// hides itself the moment `isBetaBuild` returns false — i.e. on
+    /// any 1.x or later build, even if `betaBannerDismissed` is
+    /// still false from an earlier pre-1.0 install.
+    private var betaBanner: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "flask.fill")
+                        .font(.system(.title2, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                        .padding(10)
+                        .background {
+                            Circle().fill(LiquidPalette.lavender.opacity(0.4))
+                        }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("home.beta.banner.title", bundle: .main)
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("home.beta.banner.subtitle", bundle: .main)
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 0)
+                }
+
+                HStack(spacing: 10) {
+                    Button {
+                        openBetaFeedbackFromBanner()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.bubble.fill")
+                            Text("home.beta.banner.cta", bundle: .main)
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(LiquidGradient.primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        dismissBetaBanner()
+                    } label: {
+                        Text("home.beta.banner.dismiss", bundle: .main)
+                            .font(.system(.subheadline, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// Opens the TestFlight universal feedback URL when the user taps
+    /// the banner's primary CTA. iOS intercepts the link inside a beta
+    /// build and routes the tap into the in-app feedback flow with the
+    /// screenshot + device info auto-attached.
+    private func openBetaFeedbackFromBanner() {
+        MINDTelemetry.info("beta.feedback.opened", data: ["surface": "home.banner"])
+        LiquidHaptics.tap()
+        openURL(SettingsView.testFlightFeedbackURL)
+    }
+
+    /// "Plus tard" button: flips the @AppStorage flag so the banner
+    /// never reappears on this device. A new install resets the
+    /// default, which is the intended onboarding moment.
+    private func dismissBetaBanner() {
+        MINDTelemetry.info("beta.banner.dismissed")
+        LiquidHaptics.tap()
+        withAnimation(LiquidMetrics.spring) {
+            betaBannerDismissed = true
         }
     }
 

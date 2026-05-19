@@ -176,4 +176,29 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("capture.photo.empty.fallback", lang: "en"), "No text recognised on this photo.")
         XCTAssertEqual(localized("capture.photo.empty.fallback", lang: "fr"), "Aucun texte reconnu sur cette photo.")
     }
+
+    /// v0.20 — TestFlight beta strings. The BETA badge in Settings →
+    /// About, the Beta-section rows that open the TestFlight feedback
+    /// + public join URLs, and the dismissible HomeView welcome banner
+    /// all ship to external testers via TestFlight. Lock both
+    /// translations so the FR build never silently regresses to the
+    /// EN copy on the most public surface MIND has.
+    func test_betaStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("about.beta.badge",              lang: "en"), "BETA")
+        XCTAssertEqual(localized("about.beta.badge",              lang: "fr"), "BÊTA")
+
+        XCTAssertEqual(localized("settings.beta.section",         lang: "en"), "Beta")
+        XCTAssertEqual(localized("settings.beta.section",         lang: "fr"), "Beta")
+        XCTAssertEqual(localized("settings.beta.feedback.button", lang: "en"), "Send feedback via TestFlight")
+        XCTAssertEqual(localized("settings.beta.feedback.button", lang: "fr"), "Envoyer un feedback via TestFlight")
+        XCTAssertEqual(localized("settings.beta.join.button",     lang: "en"), "Join the beta")
+        XCTAssertEqual(localized("settings.beta.join.button",     lang: "fr"), "Rejoindre la beta")
+
+        XCTAssertEqual(localized("home.beta.banner.title",        lang: "en"), "You're in the MIND beta")
+        XCTAssertEqual(localized("home.beta.banner.title",        lang: "fr"), "Tu es dans la beta de MIND")
+        XCTAssertEqual(localized("home.beta.banner.cta",          lang: "en"), "Send feedback")
+        XCTAssertEqual(localized("home.beta.banner.cta",          lang: "fr"), "Donner ton feedback")
+        XCTAssertEqual(localized("home.beta.banner.dismiss",      lang: "en"), "Later")
+        XCTAssertEqual(localized("home.beta.banner.dismiss",      lang: "fr"), "Plus tard")
+    }
 }

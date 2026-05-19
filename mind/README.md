@@ -298,6 +298,48 @@ user's private CloudKit zone. Nothing leaves the device except the
 URLs and audit content the user explicitly submits to Anthropic /
 OpenAI / Google PageSpeed.
 
+## Beta status
+
+MIND is in **public TestFlight beta** (v0.20+, up to 50 external
+testers).
+
+- **Join**: open `https://testflight.apple.com/join/<PLACEHOLDER>` on
+  an iPhone (Mehdi fills in the real public link in App Store Connect
+  → TestFlight → Public Link). Install the TestFlight app first if
+  you don't have it.
+- **In-app entry points**:
+  - HomeView shows a one-time, dismissible welcome banner on first
+    launch when the running binary is pre-1.0 (auto-hides on the
+    1.0.0 release).
+  - Settings → Beta has "Send feedback via TestFlight" and "Join the
+    beta" rows on pre-1.0 builds.
+  - Settings → About shows a small `BETA` capsule.
+- **Build identification**: `SettingsView.isBetaBuild` returns true
+  whenever `CFBundleShortVersionString` is strictly less than `1.0.0`.
+  Malformed / fallback version strings default to `true` (safer to
+  surface the beta UI in a dev / preview bundle than to silently hide
+  it). 12 tests in `Tests/Sources/BetaBuildTests.swift` lock the
+  contract.
+
+## Reporting bugs
+
+Two paths, in order of preference:
+
+1. **TestFlight → Send feedback** (built-in). Tap the `Send feedback`
+   row in Settings → Beta or the `Donner ton feedback` button on the
+   HomeView banner. iOS routes the tap to the TestFlight in-app
+   feedback flow with the screenshot + device info auto-attached. The
+   feedback shows up under App Store Connect → TestFlight → Feedback,
+   triaged the same day.
+2. **GitHub issue** at `MaestroMed/matter_hub` if you want to attach
+   a longer repro, link to a CI log, or reference another commit.
+   Include the version + build numbers from Settings → About so we can
+   bisect quickly.
+
+Telemetry breadcrumbs (`beta.banner.dismissed`, `beta.feedback.opened`,
+`beta.join.opened`) flow through `MINDTelemetry` → Sentry on opt-in
+builds, so we can see at a glance whether the beta UI is being used.
+
 ## Roadmap
 
 - **Phase 0** ✅ CI pipeline + scaffold
