@@ -125,6 +125,17 @@ public final class AuditController {
     /// before calling `run(for:)`.
     public var liveBroadcaster: AuditLiveBroadcaster?
 
+    /// v0.23 — Optional GPT Image 2 mockup source. When non-nil and
+    /// the synthesised report has at least one quick win, the
+    /// controller fires a detached task after the report lands and
+    /// appends the generated mockups onto `report.mockups` so the
+    /// AuditSheet carousel + the portal HTML can render them. Nil =
+    /// the Vision section is hidden in the UI (key not configured,
+    /// or the host explicitly opted out). The host App layer sets
+    /// this on the singleton before `run(for:)` based on whether
+    /// `OpenAIAPIKeyStore.read()` returned a non-empty key.
+    public var mockupSource: RedesignMockupSource?
+
     /// Cached probe results for the current run. Retry merges new
     /// results on top of these so a re-run only touches failed probes.
     private var lastPerformance: AuditReport.PerformanceMetrics?
@@ -294,6 +305,13 @@ public final class AuditController {
             if let broadcaster = self.liveBroadcaster {
                 await broadcaster.auditCompleted(report: synthesized)
             }
+            // v0.23 — Fire-and-forget mockup generation. Doesn't block
+            // the audit completion banner — the UI renders the
+            // synthesised report immediately, and the Vision section
+            // populates progressively as the PNGs arrive.
+            if let source = self.mockupSource {
+                kickOffMockupGeneration(source: source, report: synthesized)
+            }
         } catch is CancellationError {
             self.phase = .idle
             MINDTelemetry.info("audit.cancelled", data: ["host": host])
@@ -433,6 +451,49 @@ public final class AuditController {
                 )
             }
             return nil
+        }
+    }
+
+    /// v0.23 — Kick off a detached Task that asks the configured
+    /// `RedesignMockupSource` for the 3 redesign mockups, then folds
+    /// them into `self.report?.mockups` so the carousel populates
+    /// progressively. Soft-fails the whole batch — a missing-key
+    /// throw or a network blackout simply leaves the array empty and
+    /// the UI hides the section.
+    private func kickOffMockupGeneration(
+        source: RedesignMockupSource,
+        report synthesized: AuditReport
+    ) {
+        let host = synthesized.client.url.host(percentEncoded: false)
+            ?? synthesized.client.url.absoluteString
+        let snapshot = synthesized
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let mockups = try await source.generate(for: snapshot)
+                await MainActor.run {
+                    // Only fold into the live report when the user
+                    // hasn't moved on to a fresh audit in the
+                    // meantime. The `generatedAt` timestamp is a
+                    // stable identity proxy.
+                    guard let current = self.report,
+                          current.generatedAt == snapshot.generatedAt
+                    else { return }
+                    self.report?.mockups = mockups
+                }
+            } catch {
+                // The generator already logged the failure via its
+                // own telemetry breadcrumbs; the controller only
+                // records the host so a future search across runs
+                // can correlate.
+                MINDTelemetry.warning(
+                    "redesignMockup.generation.aborted",
+                    data: [
+                        "host": host,
+                        "reason": error.localizedDescription,
+                    ]
+                )
+            }
         }
     }
 

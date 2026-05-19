@@ -350,11 +350,45 @@ viewer to be on the same Wi-Fi or expose via tailscale / ngrok.
 **Acceptance**: zero-latency probe transitions on a browser
 connected to the iPhone's local HTTP server.
 
-### v0.23 — Mac Catalyst app ⏳
-**What**: Enable Mac Catalyst on the App target. Optimise window
-sizing, menu bar with capture/focus/audit. Sidebar always visible.
-**Acceptance**: app runs on Mac, menu bar shortcuts work, window
-resizes cleanly.
+### v0.23 — Generative Before/After Site Mockups ✅
+Shipped 2026-05-19: new `RedesignMockup` value type lives in AuditKit alongside `AuditReport.mockups: [RedesignMockup]` (optional, defaults to `[]`, backward-compatible custom Codable decoder so payloads serialised before v0.23 still round-trip). New `RedesignMockupSource` protocol declared in AuditKit is the inversion point the controller plugs into. New `RedesignMockupPrompt` (pure namespace) + `RedesignMockupGenerator` (actor) + `RedesignMockupSourceAdapter` (conforms VisualKit's generator to AuditKit's protocol) live in VisualKit, reusing the existing `OpenAIImageClient` + `OpenAIAPIKeyStore` so the OpenAI key + endpoint configuration stay centralised. `RedesignMockupGenerator.generate(…)` fans out the 3 prompts in parallel via TaskGroup with per-mockup soft-fail (one rate-limited request leaves the carousel with 2 tiles instead of nuking the batch); telemetry breadcrumbs (`redesignMockup.generation.started/completed/failed`) bounce onto MainActor through async shims so the actor stays off the main thread. `AuditController` gains `mockupSource: RedesignMockupSource?` + `kickOffMockupGeneration(source:report:)` that fires a detached Task after the report lands and folds the result back into `report.mockups` via a `generatedAt` guard so a fresh audit in flight doesn't get poisoned. `AuditSheet` adds a "Vision : votre site, refait" section between "Synthèse" and "Quick Wins" with 3 branches — populated → horizontal scroll-snap carousel of 320×180 `LiquidCard`-tinted tiles tap → full-screen modal showing the high-res PNG + the quick-win brief; empty + key configured → 3 shimmer skeletons + "Génération en cours…" progress label; empty + key missing → soft hint card pointing to Settings (rendered only when there's at least 1 quick win to visualize). `startAudit` re-reads `OpenAIAPIKeyStore` on every run so a freshly pasted key takes effect on the next audit without relaunch. `HTMLTemplates.visionSection(report:)` injects a matching gallery into the Client Portal HTML between Synthesis + Quick Wins — each mockup embedded as a `data:image/png;base64,…` URL so the portal folder stays single-file self-contained; gallery uses the same `scroll-snap-type: x mandatory` pattern as the Strategic Bets timeline for visual consistency. 11 KB of Vision CSS (gallery + card + media + caption) sits next to the Quick Wins block. 4 new MINDTelemetry breadcrumbs (`redesignMockup.generation.started/completed/failed/aborted` + `redesignMockup.tapped`). 6 new FR/EN xcstrings keys (`audit.vision.section.title`, `audit.vision.generating`, `audit.vision.empty.keyMissing`, `audit.vision.tap.detail`, `portal.vision.section.title`, `portal.vision.caption.prefix`). Tests: 11 new `RedesignMockupPromptTests` lock the pure builder — client name + host surface in the body, quick-win title + detail thread through verbatim, iris/aqua hex palette (`#5E5BD8` / `#5EE9D8`) anchored in every prompt, FR copy-language hint preserved for every persona, "no logos, no UI chrome" tail constraint, fallback prompt grounds in the prospect when client name is empty, `selectQuickWins` truncates at 3 + preserves priority order + empty-input → empty-output, determinism for identical inputs, `derivedMockupTitle` strips trailing punctuation + truncates at 48 chars with ellipsis. `LocalizationTests` extended with `test_redesignVisionStrings_resolveBothLanguages` (12 asserts FR + EN). 356 tests total, 12 skipped, 0 failures (was 344 in v0.22). Build SUCCEEDED on iPhone 17 Pro simulator. Screenshot at `mind/screenshots/v0.23.png` shows the host app launching clean on HomeView — the Vision section only renders inside AuditSheet after a real audit completes, which matches the documented vision-verify bar (host-launches-clean). Sample portal at `mind/screenshots/v0.23-portal.html` (10 KB) shows the structure end-to-end with placeholder SVG rectangles standing in for the GPT Image 2 PNGs — open in any browser to inspect the Liquid Glass gallery aesthetic.
+
+**What**: After an audit completes, generate 3 "after redesign"
+mockup images via OpenAI GPT Image 2 visualizing what the site
+would look like AFTER applying the top 3 quick wins. Embed them
+inline in the AuditSheet completed view AND in the Client Portal
+HTML (v0.21). When the client sees "here's your site today" →
+swipe → "here's your site in 3 months with Mehdi's recommendations
+applied", that's the close. Reuses VisualKit's existing
+`OpenAIImageClient` + `OpenAIAPIKeyStore`. New
+`RedesignMockupGenerator` actor + pure `RedesignMockupPrompt`
+struct, soft-fail per mockup (one failure ≠ all fail), `medium`
+quality default with `high` exposed as opt-in. `AuditReport` gains
+optional `mockups: [RedesignMockup]` with a backward-compatible
+default. AuditSheet adds a "Vision: votre site refait" section
+between "Synthèse" and "Quick Wins" — 3 skeleton cards during
+generation, then a horizontal scroll-snap carousel of 320×180
+mockup cards, tap → full-screen modal. Client Portal HTML gains a
+matching "Vision" section with base64-embedded scroll-snap
+gallery so the portal stays single-folder self-contained. If
+OpenAI key not configured, both surfaces hide the section
+gracefully (AuditSheet shows a "Connecte ta clé OpenAI dans
+Settings" hint, portal omits the section). **Acceptance**: with
+an OpenAI key, completing an audit surfaces 3 mockups in the
+AuditSheet + 3 mockups in the generated portal HTML; without a
+key, the AuditSheet shows the hint and the portal is unchanged.
+
+**Deferred to v0.23.1**: Mac Catalyst app — enable Mac Catalyst on
+the App target. Optimise window sizing, menu bar with
+capture/focus/audit. Sidebar always visible. App runs on Mac, menu
+bar shortcuts work, window resizes cleanly.
+
+**Deferred to v0.23.2**: WKWebView headless render of the current
+site → PNG → pass to GPT Image 2 as reference image so the
+"before" state grounds the "after" generation in the actual
+layout/palette. For now the generator works from prompt only,
+which is the right MVP cut since brand consistency is captured by
+the iris/aqua tokens already embedded in the prompt.
 
 ### v0.24 — iPad Stage Manager polish ⏳
 **What**: Optimise for Stage Manager: stable window aspect ratios,

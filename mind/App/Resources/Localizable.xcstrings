@@ -667,6 +667,114 @@
         }
       }
     },
+    "audit.vision.section.title": {
+      "comment": "v0.23 · Section heading for the generative redesign mockups carousel inside the completed AuditSheet view.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vision: your site, redrawn"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vision : votre site, refait"
+          }
+        }
+      }
+    },
+    "audit.vision.generating": {
+      "comment": "v0.23 · Footer label shown under the 3 skeleton cards while GPT Image 2 renders the mockups.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generating…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Génération en cours…"
+          }
+        }
+      }
+    },
+    "audit.vision.empty.keyMissing": {
+      "comment": "v0.23 · Hint card shown in the Vision section when no OpenAI API key is configured. Points the user to Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect your OpenAI key in Settings to see redesign visions."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecte ta clé OpenAI dans Réglages pour voir les visions de redesign."
+          }
+        }
+      }
+    },
+    "audit.vision.tap.detail": {
+      "comment": "v0.23 · Eyebrow label above the quick-win title inside the full-screen mockup modal.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BASED ON"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BASÉ SUR"
+          }
+        }
+      }
+    },
+    "portal.vision.section.title": {
+      "comment": "v0.23 · Section heading for the generative redesign mockups gallery inside the generated client portal HTML.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your site, redrawn"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre site, refait"
+          }
+        }
+      }
+    },
+    "portal.vision.caption.prefix": {
+      "comment": "v0.23 · Caption prefix shown above the quick-win title under each portal mockup. Followed by the recommendation text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommendation"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommandation"
+          }
+        }
+      }
+    },
     "audit.field.name": {
       "extractionState": "manual",
       "localizations": {

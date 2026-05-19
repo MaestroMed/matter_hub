@@ -252,4 +252,31 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("audit.broadcast.error.title",     lang: "en"), "Broadcast failed")
         XCTAssertEqual(localized("audit.broadcast.error.title",     lang: "fr"), "Échec de la diffusion")
     }
+
+    /// v0.23 — Generative redesign mockup strings. Locks every FR +
+    /// EN key surfaced by the AuditSheet Vision section + the
+    /// portal HTML Vision gallery so a careless catalogue edit
+    /// can't ship a redesign-vision flow where the carousel
+    /// caption silently falls back to a raw key.
+    func test_redesignVisionStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.vision.section.title",    lang: "en"), "Vision: your site, redrawn")
+        XCTAssertEqual(localized("audit.vision.section.title",    lang: "fr"), "Vision : votre site, refait")
+
+        XCTAssertEqual(localized("audit.vision.generating",       lang: "en"), "Generating…")
+        XCTAssertEqual(localized("audit.vision.generating",       lang: "fr"), "Génération en cours…")
+
+        XCTAssertEqual(localized("audit.vision.empty.keyMissing", lang: "en"),
+                       "Connect your OpenAI key in Settings to see redesign visions.")
+        XCTAssertEqual(localized("audit.vision.empty.keyMissing", lang: "fr"),
+                       "Connecte ta clé OpenAI dans Réglages pour voir les visions de redesign.")
+
+        XCTAssertEqual(localized("audit.vision.tap.detail",       lang: "en"), "BASED ON")
+        XCTAssertEqual(localized("audit.vision.tap.detail",       lang: "fr"), "BASÉ SUR")
+
+        XCTAssertEqual(localized("portal.vision.section.title",   lang: "en"), "Your site, redrawn")
+        XCTAssertEqual(localized("portal.vision.section.title",   lang: "fr"), "Votre site, refait")
+
+        XCTAssertEqual(localized("portal.vision.caption.prefix",  lang: "en"), "Recommendation")
+        XCTAssertEqual(localized("portal.vision.caption.prefix",  lang: "fr"), "Recommandation")
+    }
 }

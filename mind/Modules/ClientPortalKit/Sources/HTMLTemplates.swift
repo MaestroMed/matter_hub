@@ -42,6 +42,7 @@ public enum HTMLTemplates {
             heroSection(report: report, brand: brand),
             scoringSection(report: report, brand: brand),
             synthesisSection(report: report),
+            visionSection(report: report),
             quickWinsSection(report: report),
             strategicBetsSection(report: report),
             hiddenRisksSection(report: report),
@@ -152,6 +153,61 @@ public enum HTMLTemplates {
             \(synth)
           </article>
         </section>
+        """
+    }
+
+    /// v0.23 — Vision section. Renders the 3 GPT Image 2 mockups as
+    /// a horizontal CSS scroll-snap gallery sandwiched between the
+    /// Synthesis prose and the Quick Wins grid. Each card embeds
+    /// its PNG as a base64 `data:` URL so the portal folder stays
+    /// single-file self-contained (a future iteration can switch
+    /// to sibling assets when the byte cost matters more than the
+    /// drop-anywhere convenience).
+    ///
+    /// Omitted entirely when the report has no mockups — a portal
+    /// generated before the user configured their OpenAI key
+    /// (or for a flawless site with zero quick wins) skips the
+    /// section so the layout doesn't surface an empty band.
+    public static func visionSection(report: AuditReport) -> String {
+        guard !report.mockups.isEmpty else { return "" }
+        let cards = report.mockups.enumerated().map { (idx, mockup) in
+            visionCard(index: idx + 1, mockup: mockup)
+        }.joined(separator: "\n")
+
+        return """
+        <section class="vision reveal" data-reveal="up">
+          <div class="section__header">
+            <div class="section__eyebrow">02b — VISION</div>
+            <h2 class="section__title">Votre site, refait</h2>
+            <p class="section__lead">3 rendus IA — chaque mockup applique une recommandation prioritaire.</p>
+          </div>
+          <div class="vision__gallery">
+            \(cards)
+          </div>
+        </section>
+        """
+    }
+
+    private static func visionCard(index: Int, mockup: RedesignMockup) -> String {
+        let base64 = mockup.imageData.base64EncodedString()
+        let title = escape(mockup.title)
+        let caption = escape(mockup.quickWinTitle)
+        return """
+        <article class="vision__card">
+          <div class="vision__media">
+            <img
+              class="vision__img"
+              alt="Mockup #\(index) — \(title)"
+              src="data:image/png;base64,\(base64)"
+              loading="lazy"
+              decoding="async" />
+          </div>
+          <div class="vision__caption">
+            <span class="vision__index">#\(index)</span>
+            <span class="vision__title">\(title)</span>
+            <span class="vision__sub">Recommandation : \(caption)</span>
+          </div>
+        </article>
         """
     }
 
@@ -567,6 +623,17 @@ public enum HTMLTemplates {
         .synthesis__h3{font-size:21px;font-weight:600;color:var(--ink);margin:24px 0 10px;letter-spacing:-0.01em;}
         .synthesis__list{padding-left:18px;margin-bottom:18px;}
         .synthesis__list li{margin-bottom:8px;}
+        /* v0.23 — Vision: before/after redesign mockups gallery */
+        .vision__gallery{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 4px 24px;-webkit-overflow-scrolling:touch;}
+        .vision__gallery::-webkit-scrollbar{height:6px;}
+        .vision__gallery::-webkit-scrollbar-thumb{background:var(--card-stroke);border-radius:3px;}
+        .vision__card{min-width:320px;max-width:480px;flex:0 0 auto;scroll-snap-align:start;background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;}
+        .vision__media{aspect-ratio:16/9;background:linear-gradient(135deg,rgba(94,91,216,0.20) 0%,rgba(94,233,216,0.18) 100%);overflow:hidden;}
+        .vision__img{display:block;width:100%;height:100%;object-fit:cover;}
+        .vision__caption{padding:18px 22px 22px;display:flex;flex-direction:column;gap:6px;}
+        .vision__index{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.08em;}
+        .vision__title{font-size:18px;font-weight:600;line-height:1.3;color:var(--ink);letter-spacing:-0.01em;}
+        .vision__sub{font-size:13px;color:var(--ink-quiet);}
         /* Quick wins */
         .wins__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
         .win{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:26px;transition:transform 0.4s var(--easing),box-shadow 0.4s var(--easing);}

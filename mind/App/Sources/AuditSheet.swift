@@ -49,6 +49,12 @@ struct AuditSheet: View {
     @State private var pendingBroadcast: BroadcastShareItem?
     @State private var broadcastError: String?
     @State private var broadcastCopiedToast: Bool = false
+
+    // v0.23 — Selected redesign mockup → drives the full-screen
+    // detail sheet that opens when Mehdi taps a card in the
+    // "Vision: votre site refait" carousel.
+    @State private var selectedMockup: RedesignMockup?
+
     @FocusState private var urlFocused: Bool
 
     init(initialURL: String? = nil) {
@@ -136,6 +142,17 @@ struct AuditSheet: View {
         .alert(String(localized: "audit.broadcast.url.copied", bundle: .main),
                isPresented: $broadcastCopiedToast) {
             Button("OK", role: .cancel) {}
+        }
+        // v0.23 — Full-screen mockup detail. Tapping a card in the
+        // Vision carousel pushes the high-res PNG + the quick-win
+        // brief on top of the report so Mehdi can show the prospect
+        // the rendered Hero alongside the recommendation that drove
+        // it. Modal dismiss = back to the carousel.
+        .sheet(item: $selectedMockup) { mockup in
+            mockupDetailSheet(mockup)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
     }
 
@@ -575,6 +592,8 @@ struct AuditSheet: View {
                 }
             }
 
+            visionSection(for: report)
+
             if !report.quickWins.isEmpty {
                 section("Quick wins") {
                     VStack(spacing: 14) {
@@ -724,6 +743,209 @@ struct AuditSheet: View {
         .padding(.vertical, 4)
         .background {
             Capsule().fill(.ultraThinMaterial)
+        }
+    }
+
+    // MARK: - v0.23 — Vision (generative redesign mockups)
+
+    /// Returns true when the OpenAI key is configured and we expect
+    /// the controller to populate `report.mockups` asynchronously.
+    /// Driven off `OpenAIAPIKeyStore` rather than `mockupSource !=
+    /// nil` so the section appears even if the user pasted their
+    /// key after launch — the kickoff path always re-reads the
+    /// keychain on the next audit.
+    private var openAIConfigured: Bool {
+        let key = OpenAIAPIKeyStore.read()
+        return key != nil && !(key?.isEmpty ?? true)
+    }
+
+    @ViewBuilder
+    private func visionSection(for report: AuditReport) -> some View {
+        // Three branches:
+        //  1. Mockups already landed → carousel.
+        //  2. Key configured but mockups still empty → 3 shimmer
+        //     skeletons + "Génération en cours…" label.
+        //  3. Key missing → soft hint card pointing to Settings,
+        //     mounted only when there's at least one quick win to
+        //     visualize (a flawless site has no "before/after" to
+        //     surface).
+        if !report.mockups.isEmpty {
+            section(String(localized: "audit.vision.section.title", bundle: .main)) {
+                visionCarousel(report.mockups)
+            }
+        } else if openAIConfigured && !report.quickWins.isEmpty {
+            section(String(localized: "audit.vision.section.title", bundle: .main)) {
+                visionSkeletonRow
+            }
+        } else if !openAIConfigured && !report.quickWins.isEmpty {
+            section(String(localized: "audit.vision.section.title", bundle: .main)) {
+                visionKeyMissingCard
+            }
+        }
+    }
+
+    private func visionCarousel(_ mockups: [RedesignMockup]) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 14) {
+                ForEach(mockups) { mockup in
+                    visionCard(mockup)
+                        .onTapGesture {
+                            LiquidHaptics.tap()
+                            MINDTelemetry.info(
+                                "redesignMockup.tapped",
+                                data: [
+                                    "mockupId": mockup.id.uuidString,
+                                    "quickWin": mockup.quickWinTitle,
+                                ]
+                            )
+                            selectedMockup = mockup
+                        }
+                }
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+        }
+        .scrollTargetBehavior(.viewAligned)
+    }
+
+    private func visionCard(_ mockup: RedesignMockup) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack(alignment: .topTrailing) {
+                Group {
+                    if let img = UIImage(data: mockup.imageData) {
+                        Image(uiImage: img)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        LinearGradient(
+                            colors: [LiquidPalette.iris.opacity(0.6),
+                                     LiquidPalette.aqua.opacity(0.6)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    }
+                }
+                .frame(width: 320, height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(.white.opacity(0.10), lineWidth: 0.5)
+                }
+                .shadow(color: LiquidPalette.iris.opacity(0.25), radius: 20, x: 0, y: 12)
+            }
+            Text(mockup.title)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .frame(width: 320, alignment: .leading)
+        }
+    }
+
+    private var visionSkeletonRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        visionSkeletonCard
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+            }
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("audit.vision.generating")
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.leading, 4)
+        }
+    }
+
+    private var visionSkeletonCard: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(.ultraThinMaterial)
+            LinearGradient(
+                colors: [LiquidPalette.iris.opacity(0.20),
+                         LiquidPalette.aqua.opacity(0.18)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            Image(systemName: "sparkles")
+                .font(.system(size: 32, weight: .regular))
+                .foregroundStyle(LiquidPalette.iris.opacity(0.6))
+        }
+        .frame(width: 320, height: 180)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.10), lineWidth: 0.5)
+        }
+    }
+
+    private var visionKeyMissingCard: some View {
+        LiquidCard(cornerRadius: 18) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("audit.vision.empty.keyMissing")
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+        }
+    }
+
+    @ViewBuilder
+    private func mockupDetailSheet(_ mockup: RedesignMockup) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                if let img = UIImage(data: mockup.imageData) {
+                    Image(uiImage: img)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                .stroke(.white.opacity(0.10), lineWidth: 0.5)
+                        }
+                        .shadow(color: LiquidPalette.iris.opacity(0.30), radius: 28, x: 0, y: 16)
+                } else {
+                    LinearGradient(
+                        colors: [LiquidPalette.iris, LiquidPalette.aqua],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .frame(height: 220)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("audit.vision.tap.detail")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                        .tracking(0.6)
+                    Text(mockup.quickWinTitle)
+                        .font(.system(.title3, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    if !mockup.quickWinDetail.isEmpty {
+                        Text(mockup.quickWinDetail)
+                            .font(.system(.body, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(20)
+        }
+        .background {
+            LiquidBackground().ignoresSafeArea()
         }
     }
 
@@ -1295,6 +1517,18 @@ struct AuditSheet: View {
             url: url,
             name: trimmedName.isEmpty ? nil : trimmedName
         )
+
+        // v0.23 — Wire the generative mockup source when the OpenAI
+        // key is configured. Nil = the Vision section in the report
+        // view shows the "configure your key" hint. Set here (not in
+        // a lifecycle method) so each audit re-checks the keychain —
+        // a fresh paste in Settings takes effect on the next run
+        // without a relaunch.
+        if let key = OpenAIAPIKeyStore.read(), !key.isEmpty {
+            controller.mockupSource = RedesignMockupSourceAdapter()
+        } else {
+            controller.mockupSource = nil
+        }
 
         // v0.22 — If the broadcast toggle is armed, mint the session
         // BEFORE calling run(for:) so the AuditController seeds the

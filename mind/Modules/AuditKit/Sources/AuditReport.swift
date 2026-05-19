@@ -45,6 +45,15 @@ public struct AuditReport: Sendable, Codable, Hashable {
     /// shape the same pitch to different prospect maturity levels.
     public let pitch: String
 
+    /// v0.23 — Generative "before / after" mockups. Up to 3 PNG
+    /// images produced by GPT Image 2 visualizing what the site
+    /// could look like once the top 3 quick wins are applied.
+    /// Empty by default — kept optional so reports synthesised
+    /// before v0.23 still decode cleanly and so the field stays
+    /// progressively populated (the controller appends mockups as
+    /// they arrive without blocking the main audit flow).
+    public var mockups: [RedesignMockup]
+
     public init(
         client: AuditClient,
         generatedAt: Date = .now,
@@ -56,7 +65,8 @@ public struct AuditReport: Sendable, Codable, Hashable {
         quickWins: [QuickWin],
         strategicBets: [StrategicBet],
         hiddenRisks: [HiddenRisk] = [],
-        pitch: String
+        pitch: String,
+        mockups: [RedesignMockup] = []
     ) {
         self.client = client
         self.generatedAt = generatedAt
@@ -69,6 +79,51 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.strategicBets = strategicBets
         self.hiddenRisks = hiddenRisks
         self.pitch = pitch
+        self.mockups = mockups
+    }
+
+    // MARK: - Codable (backwards-compatible mockups)
+
+    /// v0.23 — Custom decoder so payloads serialised before the
+    /// `mockups` field existed still round-trip cleanly. Missing key
+    /// → empty array. Every other key keeps the synthesised
+    /// behaviour the compiler would have produced.
+    private enum CodingKeys: String, CodingKey {
+        case client, generatedAt, persona, scoring, performance,
+             findings, synthesis, quickWins, strategicBets,
+             hiddenRisks, pitch, mockups
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.client        = try c.decode(AuditClient.self, forKey: .client)
+        self.generatedAt   = try c.decode(Date.self, forKey: .generatedAt)
+        self.persona       = try c.decode(Persona.self, forKey: .persona)
+        self.scoring       = try c.decode(Scoring.self, forKey: .scoring)
+        self.performance   = try c.decodeIfPresent(PerformanceMetrics.self, forKey: .performance)
+        self.findings      = try c.decodeIfPresent(AuditFindings.self, forKey: .findings)
+        self.synthesis     = try c.decode(String.self, forKey: .synthesis)
+        self.quickWins     = try c.decode([QuickWin].self, forKey: .quickWins)
+        self.strategicBets = try c.decode([StrategicBet].self, forKey: .strategicBets)
+        self.hiddenRisks   = try c.decodeIfPresent([HiddenRisk].self, forKey: .hiddenRisks) ?? []
+        self.pitch         = try c.decode(String.self, forKey: .pitch)
+        self.mockups       = try c.decodeIfPresent([RedesignMockup].self, forKey: .mockups) ?? []
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(client, forKey: .client)
+        try c.encode(generatedAt, forKey: .generatedAt)
+        try c.encode(persona, forKey: .persona)
+        try c.encode(scoring, forKey: .scoring)
+        try c.encodeIfPresent(performance, forKey: .performance)
+        try c.encodeIfPresent(findings, forKey: .findings)
+        try c.encode(synthesis, forKey: .synthesis)
+        try c.encode(quickWins, forKey: .quickWins)
+        try c.encode(strategicBets, forKey: .strategicBets)
+        try c.encode(hiddenRisks, forKey: .hiddenRisks)
+        try c.encode(pitch, forKey: .pitch)
+        try c.encode(mockups, forKey: .mockups)
     }
 
     // MARK: - Nested types
