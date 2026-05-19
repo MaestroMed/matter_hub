@@ -554,12 +554,16 @@ private struct HomeView: View {
                     healthWeekCard
                 }
 
-                if shouldShowWeeklyDigest, let digest = weeklyDigest {
-                    weeklyDigestCard(digest)
-                }
-
+                // v0.17 — Morning brief comes first: it's the actionable
+                // wake-up card. The retrospective weekly digest renders
+                // just below so the user sees both on Sunday/Monday
+                // mornings without scrolling.
                 if shouldShowDailyBrief, let brief = dailyBrief {
                     dailyBriefCard(brief)
+                }
+
+                if shouldShowWeeklyDigest, let digest = weeklyDigest {
+                    weeklyDigestCard(digest)
                 }
 
                 tasksCard
