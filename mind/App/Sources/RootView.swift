@@ -168,51 +168,99 @@ struct RootView: View {
     }
 
     /// Liquid Glass sidebar — 4 destinations + a section header that
-    /// doubles as the app's wordmark on tablet.
+    /// doubles as the app's wordmark + a footer with live graph stats
+    /// so the user has a knowledge-health view at a glance.
     private var sidebar: some View {
-        List(selection: sidebarBinding) {
-            Section {
-                ForEach(MINDTab.allCasesOrdered, id: \.self) { tab in
-                    NavigationLink(value: tab) {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(tab.tint.opacity(0.18))
-                                    .frame(width: 32, height: 32)
-                                Image(systemName: tab.icon)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(tab.tint)
+        VStack(spacing: 0) {
+            List(selection: sidebarBinding) {
+                Section {
+                    ForEach(MINDTab.allCasesOrdered, id: \.self) { tab in
+                        NavigationLink(value: tab) {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(tab.tint.opacity(0.18))
+                                        .frame(width: 32, height: 32)
+                                    Image(systemName: tab.icon)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(tab.tint)
+                                }
+                                Text(tab.title)
+                                    .font(.system(.body, design: .rounded, weight: .medium))
                             }
-                            Text(tab.title)
-                                .font(.system(.body, design: .rounded, weight: .medium))
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
+                        .listRowBackground(Color.clear)
                     }
-                    .listRowBackground(Color.clear)
-                }
-            } header: {
-                HStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .fill(LiquidGradient.primary)
-                            .frame(width: 28, height: 28)
-                        Image(systemName: "brain.head.profile")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white)
+                } header: {
+                    HStack(spacing: 8) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidGradient.primary)
+                                .frame(width: 28, height: 28)
+                            Image(systemName: "brain.head.profile")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                        Text("MIND")
+                            .font(.system(.title3, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
                     }
-                    Text("MIND")
-                        .font(.system(.title3, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.primary)
+                    .textCase(nil)
+                    .padding(.vertical, 8)
                 }
-                .textCase(nil)
-                .padding(.vertical, 8)
             }
+            .scrollContentBackground(.hidden)
+            .listStyle(.sidebar)
+            .navigationTitle("MIND")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
+
+            sidebarFooter
         }
-        .scrollContentBackground(.hidden)
-        .listStyle(.sidebar)
-        .navigationTitle("MIND")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// Footer pinned at the bottom of the iPad sidebar with live counts.
+    /// Read straight from the @Query so the numbers update the moment
+    /// the user captures a new node or finishes an audit.
+    private var sidebarFooter: some View {
+        let noteCount  = allNodes.filter { $0.kindRaw == "note" || $0.kindRaw == "capture" }.count
+        let clientCount = allNodes.filter { $0.kindRaw == "client" }.count
+        let auditCount = allNodes.filter { $0.kindRaw == "audit" }.count
+
+        return HStack(spacing: 14) {
+            sidebarStatPill(value: noteCount, label: "Notes", tint: LiquidPalette.iris)
+            sidebarStatPill(value: clientCount, label: "Clients", tint: .orange)
+            sidebarStatPill(value: auditCount, label: "Audits", tint: .purple)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Rectangle()
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                        .opacity(0.4)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func sidebarStatPill(value: Int, label: String, tint: Color) -> some View {
+        VStack(spacing: 2) {
+            Text("\(value)")
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+                .contentTransition(.numericText())
+            Text(label.uppercased())
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     /// Bridges the optional-Tab selection NavigationSplitView wants
