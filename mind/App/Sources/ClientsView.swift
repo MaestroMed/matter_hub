@@ -124,11 +124,14 @@ struct ClientsView: View {
         VStack(spacing: 16) {
             LiquidCard {
                 VStack(spacing: 14) {
+                    // 40pt illustration glyph kept fixed (display-only).
                     Image(systemName: "person.text.rectangle.fill")
                         .font(.system(size: 40))
                         .foregroundStyle(LiquidGradient.primary)
                     Text("Pas encore de client")
                         .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(2)
                     Text("Tape un domaine pour lancer un audit, ou essaie un des exemples ci-dessous.")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -155,11 +158,14 @@ struct ClientsView: View {
     private var noResultsEmptyState: some View {
         LiquidCard {
             VStack(spacing: 14) {
+                // 40pt illustration glyph kept fixed (display-only).
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 40))
                     .foregroundStyle(LiquidGradient.primary)
                 Text("Aucun résultat")
                     .font(.system(.headline, design: .rounded, weight: .semibold))
+                    .minimumScaleFactor(0.85)
+                    .lineLimit(2)
                 Text("Essaie un autre terme de recherche.")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
@@ -182,20 +188,24 @@ struct ClientsView: View {
                             .fill(target.tint.opacity(0.20))
                             .frame(width: 42, height: 42)
                         Image(systemName: target.icon)
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(.body, design: .rounded, weight: .semibold))
                             .foregroundStyle(target.tint)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(target.name)
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text(target.url)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
                     }
                     Spacer()
                     Image(systemName: "play.circle.fill")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.system(.title3, design: .rounded, weight: .semibold))
                         .foregroundStyle(LiquidPalette.iris)
                 }
                 .padding(.horizontal, 16)

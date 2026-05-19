@@ -129,6 +129,9 @@ struct OnboardingView: View {
     private var welcomePage: some View {
         OnboardingCard {
             VStack(spacing: 24) {
+                // The 42pt glyph inside the 96pt circle is intentional
+                // (display-only hero icon). Kept fixed so the geometry
+                // of the welcome page doesn't break at AX5.
                 ZStack {
                     Circle()
                         .fill(LiquidGradient.primary)
@@ -143,6 +146,8 @@ struct OnboardingView: View {
                     Text("Bienvenue dans MIND")
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(2)
                     Text("Ton second cerveau. Notes, focus, audits clients, captures vocales — synchronisés sur tous tes appareils via iCloud.")
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -173,6 +178,7 @@ struct OnboardingView: View {
                     Circle()
                         .fill(LiquidPalette.iris.opacity(0.18))
                         .frame(width: 80, height: 80)
+                    // 32pt key glyph inside 80pt circle — display-only.
                     Image(systemName: "key.fill")
                         .font(.system(size: 32, weight: .semibold))
                         .foregroundStyle(LiquidPalette.iris)
@@ -182,6 +188,8 @@ struct OnboardingView: View {
                     Text("Connecte Claude")
                         .font(.system(.title, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.8)
+                        .lineLimit(2)
                     Text("MIND s'appuie sur l'API Anthropic pour le chat, la synthèse d'audit et la génération de pitchs. Sans clé, ces fonctions restent inertes.")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -241,6 +249,7 @@ struct OnboardingView: View {
                     Circle()
                         .fill(LiquidPalette.aqua.opacity(0.20))
                         .frame(width: 80, height: 80)
+                    // 32pt bell glyph inside 80pt circle — display-only.
                     Image(systemName: "bell.badge.fill")
                         .font(.system(size: 32, weight: .semibold))
                         .foregroundStyle(LiquidPalette.iris)
@@ -250,6 +259,8 @@ struct OnboardingView: View {
                     Text("Notifications d'audit")
                         .font(.system(.title, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.8)
+                        .lineLimit(2)
                     Text("Lance un audit, range ton téléphone. Tu reçois un banner quand le rapport est prêt — pas avant.")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -290,6 +301,7 @@ struct OnboardingView: View {
                         .fill(LiquidGradient.primary)
                         .frame(width: 96, height: 96)
                         .shadow(color: LiquidPalette.iris.opacity(0.4), radius: 24, y: 12)
+                    // 38pt sparkles glyph inside 96pt circle — display-only.
                     Image(systemName: "sparkles")
                         .font(.system(size: 38, weight: .semibold))
                         .foregroundStyle(.white)
@@ -298,6 +310,8 @@ struct OnboardingView: View {
                 VStack(spacing: 8) {
                     Text("Tu es prêt")
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(2)
                     Text("MIND apprendra ta manière de penser au fil de tes captures.")
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -333,15 +347,18 @@ struct OnboardingView: View {
                     .fill(tint.opacity(0.18))
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(tint)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .minimumScaleFactor(0.85)
+                    .lineLimit(2)
                 Text(detail)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .lineLimit(3)
             }
             Spacer()
         }
@@ -351,10 +368,12 @@ struct OnboardingView: View {
         HStack(spacing: 10) {
             Image(systemName: done ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(done ? .green : .secondary)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(.headline, design: .rounded, weight: .semibold))
             Text(label)
                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                 .foregroundStyle(done ? .primary : .secondary)
+                .minimumScaleFactor(0.85)
+                .lineLimit(2)
             Spacer()
         }
     }

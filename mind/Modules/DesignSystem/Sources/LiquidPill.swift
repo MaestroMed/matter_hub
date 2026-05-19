@@ -22,10 +22,12 @@ public struct LiquidPill: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(.callout, design: .rounded, weight: .semibold))
                 if let title, isActive {
                     Text(title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(1)
                 }
             }
             .foregroundStyle(isActive ? .white : .secondary)

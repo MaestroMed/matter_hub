@@ -420,17 +420,20 @@ public struct SettingsView: View {
                         .fill(.red.opacity(0.18))
                         .frame(width: 32, height: 32)
                     Image(systemName: icon)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.red)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(2)
                     Text(detail)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(3)
                 }
                 Spacer()
             }

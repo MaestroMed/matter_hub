@@ -58,17 +58,21 @@ struct NodeDetailView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(node.title)
                     .font(.system(.title3, design: .rounded, weight: .semibold))
-                    .lineLimit(3)
+                    .lineLimit(4)
+                    .minimumScaleFactor(0.8)
                 HStack(spacing: 10) {
                     Text(node.kind.rawValue.capitalized.uppercased())
                         .font(.system(.caption2, design: .rounded, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .tracking(0.8)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                     Text("·")
                         .foregroundStyle(.secondary)
                     Text(node.createdAt.formatted(.relative(presentation: .named)))
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
             }
             Spacer()

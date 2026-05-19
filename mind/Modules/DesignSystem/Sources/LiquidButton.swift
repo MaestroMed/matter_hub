@@ -50,6 +50,8 @@ public struct LiquidButton: View {
             HStack(spacing: 8) {
                 Text(title)
                     .font(.system(.headline, design: .rounded, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(.headline, weight: .semibold))

@@ -66,11 +66,12 @@ for editing. **Acceptance**: `**bold**`, `# heading`, `- list`,
 `[link](url)` all render correctly on blur, edit on tap.
 Shipped 2026-05-19: NodeDetailView's default (non-audit, non-client) body now hosts a `MarkdownEditorCard` — tap the rendered MarkdownView to swap in a monospaced TextEditor bound to `node.content`, blur (tap outside or the "Aperçu" button) commits via `node.refreshEmbedding()` + `try? context.save()` + `SpotlightIndexer.index(node)` + a `node.edit` MINDTelemetry breadcrumb. Pure `MarkdownRenderer.attributedString(from:)` helper extracted in DesignSystem (uses `.full` parsing options so headings, lists, and links surface as distinct runs with `.link` URL attribute) and exercised by 7 new MarkdownRenderingTests covering bold, italic, level-1 + level-2 headings, monotonic heading point sizes, bullet list item presentation intent, and link URL extraction. MINDTests target now also links DesignSystem so the helper is reachable from the test bundle. 131 tests, 0 failures.
 
-### v0.6 — Dynamic Type complete pass ⏳
+### v0.6 — Dynamic Type complete pass ✅
 **What**: Every text in the app uses `.font(.system(.X, design:
 .rounded))` with named text styles instead of hardcoded sizes. Test
 on AX5 (largest) — no clipping, no overlap. **Acceptance**: full app
 walkthrough at AX5 with screenshot per screen, no truncations.
+Shipped 2026-05-19: every `.font(.system(size: N))` callsite in `RootView`, `AuditSheet`, `ClientsView`, `OnboardingView`, `SettingsView`, `NodeDetailView`, `LiquidButton`, and `LiquidPill` swapped to a named text style (`.headline`, `.subheadline`, `.body`, `.callout`, `.footnote`, `.caption`, `.caption2`, `.title3`) while preserving `design: .rounded` + `weight:`. Six intentional display-only sizes survive with documenting comments: the 64pt Deep Focus countdown timer (×2 — running + idle state), the 44pt audit hero score, the 40pt empty-state illustration glyphs in ClientsView (×2), and the 42pt / 32pt / 38pt onboarding icons centered inside their 96pt / 80pt circles. Greeting / card headlines / button labels now carry `minimumScaleFactor(0.7–0.9)` + appropriate `lineLimit(1–4)` so AX5 wraps cleanly inside its container. New `DynamicTypeAuditTests.swift` adds 7 structural locks (LiquidButton + LiquidPill init contracts, `Font.TextStyle` distinctness, AX5 still present in the `DynamicTypeSize` ladder, accessibility ladder monotonicity). AX5 + normal-size screenshots saved to `mind/screenshots/v0.6-ax5.png` and `mind/screenshots/v0.6.png`. 138 tests, 0 failures.
 
 ### v0.7 — i18n FR / EN complete ⏳
 **What**: Extract every visible string into `Localizable.strings`

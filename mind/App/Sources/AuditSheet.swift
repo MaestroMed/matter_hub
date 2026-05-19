@@ -282,18 +282,20 @@ struct AuditSheet: View {
                     .fill(.ultraThinMaterial)
                     .frame(width: 28, height: 28)
                 Image(systemName: kind.systemImage)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.label)
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                     .foregroundStyle(.primary)
+                    .minimumScaleFactor(0.85)
+                    .lineLimit(2)
                 if case .failed(let reason) = state {
                     Text(reason)
                         .font(.system(.caption2, design: .rounded))
                         .foregroundStyle(.red.opacity(0.85))
-                        .lineLimit(2)
+                        .lineLimit(3)
                 }
             }
             Spacer()
@@ -399,12 +401,14 @@ struct AuditSheet: View {
                              : AnyShapeStyle(Color.white.opacity(0.15))))
                     .frame(width: 36, height: 36)
                 Image(systemName: state == .done ? "checkmark" : icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(state == .pending ? Color.secondary : .white)
             }
             Text(title)
                 .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .foregroundStyle(state == .pending ? .secondary : .primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .animation(LiquidMetrics.spring, value: state)
     }
@@ -542,12 +546,18 @@ struct AuditSheet: View {
                     )
                     .frame(height: 240)
 
+                    // Hero score is intentionally locked at 44pt
+                    // (display-only) so the visual weight stays
+                    // consistent inside the 240pt scoring chart.
+                    // minimumScaleFactor handles AX5 overflow.
                     VStack(spacing: 0) {
                         Text("\(report.scoring.overall)")
                             .font(.system(size: 44, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(LiquidPalette.iris)
                             .contentTransition(.numericText())
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
                         Text("/ 100")
                             .font(.system(.caption, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
@@ -665,16 +675,19 @@ struct AuditSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "exclamationmark.shield.fill")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(.callout, design: .rounded, weight: .semibold))
                         .foregroundStyle(severityColor(risk.severity))
                     Text(risk.title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(3)
                     Spacer()
                     severityBadge(risk.severity)
                 }
                 Text(risk.detail)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .lineLimit(nil)
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -896,11 +909,13 @@ struct AuditSheet: View {
                             .fill(tint.opacity(0.18))
                             .frame(width: 30, height: 30)
                         Image(systemName: icon)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
                             .foregroundStyle(tint)
                     }
                     Text(title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(2)
                     Spacer()
                 }
                 ForEach(lines.compactMap { $0 }, id: \.self) { line in
@@ -1197,27 +1212,30 @@ struct AuditSheet: View {
                             .fill(LiquidPalette.iris.opacity(0.18))
                             .frame(width: 40, height: 40)
                         Image(systemName: icon)
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(.callout, design: .rounded, weight: .semibold))
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text(subtitle)
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
+                            .lineLimit(2)
                     }
                     Spacer()
                     if let url {
                         ShareLink(item: url, preview: SharePreview(title)) {
                             Image(systemName: "square.and.arrow.up.fill")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(.callout, design: .rounded, weight: .semibold))
                                 .foregroundStyle(LiquidPalette.iris)
                         }
                     } else {
                         Button(action: action) {
                             Image(systemName: "arrow.down.circle.fill")
-                                .font(.system(size: 20, weight: .semibold))
+                                .font(.system(.title3, design: .rounded, weight: .semibold))
                                 .foregroundStyle(LiquidPalette.iris)
                         }
                     }

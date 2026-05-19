@@ -156,7 +156,7 @@ struct RootView: View {
                             isCapturing = true
                         } label: {
                             Label("Quick capture", systemImage: "plus.circle.fill")
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(LiquidPalette.iris)
                         }
                         .accessibilityLabel("Quick capture")
@@ -182,7 +182,7 @@ struct RootView: View {
                                         .fill(tab.tint.opacity(0.18))
                                         .frame(width: 32, height: 32)
                                     Image(systemName: tab.icon)
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                         .foregroundStyle(tab.tint)
                                 }
                                 Text(tab.title)
@@ -199,7 +199,7 @@ struct RootView: View {
                                 .fill(LiquidGradient.primary)
                                 .frame(width: 28, height: 28)
                             Image(systemName: "brain.head.profile")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(.footnote, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.white)
                         }
                         Text("MIND")
@@ -531,20 +531,23 @@ private struct HomeView: View {
                             .fill(LiquidPalette.aqua.opacity(0.30))
                             .frame(width: 44, height: 44)
                         Image(systemName: "bubble.left.and.bubble.right.fill")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(.body, design: .rounded, weight: .semibold))
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Ask MIND")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text("Pose une question à ton graphe.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
+                            .lineLimit(2)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(18)
@@ -565,20 +568,23 @@ private struct HomeView: View {
                             .fill(LiquidPalette.iris.opacity(0.18))
                             .frame(width: 44, height: 44)
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Audit client")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text("Du domaine au pitch en quelques minutes.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
+                            .lineLimit(2)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(18)
@@ -593,16 +599,20 @@ private struct HomeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(Self.timeBasedGreeting), Mehdi 👋")
                     .font(.system(.largeTitle, design: .rounded, weight: .semibold))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(2)
                 Text(Self.timeBasedSubtitle)
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .minimumScaleFactor(0.85)
+                    .lineLimit(3)
             }
-            Spacer()
+            Spacer(minLength: 12)
             Button {
                 showAmbient = true
             } label: {
                 Image(systemName: "moon.stars.fill")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
                     .foregroundStyle(LiquidPalette.iris)
                     .padding(10)
                     .background {
@@ -625,11 +635,13 @@ private struct HomeView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(.callout, design: .rounded, weight: .semibold))
                     .foregroundStyle(LiquidPalette.iris)
                 Text("Cherche dans ton graphe…")
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Spacer()
                 if !allNodes.isEmpty {
                     Text("\(allNodes.count)")
@@ -699,6 +711,11 @@ private struct HomeView: View {
         }
     }
 
+    // The Deep Focus countdown intentionally locks the size at 64pt
+    // (display-only, monospaced digits). It's a hero numeric figure
+    // the user glances at — Dynamic Type would either make it useless
+    // (too small at xSmall) or break the card frame (huge at AX5).
+    // `minimumScaleFactor` keeps it readable inside the card width.
     @ViewBuilder
     private var focusTimer: some View {
         if let session = focus.session, session.endDate > .now {
@@ -707,11 +724,15 @@ private struct HomeView: View {
                 .monospacedDigit()
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
                 .contentTransition(.numericText())
         } else {
             Text(Self.format(seconds: defaultFocusDuration))
                 .font(.system(size: 64, weight: .light, design: .rounded))
                 .monospacedDigit()
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
                 .contentTransition(.numericText())
         }
     }
@@ -761,12 +782,14 @@ private struct HomeView: View {
                             .fill(tint.opacity(0.18))
                             .frame(width: 36, height: 36)
                         Image(systemName: icon)
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(.callout, design: .rounded, weight: .semibold))
                             .foregroundStyle(tint)
                     }
                     Text(title)
                         .font(.system(.caption, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     if let badge {
                         Text(badge)
                             .font(.system(.caption2, design: .rounded, weight: .bold))
@@ -795,18 +818,21 @@ private struct HomeView: View {
                             .fill(.green.opacity(0.20))
                             .frame(width: 44, height: 44)
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(.body, design: .rounded, weight: .semibold))
                             .foregroundStyle(.green)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Tasks")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text(openTaskCount == 0
                              ? "Capture ce qui reste à faire."
                              : "\(openTaskCount) à faire")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
+                            .lineLimit(2)
                     }
                     Spacer()
                     if openTaskCount > 0 {
@@ -817,7 +843,7 @@ private struct HomeView: View {
                             .contentTransition(.numericText())
                     }
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(18)
@@ -838,16 +864,19 @@ private struct HomeView: View {
                             .fill(LiquidPalette.iris.opacity(0.22))
                             .frame(width: 40, height: 40)
                         Image(systemName: "brain.head.profile")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(.body, design: .rounded, weight: .semibold))
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Focus cette semaine")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text(focusWeekSummary)
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
+                            .lineLimit(2)
                     }
                     Spacer()
                     Text("\(thisWeekSessions.count)")
@@ -856,7 +885,7 @@ private struct HomeView: View {
                         .foregroundStyle(LiquidPalette.iris)
                         .contentTransition(.numericText())
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(16)
@@ -885,15 +914,18 @@ private struct HomeView: View {
                             .fill(LiquidGradient.primary)
                             .frame(width: 40, height: 40)
                         Image(systemName: "brain.head.profile")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.white)
                     }
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Bienvenue dans MIND")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
                         Text("Ton second cerveau démarre vide.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
+                            .lineLimit(2)
                     }
                     Spacer()
                 }
@@ -932,15 +964,18 @@ private struct HomeView: View {
                     .fill(LiquidPalette.lavender.opacity(0.5))
                     .frame(width: 30, height: 30)
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(.footnote, design: .rounded, weight: .semibold))
                     .foregroundStyle(LiquidPalette.iris)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .minimumScaleFactor(0.9)
+                    .lineLimit(2)
                 Text(detail)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .lineLimit(3)
             }
             Spacer()
         }
