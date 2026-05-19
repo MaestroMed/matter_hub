@@ -122,6 +122,11 @@ let testTarget: Target = .target(
         // the simulator at test time but most tests don't depend
         // on it — the assembly helper is the load-bearing path.
         .target(name: Module.capture.rawValue),
+        // v0.21 — ClientPortalBuilderTests + PortalWriterTests lock
+        // the pure HTML generator (slug, escaping, gauges, page-weight
+        // ceiling) and the actor write helper. AuditKit is already
+        // linked transitively via the target.
+        .target(name: Module.clientPortalKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

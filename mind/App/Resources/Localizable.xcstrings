@@ -361,6 +361,132 @@
         }
       }
     },
+    "audit.export.portal.error.title": {
+      "comment": "v0.21 · Title of the alert that fires when client-portal generation fails.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client portal failed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec du portail client"
+          }
+        }
+      }
+    },
+    "audit.export.portal.subtitle": {
+      "comment": "v0.21 · ExportSheet row subtitle below 'Generate Client Portal'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Self-contained HTML site, ready to drop on Vercel."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Site HTML autonome, prêt à déposer sur Vercel."
+          }
+        }
+      }
+    },
+    "audit.export.portal.success.body": {
+      "comment": "v0.21 · Body copy of the portal-generated success sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your client portal is ready. Open it in Files to drag-drop it onto Vercel or Cloudflare Pages, or share the folder directly."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton portail client est prêt. Ouvre-le dans Fichiers pour le déposer sur Vercel ou Cloudflare Pages, ou partage directement le dossier."
+          }
+        }
+      }
+    },
+    "audit.export.portal.success.openInFiles": {
+      "comment": "v0.21 · Primary CTA in the portal success sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Files"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir dans Fichiers"
+          }
+        }
+      }
+    },
+    "audit.export.portal.success.share": {
+      "comment": "v0.21 · Secondary CTA in the portal success sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share folder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager le dossier"
+          }
+        }
+      }
+    },
+    "audit.export.portal.success.title": {
+      "comment": "v0.21 · Title of the portal-generated success sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client portal generated"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portail client généré"
+          }
+        }
+      }
+    },
+    "audit.export.portal.title": {
+      "comment": "v0.21 · ExportSheet row title for the new HTML client portal generator.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate client portal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer le portail client"
+          }
+        }
+      }
+    },
     "audit.field.name": {
       "extractionState": "manual",
       "localizations": {

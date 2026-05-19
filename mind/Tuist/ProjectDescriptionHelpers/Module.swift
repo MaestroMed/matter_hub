@@ -17,6 +17,7 @@ public enum Module: String, CaseIterable {
     case remindersKit = "RemindersKit"
     case notionKit = "NotionKit"
     case linearKit = "LinearKit"
+    case clientPortalKit = "ClientPortalKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -160,6 +161,24 @@ public enum Module: String, CaseIterable {
             // `LinearIssueBuilder` consumes. The actor `LinearClient`
             // posts to https://api.linear.app/graphql; the UI lives in
             // Settings + AuditSheet which already link DesignSystem.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.auditKit.rawValue),
+            ]
+        case .clientPortalKit:
+            // v0.21 — MIND Client Portal Generator. Turns any completed
+            // `AuditReport` into a self-contained premium HTML static
+            // site. Depends on AuditKit for the `AuditReport` value
+            // type and on GraphCore for `MINDTelemetry` breadcrumbs
+            // (clientPortal.generated / clientPortal.shared / …). No
+            // DesignSystem dep — the output is HTML, not SwiftUI, and
+            // every visual decision lives in the Liquid Glass HTML
+            // template strings inline (gradients, backdrop-filter,
+            // typography). The host App target invokes
+            // `ClientPortalBuilder.generateSite(for:brand:)` to obtain
+            // an in-memory `ClientPortalArchive`, then hands it to the
+            // `PortalWriter` actor which writes every file to
+            // `Documents/client-portals/<slug>-<date>/`.
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),

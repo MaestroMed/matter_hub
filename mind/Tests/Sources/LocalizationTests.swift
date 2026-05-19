@@ -201,4 +201,26 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("home.beta.banner.dismiss",      lang: "en"), "Later")
         XCTAssertEqual(localized("home.beta.banner.dismiss",      lang: "fr"), "Plus tard")
     }
+
+    /// v0.21 — Client Portal generator strings. Locks every FR + EN
+    /// key surfaced by the ExportSheet row + the success bottom
+    /// sheet so a careless catalogue edit can't ship a portal flow
+    /// where half the labels fall back to raw keys.
+    func test_clientPortalStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.export.portal.title",                lang: "en"), "Generate client portal")
+        XCTAssertEqual(localized("audit.export.portal.title",                lang: "fr"), "Générer le portail client")
+
+        XCTAssertEqual(localized("audit.export.portal.subtitle",             lang: "en"), "Self-contained HTML site, ready to drop on Vercel.")
+        XCTAssertEqual(localized("audit.export.portal.subtitle",             lang: "fr"), "Site HTML autonome, prêt à déposer sur Vercel.")
+
+        XCTAssertEqual(localized("audit.export.portal.error.title",          lang: "en"), "Client portal failed")
+        XCTAssertEqual(localized("audit.export.portal.error.title",          lang: "fr"), "Échec du portail client")
+
+        XCTAssertEqual(localized("audit.export.portal.success.title",        lang: "en"), "Client portal generated")
+        XCTAssertEqual(localized("audit.export.portal.success.title",        lang: "fr"), "Portail client généré")
+        XCTAssertEqual(localized("audit.export.portal.success.openInFiles",  lang: "en"), "Open in Files")
+        XCTAssertEqual(localized("audit.export.portal.success.openInFiles",  lang: "fr"), "Ouvrir dans Fichiers")
+        XCTAssertEqual(localized("audit.export.portal.success.share",        lang: "en"), "Share folder")
+        XCTAssertEqual(localized("audit.export.portal.success.share",        lang: "fr"), "Partager le dossier")
+    }
 }

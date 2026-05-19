@@ -283,11 +283,36 @@ Shipped 2026-05-19: new `public static func SettingsView.isBetaVersion(_:)` — 
 Expand from iPhone-only to the full Apple device family. Every
 device reads the same CloudKit graph.
 
-### v0.21 — Apple Watch focus complication ⏳
-**What**: New target MINDWatch. Focus complication shows current
-session remaining time, tap → opens the WatchOS focus view (start /
-end). CloudKit syncs FocusSessionRecord. **Acceptance**: complication
-updates live, start/end roundtrips to iPhone.
+### v0.21 — MIND Client Portal Generator ✅
+**What**: New module `ClientPortalKit` that turns any completed
+`AuditReport` into a self-contained premium HTML static site
+(`ClientPortalArchive` = `[String: Data]` map of relative paths →
+bytes), written to `Documents/client-portals/<slug>-<date>/` by a
+`PortalWriter` actor. The HTML is cinematic — full-viewport hero
+with parallax, six SVG circular gauges animated on scroll via
+`IntersectionObserver`, Liquid Glass aesthetic via `backdrop-filter`
++ iris → navy → black gradient, scroll-snap timeline for strategic
+bets, alert-style hidden-risks cards, pitch + contact + footer.
+Zero JS framework, inline CSS, single `index.html` file under 80 KB
+gzipped. Respects `prefers-color-scheme` and `prefers-reduced-motion`.
+A new row in the AuditSheet ExportSheet ("Générer Client Portal")
+triggers the build, then surfaces a success sheet with "Open in
+Files" + "Share folder" buttons (UIActivityViewController). Mehdi
+drag-drops the folder onto Vercel / Cloudflare Pages and his client
+gets a beautiful audit URL in 30 seconds. **Acceptance**: tap
+generates the folder, the `index.html` renders cleanly in Safari,
+contains the client name + overall score + every quick win +
+strategic bet + hidden risk + pitch, and the file weight stays
+under the locked 200 KB ceiling.
+
+**Deferred to v0.21.1**: the original "Apple Watch focus
+complication" idea (new MINDWatch target, WatchOS complication
+showing the live remaining time, CloudKit-synced
+`FocusSessionRecord`). Worth shipping once the Apple Developer Watch
+provisioning is set up; the encoder/decoder scaffolding from the
+previous Watch attempt is stashed locally for re-use.
+
+Shipped 2026-05-19: new `ClientPortalKit` module wires four pure types — `BrandSettings` (accent colour + consultant identity), `ClientPortalArchive` (`[String: Data]` + `folderSlug`, precondition-guards `index.html`), `ClientPortalBuilder` (Foundation-only entry point delegating to `HTMLTemplates`), and `HTMLTemplates` (every section + light-markdown renderer + inline CSS/JS) — plus an actor `PortalWriter` that drops the archive under `Documents/client-portals/<slug>-<date>/` (intermediate dirs auto-created, `MainActor.run` hop for the `clientPortal.written` breadcrumb to satisfy Swift 6 strict concurrency). The new AuditSheet ExportSheet row ("Générer le portail client", iris `globe.americas.fill` glyph) is always visible (no token / opt-in), runs the build off the main actor, then surfaces `PortalSuccessSheet` (`PortalShareItem` Identifiable wrapper) with two CTAs — "Open in Files" via `shareddocuments://` URL + `@Environment(\.openURL)`, "Share folder" via `UIViewControllerRepresentable` `UIActivityViewController` bridge so the user can AirDrop / Save to Files / Messages the folder. 8 new FR/EN xcstrings keys (`audit.export.portal.title|subtitle|error.title|success.title|success.body|success.openInFiles|success.share`). 3 telemetry breadcrumbs (`clientPortal.generated` + `clientPortal.written` + `clientPortal.write.failed`). Tests: 16 new in `ClientPortalBuilderTests` (archive shape contract, page-weight ceiling under 200 KB on a heavy report, slug lowercase/dashes/diacritics-strip/punctuation-collapse/empty-fallback, content surface for client name + overall score + every quick win / strategic bet / hidden risk / pitch, hidden-risks-section omitted when empty, brand swap surfaces in hero+pitch, `prefers-color-scheme` + `prefers-reduced-motion` honored, determinism for identical inputs, XSS guard escaping `<script>` tags in the client name, light-markdown renderer covering headings + bullet lists + bold) and 4 in `PortalWriterTests` (folder + index.html on disk, intermediate dir auto-creation, nested asset path with sub-folders, default destination root contract). 330 tests total, 12 skipped, 0 failures (was 306 in v0.20). Build SUCCEEDED on iPhone 17 Pro simulator. Screenshot at `mind/screenshots/v0.21.png` shows the host app launching clean — the Client Portal row only renders inside AuditSheet → ExportSheet after a real audit completes, which matches the documented vision-verify bar (host-launches-clean).
 
 ### v0.22 — Watch voice capture ⏳
 **What**: Watch "Capture" view with mic button → records voice →

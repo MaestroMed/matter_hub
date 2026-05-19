@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AuditKit
+import ClientPortalKit
 import DesignSystem
 import GraphCore
 import LinearKit
@@ -1279,6 +1280,16 @@ struct AuditSheet: View {
             && MINDPreferences.currentLinearDefaultTeamID() != nil
         }
 
+        // v0.21 — Client Portal generation state. The Generate button
+        // disables itself + shows a spinner while the PortalWriter
+        // actor is mid-write; the resulting folder URL is held in
+        // `portalFolderURL` and drives a follow-up success sheet that
+        // surfaces both "Open in Files" and "Share folder" buttons.
+        @State private var portalGenerating: Bool = false
+        @State private var portalFolderURL: URL?
+        @State private var portalError: String?
+        @State private var portalShareItem: PortalShareItem?
+
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -1337,11 +1348,35 @@ struct AuditSheet: View {
                     if linearConfigured && !report.quickWins.isEmpty {
                         linearBulkRow
                     }
+
+                    // v0.21 — Client Portal generator. Always visible
+                    // (no token / opt-in required) because the output
+                    // is a local folder, not a remote sync.
+                    clientPortalRow
                 }
                 .padding(20)
                 .padding(.bottom, 32)
             }
             .background { LiquidBackground().ignoresSafeArea() }
+            // v0.21 — Success bottom sheet after the portal generates.
+            // Sheet binding fires from `portalFolderURL` instead of
+            // a Bool so the URL is available inside the sheet's
+            // closure without an Optional unwrap dance.
+            .sheet(item: $portalShareItem) { item in
+                PortalSuccessSheet(folderURL: item.url) {
+                    portalShareItem = nil
+                }
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+            }
+            .alert(String(localized: "audit.export.portal.error.title", bundle: .main),
+                   isPresented: Binding(get: { portalError != nil },
+                                        set: { if !$0 { portalError = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(portalError ?? "")
+            }
             .alert(String(localized: "audit.export.notion.toast.title", bundle: .main),
                    isPresented: Binding(get: { notionPageURL != nil || notionError != nil },
                                         set: { if !$0 { notionPageURL = nil; notionError = nil } })) {
@@ -1532,6 +1567,101 @@ struct AuditSheet: View {
             }
         }
 
+        // MARK: - v0.21 Client Portal row + success flow
+
+        /// Always-visible row that triggers a one-shot generate-then-
+        /// share-folder pipeline. Distinct from the Notion / Linear
+        /// rows because the output isn't a single file the user can
+        /// `ShareLink(item:)` directly — it's a *folder* the user
+        /// drag-drops onto Vercel / Cloudflare Pages, so we present
+        /// a follow-up sheet with two actions: "Open in Files" and
+        /// "Share folder" (UIActivityViewController).
+        @ViewBuilder
+        private var clientPortalRow: some View {
+            LiquidCard(cornerRadius: 18) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "globe.americas.fill")
+                            .font(.system(.callout, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("audit.export.portal.title", bundle: .main)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
+                        Text("audit.export.portal.subtitle", bundle: .main)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    if portalGenerating {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button(action: generateClientPortal) {
+                            Image(systemName: "sparkles")
+                                .font(.system(.title3, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+
+        private func generateClientPortal() {
+            portalGenerating = true
+            portalError = nil
+            // Capture the report into the task so we don't reach back
+            // into `self` from a non-isolated context.
+            let snapshot = report
+            Task {
+                let archive = ClientPortalBuilder.generateSite(for: snapshot)
+                MINDTelemetry.info("clientPortal.generated", data: [
+                    "client": snapshot.client.displayName,
+                    "bytes": "\(archive.totalBytes)",
+                    "files": "\(archive.files.count)",
+                ])
+                let destinationRoot = portalDestinationRoot()
+                do {
+                    let folderURL = try await PortalWriter().write(
+                        archive: archive,
+                        under: destinationRoot
+                    )
+                    await MainActor.run {
+                        portalGenerating = false
+                        portalFolderURL = folderURL
+                        portalShareItem = PortalShareItem(url: folderURL)
+                        LiquidHaptics.success()
+                    }
+                } catch {
+                    await MainActor.run {
+                        portalGenerating = false
+                        portalError = String(describing: error)
+                        LiquidHaptics.error()
+                        MINDTelemetry.error("clientPortal.write.failed", data: [
+                            "error": String(describing: error),
+                        ])
+                    }
+                }
+            }
+        }
+
+        /// Resolved at call site so tests can override via DI later. The
+        /// canonical location is `~/Documents/client-portals/` — the
+        /// "Files" app picks the folder up automatically because the
+        /// app target ships with `UISupportsDocumentBrowser` +
+        /// `LSSupportsOpeningDocumentsInPlace`.
+        private func portalDestinationRoot() -> URL {
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+                ?? URL(fileURLWithPath: NSTemporaryDirectory())
+            return docs.appendingPathComponent("client-portals", isDirectory: true)
+        }
+
         @ViewBuilder
         private func exportRow(
             icon: String,
@@ -1612,6 +1742,119 @@ struct AuditSheet: View {
             } catch {
                 return nil
             }
+        }
+
+        // v0.21 — Identifiable wrapper for the success sheet. SwiftUI
+        // sheet(item:) needs Identifiable; URL is not, hence the
+        // one-field box that carries `id = UUID()` for free.
+        fileprivate struct PortalShareItem: Identifiable {
+            let id = UUID()
+            let url: URL
+        }
+    }
+
+    // v0.21 — Portal success bottom sheet. Two buttons:
+    // 1. "Open in Files" — `UIApplication.open(_:)` with `shareddocuments://`
+    //    scheme so the system Files app jumps into the generated folder.
+    // 2. "Share folder" — UIActivityViewController source list of the
+    //    folder URL, lets Mehdi AirDrop / Mail / iCloud Drive the
+    //    whole directory to the client or a Vercel deploy.
+    fileprivate struct PortalSuccessSheet: View {
+        let folderURL: URL
+        let onDismiss: () -> Void
+
+        @State private var showingShareController = false
+
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 22) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("audit.export.portal.success.title", bundle: .main)
+                                .font(.system(.title2, design: .rounded, weight: .semibold))
+                            Text(folderURL.lastPathComponent)
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button { onDismiss() } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    LiquidCard(cornerRadius: 18) {
+                        VStack(spacing: 14) {
+                            Image(systemName: "globe.americas.fill")
+                                .font(.system(size: 46))
+                                .foregroundStyle(LiquidPalette.iris)
+                                .padding(.top, 22)
+                            Text("audit.export.portal.success.body", bundle: .main)
+                                .font(.system(.subheadline, design: .rounded))
+                                .multilineTextAlignment(.center)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 22)
+                                .padding(.bottom, 4)
+                            Text(folderURL.path)
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(2)
+                                .truncationMode(.middle)
+                                .padding(.horizontal, 22)
+                                .padding(.bottom, 18)
+                        }
+                    }
+
+                    Button(action: openInFiles) {
+                        HStack {
+                            Image(systemName: "folder.fill")
+                            Text("audit.export.portal.success.openInFiles", bundle: .main)
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(16)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+
+                    ShareLink(item: folderURL) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up.fill")
+                            Text("audit.export.portal.success.share", bundle: .main)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(16)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        MINDTelemetry.info("clientPortal.shared", data: [
+                            "folder": folderURL.lastPathComponent,
+                        ])
+                    })
+                }
+                .padding(20)
+                .padding(.bottom, 40)
+            }
+            .background { LiquidBackground().ignoresSafeArea() }
+        }
+
+        private func openInFiles() {
+            // shareddocuments:// is the documented scheme for jumping
+            // straight into the app's Documents directory inside the
+            // Files app. We rewrite the file:// URL to use that scheme
+            // and let UIApplication route it.
+            guard var components = URLComponents(url: folderURL, resolvingAgainstBaseURL: false) else { return }
+            components.scheme = "shareddocuments"
+            guard let openURL = components.url else { return }
+            UIApplication.shared.open(openURL)
+            MINDTelemetry.info("clientPortal.opened", data: [
+                "folder": folderURL.lastPathComponent,
+            ])
         }
     }
 
