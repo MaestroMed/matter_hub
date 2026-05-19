@@ -365,3 +365,24 @@ builds, so we can see at a glance whether the beta UI is being used.
   iCloud indicator, demo audits
 - **Phase ∞** ⏳ Apple Watch + Mac + Vision Pro clients reading the
   same CloudKit graph
+
+## ClientPortalKit (v0.21)
+
+One-tap premium HTML export for any completed audit. A new
+"Générer Client Portal" row in the AuditSheet ExportSheet calls
+`ClientPortalBuilder.generateSite(for:brand:)`, writes a
+self-contained `index.html` (inline CSS + JS, no framework, ~26 KB)
+to `~/Documents/client-portals/<slug>-<date>/` via the
+`PortalWriter` actor, then surfaces a success bottom sheet with
+"Open in Files" + "Share folder" CTAs. Drop the folder onto Vercel
+or Cloudflare Pages and the client has a beautiful audit URL in 30
+seconds.
+
+The HTML aesthetic: Liquid Glass — full-viewport hero with parallax
+gradient (iris → navy → black), six SVG circular gauges animated on
+scroll via `IntersectionObserver`, scroll-snap timeline for
+strategic bets, alert-style hidden-risk cards, full-bleed pitch
+quote with consultant byline. Respects `prefers-color-scheme` and
+`prefers-reduced-motion`. Hard page-weight ceiling locked at 200 KB
+by the test suite so no future template addition can silently bloat
+the export.

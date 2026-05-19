@@ -1744,119 +1744,13 @@ struct AuditSheet: View {
             }
         }
 
-        // v0.21 — Identifiable wrapper for the success sheet. SwiftUI
-        // sheet(item:) needs Identifiable; URL is not, hence the
-        // one-field box that carries `id = UUID()` for free.
-        fileprivate struct PortalShareItem: Identifiable {
-            let id = UUID()
-            let url: URL
-        }
     }
 
-    // v0.21 — Portal success bottom sheet. Two buttons:
-    // 1. "Open in Files" — `UIApplication.open(_:)` with `shareddocuments://`
-    //    scheme so the system Files app jumps into the generated folder.
-    // 2. "Share folder" — UIActivityViewController source list of the
-    //    folder URL, lets Mehdi AirDrop / Mail / iCloud Drive the
-    //    whole directory to the client or a Vercel deploy.
-    fileprivate struct PortalSuccessSheet: View {
-        let folderURL: URL
-        let onDismiss: () -> Void
-
-        @State private var showingShareController = false
-
-        var body: some View {
-            ScrollView {
-                VStack(spacing: 22) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("audit.export.portal.success.title", bundle: .main)
-                                .font(.system(.title2, design: .rounded, weight: .semibold))
-                            Text(folderURL.lastPathComponent)
-                                .font(.system(.subheadline, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Button { onDismiss() } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    LiquidCard(cornerRadius: 18) {
-                        VStack(spacing: 14) {
-                            Image(systemName: "globe.americas.fill")
-                                .font(.system(size: 46))
-                                .foregroundStyle(LiquidPalette.iris)
-                                .padding(.top, 22)
-                            Text("audit.export.portal.success.body", bundle: .main)
-                                .font(.system(.subheadline, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 22)
-                                .padding(.bottom, 4)
-                            Text(folderURL.path)
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(2)
-                                .truncationMode(.middle)
-                                .padding(.horizontal, 22)
-                                .padding(.bottom, 18)
-                        }
-                    }
-
-                    Button(action: openInFiles) {
-                        HStack {
-                            Image(systemName: "folder.fill")
-                            Text("audit.export.portal.success.openInFiles", bundle: .main)
-                            Spacer()
-                            Image(systemName: "arrow.up.right.square")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(16)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-
-                    ShareLink(item: folderURL) {
-                        HStack {
-                            Image(systemName: "square.and.arrow.up.fill")
-                            Text("audit.export.portal.success.share", bundle: .main)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(16)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        MINDTelemetry.info("clientPortal.shared", data: [
-                            "folder": folderURL.lastPathComponent,
-                        ])
-                    })
-                }
-                .padding(20)
-                .padding(.bottom, 40)
-            }
-            .background { LiquidBackground().ignoresSafeArea() }
-        }
-
-        private func openInFiles() {
-            // shareddocuments:// is the documented scheme for jumping
-            // straight into the app's Documents directory inside the
-            // Files app. We rewrite the file:// URL to use that scheme
-            // and let UIApplication route it.
-            guard var components = URLComponents(url: folderURL, resolvingAgainstBaseURL: false) else { return }
-            components.scheme = "shareddocuments"
-            guard let openURL = components.url else { return }
-            UIApplication.shared.open(openURL)
-            MINDTelemetry.info("clientPortal.opened", data: [
-                "folder": folderURL.lastPathComponent,
-            ])
-        }
-    }
+    // v0.21 — `PortalShareItem` Identifiable wrapper + `PortalSuccessSheet`
+    // bottom sheet live in their own file `App/Sources/PortalSuccessSheet.swift`
+    // so the AuditSheet keeps a tight scope and the success-flow UI is
+    // straightforward to swap for an `OS_UIDocumentInteractionController`
+    // path in a future iteration.
 
     // MARK: - Brief preview
 
