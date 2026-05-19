@@ -231,12 +231,13 @@ body as content, sender's email extracted to tags. **Acceptance**:
 sharing from Mail.app creates a clean Node with all fields.
 Shipped 2026-05-19: pure RFC-822 MailParser routes Mail.app shares into a `.mail` Node via the share extension; tolerant decoder defaults unknown kinds to `.link` for forward compat.
 
-### v0.15 — Knowledge graph visualization (interactive) ⏳
+### v0.15 — Knowledge graph visualization (interactive) ✅
 **What**: New tab `Graph` between Notes and Clients. Force-directed
 graph layout (use SwiftUI Canvas + custom physics) showing Nodes as
 circles + Edges as lines. Zoom, pan, tap a node → NodeDetailView.
 Colour by kind. **Acceptance**: 50-node graph renders smoothly at
 60fps, tap navigation works.
+Shipped 2026-05-19: SwiftUI Canvas + pure-function `GraphPhysics.physicsStep` (spring + Coulomb + damping + bounds clamp), pinch zoom 0.5…3.0, drag pan, tap-routing to NodeDetailView via 20pt threshold, 200-node cap with "Afficher plus" CTA, FR/EN strings + 9 physics tests locking the simulation contract.
 
 ### v0.16 — Auto-summarization weekly digest ⏳
 **What**: Every Sunday evening, on-device Foundation Models generates

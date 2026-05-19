@@ -17,6 +17,7 @@ import Capture
 enum MINDTab: Hashable {
     case home
     case notes
+    case graph
     case clients
     case settings
 }
@@ -120,7 +121,14 @@ struct RootView: View {
                         LiquidTab(icon: "doc.text.fill", tag: MINDTab.notes),
                     ],
                     trailing: [
-                        LiquidTab(icon: "person.text.rectangle.fill", tag: MINDTab.clients),
+                        // v0.15 — Graph tab swaps out the Clients slot in
+                        // the bottom tab bar. Clients remain reachable as
+                        // indigo nodes inside the graph; tapping one opens
+                        // NodeDetailView, which routes into ClientDetailView
+                        // when the kind is .client. Keeps the bar at 4
+                        // visible slots so the Liquid pill geometry stays
+                        // intact.
+                        LiquidTab(icon: "point.3.filled.connected.trianglepath.dotted", tag: MINDTab.graph),
                         LiquidTab(icon: "gearshape.fill", tag: MINDTab.settings),
                     ],
                     onCapture: { isCapturing = true }
@@ -290,6 +298,10 @@ struct RootView: View {
             NotesView { node in
                 selectedNode = node
             }
+        case .graph:
+            GraphView { node in
+                selectedNode = node
+            }
         case .clients:
             ClientsView()
         case .settings:
@@ -301,15 +313,19 @@ struct RootView: View {
 extension MINDTab {
     /// Stable ordering used by the regular-width sidebar so the
     /// destinations always appear in the same sequence the iPhone tab
-    /// bar uses, top-to-bottom: Home, Notes, Clients, Settings.
+    /// bar uses, top-to-bottom: Home, Notes, Graph, Clients, Settings.
+    /// The iPad sidebar keeps Clients as a first-class destination even
+    /// though the iPhone bar swapped it out for Graph — the regular
+    /// layout has the screen real-estate to surface both.
     static var allCasesOrdered: [MINDTab] {
-        [.home, .notes, .clients, .settings]
+        [.home, .notes, .graph, .clients, .settings]
     }
 
     var title: String {
         switch self {
         case .home:     return "Home"
         case .notes:    return "Notes"
+        case .graph:    return "Graph"
         case .clients:  return "Clients"
         case .settings: return "Settings"
         }
@@ -319,6 +335,7 @@ extension MINDTab {
         switch self {
         case .home:     return "house.fill"
         case .notes:    return "doc.text.fill"
+        case .graph:    return "point.3.filled.connected.trianglepath.dotted"
         case .clients:  return "person.text.rectangle.fill"
         case .settings: return "gearshape.fill"
         }
@@ -328,6 +345,7 @@ extension MINDTab {
         switch self {
         case .home:     return LiquidPalette.iris
         case .notes:    return LiquidPalette.iris
+        case .graph:    return LiquidPalette.aqua
         case .clients:  return .orange
         case .settings: return .gray
         }

@@ -103,11 +103,12 @@ public struct LiquidTabBar<Tag: Hashable>: View {
     /// callers; if we ever change the icon the label still makes sense.
     private func tabAccessibilityLabel(for icon: String) -> String {
         switch icon {
-        case "house.fill":                  return "Home"
-        case "doc.text.fill":               return "Notes"
-        case "person.text.rectangle.fill":  return "Clients"
-        case "gearshape.fill":              return "Settings"
-        default:                            return "Tab"
+        case "house.fill":                                     return "Home"
+        case "doc.text.fill":                                  return "Notes"
+        case "point.3.filled.connected.trianglepath.dotted":   return "Graph"
+        case "person.text.rectangle.fill":                     return "Clients"
+        case "gearshape.fill":                                 return "Settings"
+        default:                                               return "Tab"
         }
     }
 }

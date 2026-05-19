@@ -136,4 +136,14 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("share.mail.empty.fallback", lang: "en"), "Untitled email")
         XCTAssertEqual(localized("share.mail.empty.fallback", lang: "fr"), "E-mail sans sujet")
     }
+
+    /// v0.15 — Knowledge graph tab. Lock both translations of the tab
+    /// title and the empty-state copy so the FR build never falls back
+    /// to the EN string on a fresh install where the graph is empty.
+    func test_graphStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("tab.graph",          lang: "en"), "Graph")
+        XCTAssertEqual(localized("tab.graph",          lang: "fr"), "Graphe")
+        XCTAssertEqual(localized("graph.empty.title",  lang: "en"), "Your graph is empty")
+        XCTAssertEqual(localized("graph.empty.title",  lang: "fr"), "Ton graphe est vide")
+    }
 }
