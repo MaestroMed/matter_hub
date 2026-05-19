@@ -172,13 +172,16 @@ struct AuditSheet: View {
 
     private var runningView: some View {
         LiquidCard(cornerRadius: 22) {
-            VStack(spacing: 18) {
+            VStack(spacing: 22) {
                 ProgressView()
                     .controlSize(.large)
                     .tint(LiquidPalette.iris)
                 Text(controller.progressLabel)
                     .font(.system(.headline, design: .rounded, weight: .semibold))
                     .multilineTextAlignment(.center)
+
+                phaseStepIndicator
+
                 Text("Tu peux fermer la sheet, l'audit continue en arrière-plan.")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
@@ -192,6 +195,85 @@ struct AuditSheet: View {
             .padding(32)
             .frame(maxWidth: .infinity)
         }
+    }
+
+    /// Three-step progress indicator for the audit pipeline:
+    /// Probing → Synthesizing → Ready. Each step lights up green
+    /// when reached, the current step shows a Liquid Glass pulse,
+    /// future steps stay muted. Gives the user a concrete sense of
+    /// where the wall-time goes (probes ≈ 80%, synthesis ≈ 20%).
+    private var phaseStepIndicator: some View {
+        HStack(spacing: 10) {
+            phaseStep(
+                title: "Sondes",
+                icon: "antenna.radiowaves.left.and.right",
+                state: phaseState(for: .probing)
+            )
+            phaseConnector(reached: controller.phase != .idle && controller.phase != .probing)
+            phaseStep(
+                title: "Synthèse",
+                icon: "sparkles",
+                state: phaseState(for: .synthesizing)
+            )
+            phaseConnector(reached: controller.phase == .completed)
+            phaseStep(
+                title: "Prêt",
+                icon: "checkmark.seal.fill",
+                state: phaseState(for: .completed)
+            )
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private enum PhaseDisplayState {
+        case pending     // not yet reached
+        case active      // currently running
+        case done        // completed
+    }
+
+    private func phaseState(for target: AuditController.Phase) -> PhaseDisplayState {
+        let order: [AuditController.Phase] = [.idle, .probing, .synthesizing, .completed]
+        guard let currentIdx = order.firstIndex(of: controller.phase),
+              let targetIdx = order.firstIndex(of: target)
+        else { return .pending }
+        if currentIdx > targetIdx { return .done }
+        if currentIdx == targetIdx { return .active }
+        return .pending
+    }
+
+    @ViewBuilder
+    private func phaseStep(
+        title: String,
+        icon: String,
+        state: PhaseDisplayState
+    ) -> some View {
+        VStack(spacing: 6) {
+            ZStack {
+                Circle()
+                    .fill(state == .done
+                          ? AnyShapeStyle(Color.green.opacity(0.20))
+                          : (state == .active
+                             ? AnyShapeStyle(LiquidGradient.primary.opacity(0.85))
+                             : AnyShapeStyle(Color.white.opacity(0.15))))
+                    .frame(width: 36, height: 36)
+                Image(systemName: state == .done ? "checkmark" : icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(state == .pending ? Color.secondary : .white)
+            }
+            Text(title)
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .foregroundStyle(state == .pending ? .secondary : .primary)
+        }
+        .animation(LiquidMetrics.spring, value: state)
+    }
+
+    @ViewBuilder
+    private func phaseConnector(reached: Bool) -> some View {
+        Rectangle()
+            .fill(reached ? AnyShapeStyle(LiquidPalette.iris) : AnyShapeStyle(Color.white.opacity(0.25)))
+            .frame(height: 2)
+            .frame(maxWidth: .infinity)
+            .animation(LiquidMetrics.spring, value: reached)
     }
 
     // MARK: - Error
