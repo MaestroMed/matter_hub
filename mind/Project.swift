@@ -54,6 +54,9 @@ let testTarget: Target = .target(
         .target(name: Module.visualKit.rawValue),
         .target(name: Module.intelligence.rawValue),
         .target(name: Module.settings.rawValue),
+        // v0.5 — MarkdownRenderingTests link DesignSystem to verify the
+        // pure markdown → AttributedString helper used by the Note editor.
+        .target(name: Module.designSystem.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

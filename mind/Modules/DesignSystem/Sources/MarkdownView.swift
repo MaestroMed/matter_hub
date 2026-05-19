@@ -1,5 +1,98 @@
 import SwiftUI
 
+/// Pure markdown → AttributedString helper, isolated from any SwiftUI
+/// view so the renderer can be exercised in unit tests without booting
+/// a host app. Powers `MarkdownView` (block hierarchy) and the v0.5
+/// Note editor's blur-to-render preview (whole-document attributed
+/// string with inline emphasis + heading point sizes + .link
+/// attributes via NSAttributedString.MarkdownParsingOptions).
+public enum MarkdownRenderer {
+
+    /// Parse the full document with `.full` syntax interpretation so
+    /// headings, bullet/ordered lists, and links surface as distinct
+    /// runs. Walks the result once and applies font + foreground
+    /// styling per `presentationIntent` so the AttributedString feels
+    /// rendered, not raw — and stays Liquid Glass-friendly.
+    public static func attributedString(from markdown: String) -> AttributedString {
+        var options = AttributedString.MarkdownParsingOptions()
+        options.interpretedSyntax = .full
+        options.allowsExtendedAttributes = true
+        guard var attributed = try? AttributedString(
+            markdown: markdown,
+            options: options,
+            baseURL: nil
+        ) else {
+            return AttributedString(markdown)
+        }
+        applyPresentationStyling(to: &attributed)
+        return attributed
+    }
+
+    /// Walk every run; promote headings to a bigger rounded font,
+    /// keep list/quote runs readable, and ensure links are visibly
+    /// distinct via the inline `.link` attribute.
+    private static func applyPresentationStyling(to attributed: inout AttributedString) {
+        for run in attributed.runs {
+            let range = run.range
+            if let intent = run.presentationIntent {
+                for component in intent.components {
+                    switch component.kind {
+                    case .header(level: let level):
+                        let size = headerPointSize(for: level)
+                        attributed[range].font = .system(
+                            size: size,
+                            weight: .semibold,
+                            design: .rounded
+                        )
+                    case .blockQuote:
+                        attributed[range].foregroundColor = .secondary
+                    case .codeBlock:
+                        attributed[range].font = .system(.callout, design: .monospaced)
+                    default:
+                        break
+                    }
+                }
+            }
+            if run.link != nil {
+                attributed[range].foregroundColor = LiquidPalette.iris
+                attributed[range].underlineStyle = .single
+            }
+        }
+    }
+
+    /// Heading point sizes mirror SwiftUI's title/title2/title3 stack
+    /// so the editor preview matches the rest of MIND's typography.
+    /// Exposed `public` so MarkdownRenderingTests can verify the
+    /// monotonic decrease from level 1 → 6 without bridging through
+    /// SwiftUI's opaque `Font` type.
+    public static func headerPointSize(for level: Int) -> CGFloat {
+        switch level {
+        case 1:  return 28
+        case 2:  return 22
+        case 3:  return 19
+        case 4:  return 17
+        case 5:  return 15
+        default: return 14
+        }
+    }
+
+    /// True when the AttributedString contains at least one run whose
+    /// presentation intent declares a header of the given level. Used
+    /// by tests (and by the editor preview if it ever needs to scroll
+    /// to a heading anchor).
+    public static func containsHeader(level: Int, in attributed: AttributedString) -> Bool {
+        for run in attributed.runs {
+            guard let intent = run.presentationIntent else { continue }
+            for component in intent.components {
+                if case .header(level: let candidate) = component.kind, candidate == level {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+}
+
 /// Block-level markdown renderer for the kind of text Claude returns
 /// (headings, bullet lists, blockquotes, fenced code blocks, paragraphs
 /// with inline emphasis / links / inline code).

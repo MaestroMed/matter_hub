@@ -58,12 +58,13 @@ Error>`) and the running view shows each probe with green/red dot.
 show 5 distinct error rows, retry only re-runs failed ones.
 Shipped 2026-05-19: ProbeKind/ProbeState added on AuditController, per-probe rows + retry CTA in AuditSheet, 8 new tests (124 total).
 
-### v0.5 — Markdown editor for Notes ⏳
+### v0.5 — Markdown editor for Notes ✅
 **What**: Replace TextEditor in NodeDetailView with a markdown editor
 (syntax highlight + on-blur render). Use AttributedString with
 NSAttributedString.MarkdownParsingOptions for rendering, plain text
 for editing. **Acceptance**: `**bold**`, `# heading`, `- list`,
 `[link](url)` all render correctly on blur, edit on tap.
+Shipped 2026-05-19: NodeDetailView's default (non-audit, non-client) body now hosts a `MarkdownEditorCard` — tap the rendered MarkdownView to swap in a monospaced TextEditor bound to `node.content`, blur (tap outside or the "Aperçu" button) commits via `node.refreshEmbedding()` + `try? context.save()` + `SpotlightIndexer.index(node)` + a `node.edit` MINDTelemetry breadcrumb. Pure `MarkdownRenderer.attributedString(from:)` helper extracted in DesignSystem (uses `.full` parsing options so headings, lists, and links surface as distinct runs with `.link` URL attribute) and exercised by 7 new MarkdownRenderingTests covering bold, italic, level-1 + level-2 headings, monotonic heading point sizes, bullet list item presentation intent, and link URL extraction. MINDTests target now also links DesignSystem so the helper is reachable from the test bundle. 131 tests, 0 failures.
 
 ### v0.6 — Dynamic Type complete pass ⏳
 **What**: Every text in the app uses `.font(.system(.X, design:

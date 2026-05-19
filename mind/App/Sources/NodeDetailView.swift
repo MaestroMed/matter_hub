@@ -199,21 +199,11 @@ struct NodeDetailView: View {
     // MARK: - Default body (notes, captures, ideas, tasks, etc.)
 
     private var defaultBody: some View {
-        LiquidCard(cornerRadius: 18) {
-            VStack(alignment: .leading, spacing: 10) {
-                if node.content.isEmpty {
-                    Text("Pas de contenu pour le moment.")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text(node.content)
-                        .font(.system(.body, design: .rounded))
-                        .textSelection(.enabled)
-                }
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        // Tap-to-edit / blur-to-render markdown experience (v0.5). The
+        // editor is its own subview so its FocusState + binding live
+        // close to the TextEditor without rebuilding the whole detail
+        // tree on every keystroke.
+        MarkdownEditorCard(node: node)
     }
 
     // MARK: - Tags + source
@@ -268,6 +258,142 @@ struct NodeDetailView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Markdown editor card (v0.5)
+
+/// Tap-to-edit / blur-to-render markdown card. Renders the Node's
+/// content as a styled `MarkdownView` by default; switching to edit
+/// mode swaps in a monospaced `TextEditor` bound to `node.content`.
+/// On blur we persist (`context.save()`), refresh the on-device
+/// embedding so semantic search stays in sync, re-index Spotlight,
+/// and emit a `node.edit` telemetry breadcrumb.
+private struct MarkdownEditorCard: View {
+    @Environment(\.modelContext) private var context
+    @Bindable var node: Node
+
+    @State private var isEditing = false
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        LiquidCard(cornerRadius: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                if isEditing {
+                    editor
+                } else {
+                    renderedPreview
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .animation(.smooth(duration: 0.18), value: isEditing)
+        // Treat any blur (tap outside, keyboard dismissal, programmatic
+        // focus loss) as the commit signal — matches the v0.5
+        // acceptance: tap to edit, blur to render.
+        .onChange(of: isFocused) { _, focused in
+            if !focused, isEditing {
+                commitEdit()
+            }
+        }
+    }
+
+    // MARK: - Rendered preview (default state)
+
+    @ViewBuilder
+    private var renderedPreview: some View {
+        if node.content.isEmpty {
+            Button {
+                enterEditMode()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.and.pencil")
+                        .foregroundStyle(LiquidPalette.iris)
+                    Text("Touche pour écrire en Markdown.")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+        } else {
+            // Tap anywhere on the rendered markdown to jump into
+            // edit mode. `contentShape` makes the whole card area
+            // tappable rather than only the glyphs themselves.
+            MarkdownView(node.content)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    enterEditMode()
+                }
+        }
+    }
+
+    // MARK: - Editor
+
+    private var editor: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            TextEditor(text: $node.content)
+                .focused($isFocused)
+                .font(.system(.body, design: .monospaced))
+                .scrollContentBackground(.hidden)
+                .frame(minHeight: 180)
+                .overlay(alignment: .topLeading) {
+                    if node.content.isEmpty {
+                        Text("Markdown… **gras**, *italique*, # titre, - liste, [lien](https://)")
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                            .padding(.top, 8)
+                            .padding(.leading, 4)
+                            .allowsHitTesting(false)
+                    }
+                }
+
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(LiquidPalette.iris)
+                Text("Termine pour générer l'aperçu")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Aperçu") {
+                    // Drop focus and let the .onChange(isFocused) on
+                    // the parent commit, so the manual button and a
+                    // tap-outside share the exact same code path.
+                    isFocused = false
+                }
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(LiquidPalette.iris)
+            }
+        }
+    }
+
+    // MARK: - State transitions
+
+    private func enterEditMode() {
+        isEditing = true
+        // Defer the focus flip a tick so the TextEditor exists in the
+        // hierarchy before we ask it to become first responder.
+        DispatchQueue.main.async {
+            isFocused = true
+        }
+    }
+
+    private func commitEdit() {
+        guard isEditing else { return }
+        isEditing = false
+        node.updatedAt = .now
+        node.refreshEmbedding()
+        try? context.save()
+        SpotlightIndexer.index(node)
+        MINDTelemetry.info(
+            "node.edit",
+            data: [
+                "kind": node.kindRaw,
+                "length": String(node.content.count),
+            ]
+        )
     }
 }
 
