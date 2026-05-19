@@ -41,12 +41,12 @@ public struct SettingsView: View {
             VStack(alignment: .leading, spacing: 24) {
                 header
 
-                section(title: "Anthropic API Key") {
+                section(localized: "settings.section.anthropicKey") {
                     VStack(spacing: 12) {
                         keyField
                         HStack(spacing: 8) {
                             LiquidButton(
-                                title: keySaved ? "Saved" : "Save key",
+                                title: String(localized: keySaved ? "settings.button.saved" : "settings.button.save", bundle: .main),
                                 systemImage: keySaved ? "checkmark" : "key.fill"
                             ) {
                                 APIKeyStore.save(apiKey)
@@ -54,7 +54,7 @@ public struct SettingsView: View {
                             }
                             .disabled(apiKey.isEmpty)
 
-                            Button("Clear") {
+                            Button(String(localized: "settings.button.clear", bundle: .main)) {
                                 APIKeyStore.clear()
                                 apiKey = ""
                                 keySaved = false
@@ -65,7 +65,7 @@ public struct SettingsView: View {
                     }
                 }
 
-                section(title: "OpenAI API Key (visual boards)") {
+                section(localized: "settings.section.openAIKey") {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Clé sk-… utilisée pour générer les boards visuels GPT Image 2 dans l'audit. Stockée dans le Keychain.")
                             .font(.system(.caption, design: .rounded))
@@ -75,7 +75,7 @@ public struct SettingsView: View {
 
                         HStack(spacing: 8) {
                             LiquidButton(
-                                title: openAIKeySaved ? "Saved" : "Save key",
+                                title: String(localized: openAIKeySaved ? "settings.button.saved" : "settings.button.save", bundle: .main),
                                 systemImage: openAIKeySaved ? "checkmark" : "key.fill"
                             ) {
                                 OpenAIAPIKeyStore.save(openAIKey)
@@ -83,7 +83,7 @@ public struct SettingsView: View {
                             }
                             .disabled(openAIKey.isEmpty)
 
-                            Button("Clear") {
+                            Button(String(localized: "settings.button.clear", bundle: .main)) {
                                 OpenAIAPIKeyStore.clear()
                                 openAIKey = ""
                                 openAIKeySaved = false
@@ -94,7 +94,7 @@ public struct SettingsView: View {
                     }
                 }
 
-                section(title: "Intelligence") {
+                section(localized: "settings.section.intelligence") {
                     VStack(spacing: 16) {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
@@ -122,7 +122,7 @@ public struct SettingsView: View {
                     }
                 }
 
-                section(title: "Crash reporting (Sentry)") {
+                section(localized: "settings.section.sentry") {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Colle ton DSN Sentry (sentry.io → projet → Client Keys). Vide = télémétrie désactivée.")
                             .font(.system(.caption, design: .rounded))
@@ -150,7 +150,7 @@ public struct SettingsView: View {
                     }
                 }
 
-                section(title: "Préférences") {
+                section(localized: "settings.section.preferences") {
                     VStack(spacing: 16) {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
@@ -183,7 +183,7 @@ public struct SettingsView: View {
 
                 iCloudSection
 
-                section(title: "About") {
+                section(localized: "settings.section.about") {
                     VStack(alignment: .leading, spacing: 6) {
                         infoRow(label: "Version", value: Self.appVersion)
                         infoRow(label: "Build", value: Self.appBuild)
@@ -256,7 +256,7 @@ public struct SettingsView: View {
     /// matches what the iCloud settings page expects.
     private var iCloudSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("iCloud Sync".uppercased())
+            Text(String(localized: "settings.section.iCloud", bundle: .main).uppercased())
                 .font(.system(.caption, design: .rounded, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .padding(.leading, 4)
@@ -355,7 +355,7 @@ public struct SettingsView: View {
 
     private var dangerZone: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Danger zone".uppercased())
+            Text(String(localized: "settings.section.dangerZone", bundle: .main).uppercased())
                 .font(.system(.caption, design: .rounded, weight: .semibold))
                 .foregroundStyle(.red.opacity(0.85))
                 .padding(.leading, 4)
@@ -364,7 +364,7 @@ public struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     dangerRow(
                         icon: "arrow.counterclockwise.circle.fill",
-                        title: "Restart onboarding",
+                        title: String(localized: "settings.danger.restartOnboarding.title", bundle: .main),
                         detail: "Re-shows the 4-page welcome flow on next app launch. Doesn't touch your data — only flips the @AppStorage flag.",
                         action: {
                             LiquidHaptics.tap()
@@ -380,7 +380,7 @@ public struct SettingsView: View {
 
                     dangerRow(
                         icon: "magnifyingglass.circle.fill",
-                        title: "Reset Spotlight index",
+                        title: String(localized: "settings.danger.resetSpotlight.title", bundle: .main),
                         detail: "Wipe every MIND row from iOS Spotlight. Data stays intact.",
                         action: {
                             LiquidHaptics.warning()
@@ -392,7 +392,7 @@ public struct SettingsView: View {
 
                     dangerRow(
                         icon: "trash.circle.fill",
-                        title: "Wipe all data",
+                        title: String(localized: "settings.danger.wipeAll.title", bundle: .main),
                         detail: "Delete every note, capture, audit, client, edge, and focus session. iCloud will sync the deletion.",
                         action: {
                             LiquidHaptics.warning()
@@ -481,9 +481,9 @@ public struct SettingsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Settings")
+            Text("settings.header.title", bundle: .main)
                 .font(.system(.largeTitle, design: .rounded, weight: .semibold))
-            Text("Configure your second brain.")
+            Text("settings.header.subtitle", bundle: .main)
                 .font(.system(.body, design: .rounded))
                 .foregroundStyle(.secondary)
         }
@@ -629,5 +629,15 @@ public struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+    }
+
+    /// Localized overload: resolves the key against the main app bundle
+    /// (where Localizable.xcstrings lives) and uppercases the result for
+    /// the section header style. Used by every section so all titles
+    /// translate uniformly.
+    @ViewBuilder
+    private func section<Content: View>(localized key: String.LocalizationValue, @ViewBuilder content: () -> Content) -> some View {
+        let resolved = String(localized: key, bundle: .main)
+        section(title: resolved, content: content)
     }
 }

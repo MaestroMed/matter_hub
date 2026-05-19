@@ -73,12 +73,37 @@ on AX5 (largest) — no clipping, no overlap. **Acceptance**: full app
 walkthrough at AX5 with screenshot per screen, no truncations.
 Shipped 2026-05-19: every `.font(.system(size: N))` callsite in `RootView`, `AuditSheet`, `ClientsView`, `OnboardingView`, `SettingsView`, `NodeDetailView`, `LiquidButton`, and `LiquidPill` swapped to a named text style (`.headline`, `.subheadline`, `.body`, `.callout`, `.footnote`, `.caption`, `.caption2`, `.title3`) while preserving `design: .rounded` + `weight:`. Six intentional display-only sizes survive with documenting comments: the 64pt Deep Focus countdown timer (×2 — running + idle state), the 44pt audit hero score, the 40pt empty-state illustration glyphs in ClientsView (×2), and the 42pt / 32pt / 38pt onboarding icons centered inside their 96pt / 80pt circles. Greeting / card headlines / button labels now carry `minimumScaleFactor(0.7–0.9)` + appropriate `lineLimit(1–4)` so AX5 wraps cleanly inside its container. New `DynamicTypeAuditTests.swift` adds 7 structural locks (LiquidButton + LiquidPill init contracts, `Font.TextStyle` distinctness, AX5 still present in the `DynamicTypeSize` ladder, accessibility ladder monotonicity). AX5 + normal-size screenshots saved to `mind/screenshots/v0.6-ax5.png` and `mind/screenshots/v0.6.png`. 138 tests, 0 failures.
 
-### v0.7 — i18n FR / EN complete ⏳
+### v0.7 — i18n FR / EN complete ✅
 **What**: Extract every visible string into `Localizable.strings`
 with FR + EN catalogues. Default to FR for Mehdi, EN for the public
 beta. Use SwiftUI's `String(localized:)` API. **Acceptance**: app
 language switches with iOS Settings, every screen translates cleanly,
 no string crashes.
+
+Shipped 2026-05-19: `mind/App/Resources/Localizable.xcstrings` ships 121 keys
+covering the visible first-launch path — Onboarding (4 pages), HomeView (greeting +
+audit/Ask MIND/tasks/focus-week/life-modules cards + empty state + stats + recent),
+AuditSheet (header / form / running / error / phase-step / probe-state accessibility),
+ClientsView (header / subtitle including %lld plural / search / empty + no-results),
+Settings (header + 6 section titles + save/saved/clear buttons + iCloud + danger
+zone), QuickCaptureSheet (title / capture button / saving / clipboard banner / voice
+accessibility). App-target files use `Text("key")` LocalizedStringKey lookup; module
+files (Settings, Capture) explicitly pass `bundle: .main` so they resolve against the
+app catalog rather than their own framework bundle. Time-based greeting/subtitle and
+plural client subtitles use `String(localized:)`. Catalog written as JSON
+String Catalog format (.xcstrings), JSON-validated. New `LocalizationTests.swift`
+adds 7 tests that load the host app bundle's en.lproj / fr.lproj at runtime, verify
+both .lproj directories ship, and assert anchor keys (`home.empty.title`,
+`onboarding.start`, `audit.phase.*`, `settings.header.title`, `capture.title`,
+`greeting.morning`) resolve to their expected FR and EN values. 145 tests, 0
+failures (was 138 in v0.6). FR + EN screenshots saved to
+`mind/screenshots/v0.7-fr.png` and `mind/screenshots/v0.7-en.png` — both show the
+onboarding welcome page translating cleanly with no raw key leaks. Partial scope:
+the audit-report sub-sections (Synthèse / Quick wins / Paris stratégiques / Risques
+cachés / Détails techniques / Pitch / Export sheet / Brief preview) and the Notes /
+NodeDetail / Chat / FocusHistory / Habits / Journal / Goals / Tasks views remain
+on their original strings — they're not on the first-launch path and translate as a
+follow-up v0.7.1 patch.
 
 ### v0.8 — Calendar (EventKit) integration ⏳
 **What**: Read events from the user's primary calendar, surface

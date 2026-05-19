@@ -75,7 +75,7 @@ struct ClientsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Clients")
+            Text("clients.header.title")
                 .font(.system(.largeTitle, design: .rounded, weight: .semibold))
             Text(subtitle)
                 .font(.system(.body, design: .rounded))
@@ -85,9 +85,11 @@ struct ClientsView: View {
 
     private var subtitle: String {
         switch clients.count {
-        case 0:  return "Aucun client audité pour le moment."
-        case 1:  return "1 prospect dans ton graphe."
-        default: return "\(clients.count) prospects dans ton graphe."
+        case 0:  return String(localized: "clients.subtitle.none")
+        case 1:  return String(localized: "clients.subtitle.one")
+        default:
+            let format = String(localized: "clients.subtitle.many")
+            return String(format: format, clients.count)
         }
     }
 
@@ -96,7 +98,7 @@ struct ClientsView: View {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("Search clients…", text: $searchText)
+                TextField(String(localized: "clients.search.placeholder"), text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.system(.body, design: .rounded))
                     .autocorrectionDisabled()
@@ -128,11 +130,11 @@ struct ClientsView: View {
                     Image(systemName: "person.text.rectangle.fill")
                         .font(.system(size: 40))
                         .foregroundStyle(LiquidGradient.primary)
-                    Text("Pas encore de client")
+                    Text("clients.empty.title")
                         .font(.system(.headline, design: .rounded, weight: .semibold))
                         .minimumScaleFactor(0.85)
                         .lineLimit(2)
-                    Text("Tape un domaine pour lancer un audit, ou essaie un des exemples ci-dessous.")
+                    Text("clients.empty.detail")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -142,7 +144,7 @@ struct ClientsView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Essaie avec".uppercased())
+                Text(String(localized: "clients.demo.section").uppercased())
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .tracking(0.5)
@@ -162,11 +164,11 @@ struct ClientsView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 40))
                     .foregroundStyle(LiquidGradient.primary)
-                Text("Aucun résultat")
+                Text("clients.noresults.title")
                     .font(.system(.headline, design: .rounded, weight: .semibold))
                     .minimumScaleFactor(0.85)
                     .lineLimit(2)
-                Text("Essaie un autre terme de recherche.")
+                Text("clients.noresults.detail")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

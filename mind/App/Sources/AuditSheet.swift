@@ -94,9 +94,9 @@ struct AuditSheet: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Audit client")
+                Text("audit.header.title")
                     .font(.system(.title2, design: .rounded, weight: .semibold))
-                Text("Du domaine au pitch en quelques minutes.")
+                Text("audit.header.subtitle")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
             }
@@ -135,8 +135,8 @@ struct AuditSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             LiquidCard(cornerRadius: 18) {
                 VStack(alignment: .leading, spacing: 14) {
-                    fieldLabel("URL du site")
-                    TextField("stripe.com ou https://stripe.com", text: $urlString)
+                    fieldLabel(String(localized: "audit.field.url"))
+                    TextField(String(localized: "audit.field.urlPlaceholder"), text: $urlString)
                         .textFieldStyle(.plain)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
@@ -146,7 +146,7 @@ struct AuditSheet: View {
 
                     Divider().background(.white.opacity(0.18))
 
-                    fieldLabel("Nom (optionnel)")
+                    fieldLabel(String(localized: "audit.field.name"))
                     TextField("Stripe", text: $name)
                         .textFieldStyle(.plain)
                         .font(.system(.body, design: .rounded))
@@ -155,13 +155,13 @@ struct AuditSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            LiquidButton(title: "Lancer l'audit", systemImage: "magnifyingglass") {
+            LiquidButton(title: String(localized: "audit.button.start"), systemImage: "magnifyingglass") {
                 startAudit()
             }
             .disabled(normalizedURL == nil)
             .opacity(normalizedURL == nil ? 0.45 : 1)
 
-            Text("Mesure Lighthouse + synthèse Claude. Compte ~2 min sur un site moyen.")
+            Text("audit.formHint")
                 .font(.system(.caption, design: .rounded))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
@@ -183,11 +183,11 @@ struct AuditSheet: View {
 
                     phaseStepIndicator
 
-                    Text("Tu peux fermer la sheet, l'audit continue en arrière-plan.")
+                    Text("audit.running.backgroundHint")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                    Button("Annuler") {
+                    Button(String(localized: "audit.button.cancel")) {
                         controller.cancel()
                     }
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
@@ -201,7 +201,7 @@ struct AuditSheet: View {
 
             if controller.hasFailedProbes {
                 LiquidButton(
-                    title: "Réessayer les sondes en échec (\(controller.failedProbes.count))",
+                    title: "\(String(localized: "audit.button.retry")) (\(controller.failedProbes.count))",
                     systemImage: "arrow.counterclockwise",
                     haptic: .select
                 ) {
@@ -220,7 +220,7 @@ struct AuditSheet: View {
             LiquidCard(cornerRadius: 18) {
                 VStack(spacing: 0) {
                     HStack {
-                        Text("Sondes")
+                        Text("audit.probes.list.header")
                             .font(.system(.caption, design: .rounded, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .tracking(0.8)
@@ -317,7 +317,7 @@ struct AuditSheet: View {
                     .fill(Color.yellow)
                     .frame(width: 8, height: 8)
             }
-            .accessibilityLabel("En cours")
+            .accessibilityLabel(Text("audit.probe.runningAccessibility"))
         case .ok:
             ZStack {
                 Circle()
@@ -327,7 +327,7 @@ struct AuditSheet: View {
                     .fill(Color.green)
                     .frame(width: 8, height: 8)
             }
-            .accessibilityLabel("Réussi")
+            .accessibilityLabel(Text("audit.probe.okAccessibility"))
         case .failed:
             ZStack {
                 Circle()
@@ -337,7 +337,7 @@ struct AuditSheet: View {
                     .fill(Color.red)
                     .frame(width: 8, height: 8)
             }
-            .accessibilityLabel("Échec")
+            .accessibilityLabel(Text("audit.probe.failedAccessibility"))
         }
     }
 
@@ -349,19 +349,19 @@ struct AuditSheet: View {
     private var phaseStepIndicator: some View {
         HStack(spacing: 10) {
             phaseStep(
-                title: "Sondes",
+                title: "audit.phase.probing",
                 icon: "antenna.radiowaves.left.and.right",
                 state: phaseState(for: .probing)
             )
             phaseConnector(reached: controller.phase != .idle && controller.phase != .probing)
             phaseStep(
-                title: "Synthèse",
+                title: "audit.phase.synthesizing",
                 icon: "sparkles",
                 state: phaseState(for: .synthesizing)
             )
             phaseConnector(reached: controller.phase == .completed)
             phaseStep(
-                title: "Prêt",
+                title: "audit.phase.ready",
                 icon: "checkmark.seal.fill",
                 state: phaseState(for: .completed)
             )
@@ -387,7 +387,7 @@ struct AuditSheet: View {
 
     @ViewBuilder
     private func phaseStep(
-        title: String,
+        title: LocalizedStringKey,
         icon: String,
         state: PhaseDisplayState
     ) -> some View {
@@ -431,13 +431,13 @@ struct AuditSheet: View {
                     HStack(spacing: 10) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
-                        Text("Audit en échec")
+                        Text("audit.error.title")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                     }
                     Text(message)
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
-                    Text("Vérifie que ta clé Anthropic est bien renseignée dans Settings.")
+                    Text("audit.error.checkKeyHint")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.tertiary)
                 }
@@ -445,7 +445,7 @@ struct AuditSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            LiquidButton(title: "Réessayer", systemImage: "arrow.counterclockwise") {
+            LiquidButton(title: String(localized: "audit.button.retry"), systemImage: "arrow.counterclockwise") {
                 startAudit()
             }
         }

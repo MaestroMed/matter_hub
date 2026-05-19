@@ -1,0 +1,848 @@
+{
+  "sourceLanguage" : "en",
+  "version" : "1.0",
+  "strings" : {
+    "ambient.accessibility" : {
+      "comment" : "HomeView greeting · accessibility label for the moon button that opens Ambient.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ambient mode" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mode ambient" } }
+      }
+    },
+    "audit.button.cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annuler" } }
+      }
+    },
+    "audit.button.retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réessayer" } }
+      }
+    },
+    "audit.button.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Run audit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lancer l'audit" } }
+      }
+    },
+    "audit.error.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Audit failed" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audit en échec" } }
+      }
+    },
+    "audit.error.checkKeyHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Check that your Anthropic key is set in Settings." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vérifie que ta clé Anthropic est bien renseignée dans Settings." } }
+      }
+    },
+    "audit.field.url" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Site URL" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "URL du site" } }
+      }
+    },
+    "audit.field.urlPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "stripe.com or https://stripe.com" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "stripe.com ou https://stripe.com" } }
+      }
+    },
+    "audit.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name (optional)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nom (optionnel)" } }
+      }
+    },
+    "audit.formHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lighthouse measurement + Claude synthesis. Count ~2 min on a medium site." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mesure Lighthouse + synthèse Claude. Compte ~2 min sur un site moyen." } }
+      }
+    },
+    "audit.header.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "From domain to pitch in a few minutes." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Du domaine au pitch en quelques minutes." } }
+      }
+    },
+    "audit.header.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Client audit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audit client" } }
+      }
+    },
+    "audit.phase.probing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Probes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sondes" } }
+      }
+    },
+    "audit.phase.ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prêt" } }
+      }
+    },
+    "audit.phase.synthesizing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Synthesis" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Synthèse" } }
+      }
+    },
+    "audit.probe.failedAccessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Échec" } }
+      }
+    },
+    "audit.probe.okAccessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Succeeded" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réussi" } }
+      }
+    },
+    "audit.probe.runningAccessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Running" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En cours" } }
+      }
+    },
+    "audit.probes.list.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Probes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sondes" } }
+      }
+    },
+    "audit.running.backgroundHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can close the sheet — the audit keeps running in the background." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tu peux fermer la sheet, l'audit continue en arrière-plan." } }
+      }
+    },
+    "common.cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annuler" } }
+      }
+    },
+    "common.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
+      }
+    },
+    "capture.banner.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capture from clipboard" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer depuis le presse-papier" } }
+      }
+    },
+    "capture.button.capture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capturer" } }
+      }
+    },
+    "capture.button.saving" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saving…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sauvegarde…" } }
+      }
+    },
+    "capture.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } }
+      }
+    },
+    "capture.voice.startAccessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start voice capture" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer la capture vocale" } }
+      }
+    },
+    "capture.voice.stopAccessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop voice capture" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter la capture vocale" } }
+      }
+    },
+    "clients.demo.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try with" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Essaie avec" } }
+      }
+    },
+    "clients.empty.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No clients yet" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore de client" } }
+      }
+    },
+    "clients.empty.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Type a domain to start an audit, or try one of the examples below." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tape un domaine pour lancer un audit, ou essaie un des exemples ci-dessous." } }
+      }
+    },
+    "clients.header.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clients" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clients" } }
+      }
+    },
+    "clients.noresults.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No results" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun résultat" } }
+      }
+    },
+    "clients.noresults.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try another search term." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Essaie un autre terme de recherche." } }
+      }
+    },
+    "clients.search.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search clients…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Chercher un client…" } }
+      }
+    },
+    "clients.subtitle.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No clients audited yet." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun client audité pour le moment." } }
+      }
+    },
+    "clients.subtitle.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 prospect in your graph." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "1 prospect dans ton graphe." } }
+      }
+    },
+    "clients.subtitle.many" : {
+      "comment" : "Plural-count subtitle. %lld = total prospects (>=2).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld prospects in your graph." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld prospects dans ton graphe." } }
+      }
+    },
+    "greeting.morning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good morning" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bonjour" } }
+      }
+    },
+    "greeting.afternoon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good afternoon" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bon après-midi" } }
+      }
+    },
+    "greeting.evening" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good evening" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bonsoir" } }
+      }
+    },
+    "greeting.night" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Still up" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Encore debout" } }
+      }
+    },
+    "greeting.subtitle.morning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stay soft. Stay focused." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Reste doux. Reste concentré." } }
+      }
+    },
+    "greeting.subtitle.afternoon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep moving. One thought at a time." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Continue. Une pensée à la fois." } }
+      }
+    },
+    "greeting.subtitle.evening" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind down. Capture what mattered." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Décompresse. Capture ce qui a compté." } }
+      }
+    },
+    "greeting.subtitle.night" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your brain stays on, but you should rest soon." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ton cerveau veille, mais tu devrais te reposer bientôt." } }
+      }
+    },
+    "home.askMind.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask a question to your graph." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pose une question à ton graphe." } }
+      }
+    },
+    "home.askMind.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask MIND" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Demande à MIND" } }
+      }
+    },
+    "home.auditCard.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "From domain to pitch in a few minutes." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Du domaine au pitch en quelques minutes." } }
+      }
+    },
+    "home.auditCard.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Client audit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audit client" } }
+      }
+    },
+    "home.deepFocus.idle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deep Focus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Deep Focus" } }
+      }
+    },
+    "home.deepFocus.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "In focus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En focus" } }
+      }
+    },
+    "home.deepFocus.endButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "End focus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter le focus" } }
+      }
+    },
+    "home.deepFocus.startButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start Focus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer Focus" } }
+      }
+    },
+    "home.empty.hint.audit.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "From domain to pitch in 2 minutes — to qualify a prospect." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Du domaine au pitch en 2 minutes — pour qualifier un prospect." } }
+      }
+    },
+    "home.empty.hint.audit.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Client audit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audit client" } }
+      }
+    },
+    "home.empty.hint.capture.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap the + button at the bottom to record your first thought." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tap le bouton + en bas pour saisir ta première pensée." } }
+      }
+    },
+    "home.empty.hint.capture.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } }
+      }
+    },
+    "home.empty.hint.focus.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start a focus session, watch it in Live Activity." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarre une session focus, suis-la en Live Activity." } }
+      }
+    },
+    "home.empty.hint.focus.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deep Focus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Deep Focus" } }
+      }
+    },
+    "home.empty.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your second brain starts empty." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ton second cerveau démarre vide." } }
+      }
+    },
+    "home.empty.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to MIND" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bienvenue dans MIND" } }
+      }
+    },
+    "home.lifeModule.goals" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Goals" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Objectifs" } }
+      }
+    },
+    "home.lifeModule.habits" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Habits" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Habitudes" } }
+      }
+    },
+    "home.lifeModule.journal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Journal" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Journal" } }
+      }
+    },
+    "home.quickSearch.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search your graph…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cherche dans ton graphe…" } }
+      }
+    },
+    "home.quickSearch.accessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search the graph" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Chercher dans le graphe" } }
+      }
+    },
+    "home.recent.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent thoughts" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pensées récentes" } }
+      }
+    },
+    "home.stats.captures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Captures" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Captures" } }
+      }
+    },
+    "home.stats.notes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } }
+      }
+    },
+    "home.stats.total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Total" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Total" } }
+      }
+    },
+    "home.tasks.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capture what's left to do." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capture ce qui reste à faire." } }
+      }
+    },
+    "home.tasks.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tasks" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tâches" } }
+      }
+    },
+    "home.focusWeek.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Focus this week" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Focus cette semaine" } }
+      }
+    },
+    "onboarding.anthropic.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "MIND uses the Anthropic API for chat, audit synthesis, and pitch generation. Without a key these features stay inert." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "MIND s'appuie sur l'API Anthropic pour le chat, la synthèse d'audit et la génération de pitchs. Sans clé, ces fonctions restent inertes." } }
+      }
+    },
+    "onboarding.anthropic.footnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The key is stored in the iOS Keychain and never leaves the device except to call the Anthropic API." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La clé est stockée dans le Keychain iOS et ne quitte jamais l'appareil sauf pour appeler l'API Anthropic." } }
+      }
+    },
+    "onboarding.anthropic.getKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get a key" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Obtenir une clé" } }
+      }
+    },
+    "onboarding.anthropic.save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save key" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer la clé" } }
+      }
+    },
+    "onboarding.anthropic.saved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved in Keychain" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrée dans Keychain" } }
+      }
+    },
+    "onboarding.anthropic.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connect Claude" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecte Claude" } }
+      }
+    },
+    "onboarding.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retour" } }
+      }
+    },
+    "onboarding.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Suivant" } }
+      }
+    },
+    "onboarding.notifications.allow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Autoriser" } }
+      }
+    },
+    "onboarding.notifications.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Run an audit, put your phone down. You get a banner when the report is ready — not before." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lance un audit, range ton téléphone. Tu reçois un banner quand le rapport est prêt — pas avant." } }
+      }
+    },
+    "onboarding.notifications.denied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Denied — you can change this in iOS Settings." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Refusées — tu peux changer dans Réglages iOS." } }
+      }
+    },
+    "onboarding.notifications.footnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can always toggle this in Settings → Preferences." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tu peux toujours toggle ça dans Settings → Préférences." } }
+      }
+    },
+    "onboarding.notifications.granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications enabled." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Notifications activées." } }
+      }
+    },
+    "onboarding.notifications.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Audit notifications" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Notifications d'audit" } }
+      }
+    },
+    "onboarding.ready.checklist.icloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud sync enabled" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync iCloud activée" } }
+      }
+    },
+    "onboarding.ready.checklist.key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anthropic key configured" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clé Anthropic configurée" } }
+      }
+    },
+    "onboarding.ready.checklist.notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Audit notifications" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Notifications d'audit" } }
+      }
+    },
+    "onboarding.ready.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "MIND will learn the way you think as you capture." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "MIND apprendra ta manière de penser au fil de tes captures." } }
+      }
+    },
+    "onboarding.ready.footnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "A few starters: capture a thought, run an audit, or start a focus session." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quelques pistes pour démarrer : capture une pensée, lance un audit, ou démarre une session focus." } }
+      }
+    },
+    "onboarding.ready.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You're ready" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tu es prêt" } }
+      }
+    },
+    "onboarding.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Skip" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ignorer" } }
+      }
+    },
+    "onboarding.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Commencer" } }
+      }
+    },
+    "onboarding.welcome.bullet.audit.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "From domain to pitch in a few minutes." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Du domaine au pitch en quelques minutes." } }
+      }
+    },
+    "onboarding.welcome.bullet.audit.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Client audit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audit client" } }
+      }
+    },
+    "onboarding.welcome.bullet.capture.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Text, voice, document — everything lands in your graph." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Texte, voix, document — tout finit dans ton graphe." } }
+      }
+    },
+    "onboarding.welcome.bullet.capture.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Capture" } }
+      }
+    },
+    "onboarding.welcome.bullet.focus.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Timed sessions, Live Activity, Dynamic Island." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sessions chronométrées, Live Activity, Dynamic Island." } }
+      }
+    },
+    "onboarding.welcome.bullet.focus.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deep Focus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Deep Focus" } }
+      }
+    },
+    "onboarding.welcome.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your second brain. Notes, focus, client audits, voice captures — synced across all your devices via iCloud." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ton second cerveau. Notes, focus, audits clients, captures vocales — synchronisés sur tous tes appareils via iCloud." } }
+      }
+    },
+    "onboarding.welcome.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to MIND" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bienvenue dans MIND" } }
+      }
+    },
+    "settings.header.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Configure your second brain." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Configure ton second cerveau." } }
+      }
+    },
+    "settings.header.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réglages" } }
+      }
+    },
+    "settings.section.anthropicKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anthropic API Key" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clé API Anthropic" } }
+      }
+    },
+    "settings.section.about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À propos" } }
+      }
+    },
+    "settings.section.intelligence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Intelligence" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Intelligence" } }
+      }
+    },
+    "settings.section.preferences" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Preferences" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Préférences" } }
+      }
+    },
+    "settings.section.iCloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync iCloud" } }
+      }
+    },
+    "settings.section.openAIKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAI API Key (visual boards)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clé API OpenAI (boards visuels)" } }
+      }
+    },
+    "settings.section.sentry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Crash reporting (Sentry)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rapports de crash (Sentry)" } }
+      }
+    },
+    "settings.section.dangerZone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Danger zone" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Zone dangereuse" } }
+      }
+    },
+    "settings.button.save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save key" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer la clé" } }
+      }
+    },
+    "settings.button.saved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrée" } }
+      }
+    },
+    "settings.button.clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer" } }
+      }
+    },
+    "settings.danger.restartOnboarding.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Restart onboarding" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Recommencer l'onboarding" } }
+      }
+    },
+    "settings.danger.resetSpotlight.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset Spotlight index" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réinitialiser l'index Spotlight" } }
+      }
+    },
+    "settings.danger.wipeAll.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wipe all data" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer toutes les données" } }
+      }
+    }
+  }
+}

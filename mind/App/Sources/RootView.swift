@@ -155,11 +155,11 @@ struct RootView: View {
                             LiquidHaptics.select()
                             isCapturing = true
                         } label: {
-                            Label("Quick capture", systemImage: "plus.circle.fill")
+                            Label(String(localized: "capture.title"), systemImage: "plus.circle.fill")
                                 .font(.system(.headline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(LiquidPalette.iris)
                         }
-                        .accessibilityLabel("Quick capture")
+                        .accessibilityLabel(Text("capture.title"))
                     }
                 }
             }
@@ -535,12 +535,12 @@ private struct HomeView: View {
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Ask MIND")
+                        Text("home.askMind.title")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
                             .minimumScaleFactor(0.85)
                             .lineLimit(2)
-                        Text("Pose une question à ton graphe.")
+                        Text("home.askMind.subtitle")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
@@ -572,12 +572,12 @@ private struct HomeView: View {
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Audit client")
+                        Text("home.auditCard.title")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
                             .minimumScaleFactor(0.85)
                             .lineLimit(2)
-                        Text("Du domaine au pitch en quelques minutes.")
+                        Text("home.auditCard.subtitle")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
@@ -620,7 +620,7 @@ private struct HomeView: View {
                     }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Ambient mode")
+            .accessibilityLabel(Text("ambient.accessibility"))
         }
     }
 
@@ -637,7 +637,7 @@ private struct HomeView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(.callout, design: .rounded, weight: .semibold))
                     .foregroundStyle(LiquidPalette.iris)
-                Text("Cherche dans ton graphe…")
+                Text("home.quickSearch.placeholder")
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -667,13 +667,13 @@ private struct HomeView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Search the graph")
+        .accessibilityLabel(Text("home.quickSearch.accessibility"))
     }
 
     private var deepFocusCard: some View {
         LiquidCard {
             VStack(spacing: 16) {
-                Text(focus.isRunning ? "In focus" : "Deep Focus")
+                Text(focus.isRunning ? "home.deepFocus.running" : "home.deepFocus.idle")
                     .font(.system(.headline, design: .rounded))
                     .foregroundStyle(.secondary)
                     .contentTransition(.opacity)
@@ -684,7 +684,7 @@ private struct HomeView: View {
                     // success → three-pulse "done" that signals the
                     // session is being wrapped up. Feels rewarding.
                     LiquidButton(
-                        title: "End focus",
+                        title: String(localized: "home.deepFocus.endButton"),
                         systemImage: "stop.fill",
                         haptic: .success
                     ) {
@@ -694,7 +694,7 @@ private struct HomeView: View {
                     // select → medium thump that says "I'm committing,
                     // don't disturb me". Heavier than a normal tap.
                     LiquidButton(
-                        title: "Start Focus",
+                        title: String(localized: "home.deepFocus.startButton"),
                         systemImage: "drop.fill",
                         haptic: .select
                     ) {
@@ -746,21 +746,21 @@ private struct HomeView: View {
         HStack(spacing: 10) {
             lifeModuleTile(
                 icon: "repeat.circle.fill",
-                title: "Habits",
+                title: "home.lifeModule.habits",
                 tint: .orange,
                 badge: habitsTodayCount > 0 ? "\(habitsTodayCount)✓" : nil
             ) { showHabits = true }
 
             lifeModuleTile(
                 icon: "book.closed.fill",
-                title: "Journal",
+                title: "home.lifeModule.journal",
                 tint: LiquidPalette.iris,
                 badge: nil
             ) { showJournal = true }
 
             lifeModuleTile(
                 icon: "target",
-                title: "Goals",
+                title: "home.lifeModule.goals",
                 tint: .purple,
                 badge: openGoalsCount > 0 ? "\(openGoalsCount)" : nil
             ) { showGoals = true }
@@ -769,7 +769,7 @@ private struct HomeView: View {
 
     private func lifeModuleTile(
         icon: String,
-        title: String,
+        title: LocalizedStringKey,
         tint: Color,
         badge: String?,
         action: @escaping () -> Void
@@ -822,13 +822,13 @@ private struct HomeView: View {
                             .foregroundStyle(.green)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Tasks")
+                        Text("home.tasks.title")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
                             .minimumScaleFactor(0.85)
                             .lineLimit(2)
                         Text(openTaskCount == 0
-                             ? "Capture ce qui reste à faire."
+                             ? String(localized: "home.tasks.empty")
                              : "\(openTaskCount) à faire")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
@@ -868,7 +868,7 @@ private struct HomeView: View {
                             .foregroundStyle(LiquidPalette.iris)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Focus cette semaine")
+                        Text("home.focusWeek.title")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.primary)
                             .minimumScaleFactor(0.85)
@@ -918,11 +918,11 @@ private struct HomeView: View {
                             .foregroundStyle(.white)
                     }
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Bienvenue dans MIND")
+                        Text("home.empty.title")
                             .font(.system(.headline, design: .rounded, weight: .semibold))
                             .minimumScaleFactor(0.85)
                             .lineLimit(2)
-                        Text("Ton second cerveau démarre vide.")
+                        Text("home.empty.subtitle")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
@@ -933,18 +933,18 @@ private struct HomeView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     onboardingHint(
                         icon: "drop.fill",
-                        title: "Capture",
-                        detail: "Tap le bouton + en bas pour saisir ta première pensée."
+                        title: "home.empty.hint.capture.title",
+                        detail: "home.empty.hint.capture.detail"
                     )
                     onboardingHint(
                         icon: "magnifyingglass",
-                        title: "Audit client",
-                        detail: "Du domaine au pitch en 2 minutes — pour qualifier un prospect."
+                        title: "home.empty.hint.audit.title",
+                        detail: "home.empty.hint.audit.detail"
                     )
                     onboardingHint(
                         icon: "brain.head.profile",
-                        title: "Deep Focus",
-                        detail: "Démarre une session focus, suis-la en Live Activity."
+                        title: "home.empty.hint.focus.title",
+                        detail: "home.empty.hint.focus.detail"
                     )
                 }
             }
@@ -955,8 +955,8 @@ private struct HomeView: View {
 
     private func onboardingHint(
         icon: String,
-        title: String,
-        detail: String
+        title: LocalizedStringKey,
+        detail: LocalizedStringKey
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
@@ -984,11 +984,11 @@ private struct HomeView: View {
     private var statsCard: some View {
         LiquidCard(cornerRadius: 20) {
             HStack(spacing: 0) {
-                statColumn(value: noteCount, label: "Notes")
+                statColumn(value: noteCount, labelKey: "home.stats.notes")
                 divider
-                statColumn(value: captureCount, label: "Captures")
+                statColumn(value: captureCount, labelKey: "home.stats.captures")
                 divider
-                statColumn(value: allNodes.count, label: "Total")
+                statColumn(value: allNodes.count, labelKey: "home.stats.total")
             }
             .padding(20)
             .frame(maxWidth: .infinity)
@@ -996,12 +996,12 @@ private struct HomeView: View {
     }
 
     @ViewBuilder
-    private func statColumn(value: Int, label: String) -> some View {
+    private func statColumn(value: Int, labelKey: String.LocalizationValue) -> some View {
         VStack(spacing: 4) {
             Text("\(value)")
                 .font(.system(.title, design: .rounded, weight: .semibold))
                 .foregroundStyle(LiquidPalette.iris)
-            Text(label.uppercased())
+            Text(String(localized: labelKey).uppercased())
                 .font(.system(.caption2, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
@@ -1017,7 +1017,7 @@ private struct HomeView: View {
 
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent thoughts".uppercased())
+            Text(String(localized: "home.recent.header").uppercased())
                 .font(.system(.caption, design: .rounded, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
@@ -1049,20 +1049,20 @@ private struct HomeView: View {
     private static var timeBasedGreeting: String {
         let hour = Calendar.current.component(.hour, from: .now)
         switch hour {
-        case 5..<12:  return "Good morning"
-        case 12..<18: return "Good afternoon"
-        case 18..<23: return "Good evening"
-        default:      return "Still up"
+        case 5..<12:  return String(localized: "greeting.morning")
+        case 12..<18: return String(localized: "greeting.afternoon")
+        case 18..<23: return String(localized: "greeting.evening")
+        default:      return String(localized: "greeting.night")
         }
     }
 
     private static var timeBasedSubtitle: String {
         let hour = Calendar.current.component(.hour, from: .now)
         switch hour {
-        case 5..<12:  return "Stay soft. Stay focused."
-        case 12..<18: return "Keep moving. One thought at a time."
-        case 18..<23: return "Wind down. Capture what mattered."
-        default:      return "Your brain stays on, but you should rest soon."
+        case 5..<12:  return String(localized: "greeting.subtitle.morning")
+        case 12..<18: return String(localized: "greeting.subtitle.afternoon")
+        case 18..<23: return String(localized: "greeting.subtitle.evening")
+        default:      return String(localized: "greeting.subtitle.night")
         }
     }
 }

@@ -92,7 +92,7 @@ struct OnboardingView: View {
     private var bottomBar: some View {
         HStack(spacing: 12) {
             if stage != .welcome {
-                Button("Back") {
+                Button(String(localized: "onboarding.back")) {
                     advance(to: previousStage)
                 }
                 .font(.system(.subheadline, design: .rounded, weight: .medium))
@@ -102,7 +102,7 @@ struct OnboardingView: View {
             Spacer()
 
             if stage != .ready {
-                Button("Skip") {
+                Button(String(localized: "onboarding.skip")) {
                     advance(to: nextStage)
                 }
                 .font(.system(.subheadline, design: .rounded, weight: .medium))
@@ -111,7 +111,7 @@ struct OnboardingView: View {
             }
 
             LiquidButton(
-                title: stage == .ready ? "Start" : "Next",
+                title: String(localized: stage == .ready ? "onboarding.start" : "onboarding.next"),
                 systemImage: stage == .ready ? "sparkles" : "arrow.right"
             ) {
                 if stage == .ready {
@@ -143,12 +143,12 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 10) {
-                    Text("Bienvenue dans MIND")
+                    Text("onboarding.welcome.title")
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.7)
                         .lineLimit(2)
-                    Text("Ton second cerveau. Notes, focus, audits clients, captures vocales — synchronisés sur tous tes appareils via iCloud.")
+                    Text("onboarding.welcome.body")
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -157,16 +157,16 @@ struct OnboardingView: View {
 
                 bulletRow(icon: "doc.text.fill",
                           tint: LiquidPalette.iris,
-                          title: "Capture",
-                          detail: "Texte, voix, document — tout finit dans ton graphe.")
+                          title: "onboarding.welcome.bullet.capture.title",
+                          detail: "onboarding.welcome.bullet.capture.detail")
                 bulletRow(icon: "magnifyingglass",
                           tint: .orange,
-                          title: "Audit client",
-                          detail: "Du domaine au pitch en quelques minutes.")
+                          title: "onboarding.welcome.bullet.audit.title",
+                          detail: "onboarding.welcome.bullet.audit.detail")
                 bulletRow(icon: "drop.fill",
                           tint: LiquidPalette.iris,
-                          title: "Deep Focus",
-                          detail: "Sessions chronométrées, Live Activity, Dynamic Island.")
+                          title: "onboarding.welcome.bullet.focus.title",
+                          detail: "onboarding.welcome.bullet.focus.detail")
             }
         }
     }
@@ -185,12 +185,12 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("Connecte Claude")
+                    Text("onboarding.anthropic.title")
                         .font(.system(.title, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.8)
                         .lineLimit(2)
-                    Text("MIND s'appuie sur l'API Anthropic pour le chat, la synthèse d'audit et la génération de pitchs. Sans clé, ces fonctions restent inertes.")
+                    Text("onboarding.anthropic.body")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -198,7 +198,7 @@ struct OnboardingView: View {
 
                 Link(destination: URL(string: "https://console.anthropic.com/settings/keys")!) {
                     HStack(spacing: 6) {
-                        Text("Obtenir une clé")
+                        Text("onboarding.anthropic.getKey")
                         Image(systemName: "arrow.up.right.square")
                     }
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
@@ -224,7 +224,7 @@ struct OnboardingView: View {
                         .onChange(of: anthropicKey) { _, _ in keySaved = false }
 
                     LiquidButton(
-                        title: keySaved ? "Saved in Keychain" : "Save key",
+                        title: String(localized: keySaved ? "onboarding.anthropic.saved" : "onboarding.anthropic.save"),
                         systemImage: keySaved ? "checkmark.circle.fill" : "key.fill"
                     ) {
                         APIKeyStore.save(anthropicKey)
@@ -234,7 +234,7 @@ struct OnboardingView: View {
                 }
                 .padding(.horizontal, 4)
 
-                Text("La clé est stockée dans le Keychain iOS et ne quitte jamais l'appareil sauf pour appeler l'API Anthropic.")
+                Text("onboarding.anthropic.footnote")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -256,12 +256,12 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("Notifications d'audit")
+                    Text("onboarding.notifications.title")
                         .font(.system(.title, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.8)
                         .lineLimit(2)
-                    Text("Lance un audit, range ton téléphone. Tu reçois un banner quand le rapport est prêt — pas avant.")
+                    Text("onboarding.notifications.body")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -272,20 +272,20 @@ struct OnboardingView: View {
                         Image(systemName: notificationsGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
                             .foregroundStyle(notificationsGranted ? .green : .orange)
                         Text(notificationsGranted
-                             ? "Notifications activées."
-                             : "Refusées — tu peux changer dans Réglages iOS.")
+                             ? "onboarding.notifications.granted"
+                             : "onboarding.notifications.denied")
                             .font(.system(.subheadline, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 4)
                 } else {
-                    LiquidButton(title: "Autoriser", systemImage: "bell.fill") {
+                    LiquidButton(title: String(localized: "onboarding.notifications.allow"), systemImage: "bell.fill") {
                         requestNotifications()
                     }
                     .padding(.top, 4)
                 }
 
-                Text("Tu peux toujours toggle ça dans Settings → Préférences.")
+                Text("onboarding.notifications.footnote")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -308,24 +308,24 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("Tu es prêt")
+                    Text("onboarding.ready.title")
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                         .minimumScaleFactor(0.7)
                         .lineLimit(2)
-                    Text("MIND apprendra ta manière de penser au fil de tes captures.")
+                    Text("onboarding.ready.body")
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
-                    setupRow(done: keySaved, label: "Clé Anthropic configurée")
-                    setupRow(done: notificationsGranted, label: "Notifications d'audit")
-                    setupRow(done: true, label: "Sync iCloud activée")
+                    setupRow(done: keySaved, label: "onboarding.ready.checklist.key")
+                    setupRow(done: notificationsGranted, label: "onboarding.ready.checklist.notifications")
+                    setupRow(done: true, label: "onboarding.ready.checklist.icloud")
                 }
                 .padding(.horizontal, 8)
 
-                Text("Quelques pistes pour démarrer : capture une pensée, lance un audit, ou démarre une session focus.")
+                Text("onboarding.ready.footnote")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -338,8 +338,8 @@ struct OnboardingView: View {
     private func bulletRow(
         icon: String,
         tint: Color,
-        title: String,
-        detail: String
+        title: LocalizedStringKey,
+        detail: LocalizedStringKey
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
@@ -364,7 +364,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func setupRow(done: Bool, label: String) -> some View {
+    private func setupRow(done: Bool, label: LocalizedStringKey) -> some View {
         HStack(spacing: 10) {
             Image(systemName: done ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(done ? .green : .secondary)

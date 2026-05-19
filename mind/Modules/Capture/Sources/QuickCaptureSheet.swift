@@ -21,7 +21,7 @@ public struct QuickCaptureSheet: View {
     public var body: some View {
         VStack(spacing: 20) {
             HStack {
-                Text("Capture")
+                Text("capture.title", bundle: .main)
                     .font(.system(.title2, design: .rounded, weight: .semibold))
                 Spacer()
                 Button {
@@ -66,12 +66,12 @@ public struct QuickCaptureSheet: View {
                             }
                         }
                 }
-                .accessibilityLabel(voice.isRecording ? "Stop voice capture" : "Start voice capture")
+                .accessibilityLabel(Text(voice.isRecording ? "capture.voice.stopAccessibility" : "capture.voice.startAccessibility", bundle: .main))
 
                 Spacer()
 
                 LiquidButton(
-                    title: isProcessing ? "Saving…" : "Capture",
+                    title: String(localized: isProcessing ? "capture.button.saving" : "capture.button.capture", bundle: .main),
                     systemImage: "drop.fill",
                     haptic: .select
                 ) {
@@ -119,7 +119,7 @@ public struct QuickCaptureSheet: View {
                         .foregroundStyle(LiquidPalette.iris)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Capturer depuis le presse-papier")
+                    Text("capture.banner.subtitle", bundle: .main)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
                     Text(url.absoluteString)
