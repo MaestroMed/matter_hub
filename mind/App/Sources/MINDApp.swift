@@ -38,6 +38,7 @@ struct MINDApp: App {
             case .active:
                 MINDTelemetry.info("lifecycle.foreground")
                 refreshGraphFromCloud()
+                drainShareInbox()
             case .background:
                 MINDTelemetry.info("lifecycle.background")
                 // Ask iOS to wake MIND in ~6h so the CloudKit mirror
@@ -103,6 +104,84 @@ struct MINDApp: App {
                 )
             }
         }
+    }
+
+    /// Drains the cross-process `ShareInbox` queue populated by the
+    /// MINDShareExtension target. Every payload becomes a `capture`
+    /// Node (with `sourceURL` set when the share carried a URL), and
+    /// known SaaS hosts auto-create or attach a sibling `client` Node
+    /// so the capture lands in the right bucket from day one.
+    ///
+    /// Runs on every `.active` scenePhase transition. If the queue is
+    /// empty (typical case), it's a single read of a 2-byte file — no
+    /// measurable cost.
+    @MainActor
+    private func drainShareInbox() {
+        let payloads = ShareInbox.drain()
+        guard !payloads.isEmpty else { return }
+
+        let context = GraphCore.sharedContainer.mainContext
+
+        for payload in payloads {
+            let node = Node(
+                kind: .capture,
+                title: payload.titleCandidate,
+                content: payload.contentBody,
+                sourceURL: payload.url?.absoluteString
+            )
+            context.insert(node)
+            node.refreshEmbedding()
+
+            // Known SaaS host? Surface (and reuse) a `client` Node so
+            // the capture is filed alongside the existing audit / notes
+            // the user keeps on that brand.
+            if let url = payload.url,
+               let clientName = ShareInbox.knownClientName(for: url) {
+                _ = clientNode(named: clientName, in: context)
+            }
+
+            MINDTelemetry.info(
+                "share.inbox.captured",
+                data: [
+                    "hasURL": payload.url != nil ? "1" : "0",
+                    "knownClient": payload.url.flatMap {
+                        ShareInbox.knownClientName(for: $0)
+                    } ?? "none",
+                ]
+            )
+        }
+
+        do {
+            try context.save()
+        } catch {
+            MINDTelemetry.error(
+                "share.inbox.save.failed",
+                data: ["error": String(describing: error)]
+            )
+        }
+    }
+
+    /// Find-or-create helper for the brand-name `client` Node used by
+    /// the Share Extension capture flow. Title match is case-insensitive
+    /// (covers "Stripe" vs "stripe"). Returns the canonical Node so
+    /// callers can attach edges if they want to.
+    @MainActor
+    private func clientNode(
+        named name: String,
+        in context: ModelContext
+    ) -> Node {
+        let lowerName = name.lowercased()
+        let clientRaw = NodeKind.client.rawValue
+        let descriptor = FetchDescriptor<Node>(
+            predicate: #Predicate { $0.kindRaw == clientRaw }
+        )
+        if let existing = try? context.fetch(descriptor)
+            .first(where: { $0.title.lowercased() == lowerName }) {
+            return existing
+        }
+        let new = Node(kind: .client, title: name)
+        context.insert(new)
+        return new
     }
 
     /// Starts Sentry if the user has saved a DSN in Settings. Silently

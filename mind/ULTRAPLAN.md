@@ -41,13 +41,14 @@ the phase state machine. **Acceptance**: BGAppRefreshTask registered,
 6 new tests pass, audit phase state diagram covered.
 Shipped 2026-05-19: BGAppRefreshTask `app.mind.ios.refresh` registered in MINDApp.init via BackgroundRefreshScheduler (GraphCore), scheduled on scenePhase=.background, 6 AuditController state-machine tests added (101 total, 0 failures).
 
-### v0.3 — Share Extension iOS ⏳
+### v0.3 — Share Extension iOS ✅
 **What**: New `MINDShareExtension` Tuist target with
 SLComposeServiceViewController. User shares any URL or text from
 Safari/Mail/Notes/Messages → MIND captures it as a node with
 `source = clipboardURL` and auto-creates a `client` if the URL has a
 known SaaS host. **Acceptance**: extension shows up in share sheet,
 URL capture creates correct node, screenshot of share flow saved.
+Shipped 2026-05-19: MINDShareExtension appExtension target wired via Tuist, SLComposeServiceViewController serialises URL+text shares into a cross-process `ShareInbox` queue (App Group group.app.mind.ios), host MIND app drains the queue on .active scenePhase and auto-creates a `client` Node when the URL host is a known SaaS (Stripe/Notion/Linear/GitHub/Figma/Vercel/Netlify/Shopify/Slack/Airtable/Anthropic/OpenAI/Apple/Google/Cloudflare). 14 ShareInboxTests added (115 total, 0 failures).
 
 ### v0.4 — Per-probe error UI + retry ⏳
 **What**: AuditSheet's error path today shows a global message. Refactor

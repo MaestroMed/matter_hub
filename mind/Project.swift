@@ -31,6 +31,7 @@ let appTarget: Target = .target(
     entitlements: .file(path: "App/MIND.entitlements"),
     dependencies: Module.allCases.map { .target(name: $0.rawValue) } + [
         .target(name: "MINDWidgets"),
+        .target(name: "MINDShareExtension"),
         .external(name: "Sentry"),
     ],
     settings: .settings(base: [
@@ -88,6 +89,47 @@ let widgetTarget: Target = .target(
     ])
 )
 
+// Share Extension — surfaces MIND in every share sheet (Safari, Mail,
+// Notes, Messages, Photos) so the user can capture a URL or text
+// payload in two taps. The extension is intentionally minimal: it
+// serialises the share into the cross-process `ShareInbox` queue and
+// hands control back to iOS. The host MIND app drains the queue on
+// next foreground and turns each payload into a Node (auto-creating
+// a `client` Node when the URL matches a known SaaS host).
+let shareExtensionTarget: Target = .target(
+    name: "MINDShareExtension",
+    destinations: .iOS,
+    product: .appExtension,
+    bundleId: "\(appBundleId).shareextension",
+    deploymentTargets: .iOS("26.0"),
+    infoPlist: .extendingDefault(with: [
+        "CFBundleDisplayName": "MIND",
+        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleVersion": "1",
+        "NSExtension": [
+            "NSExtensionPointIdentifier": "com.apple.share-services",
+            "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
+            "NSExtensionAttributes": [
+                // Accept any share that includes either a URL or plain
+                // text. Quantities are capped at 1 — multi-select is a
+                // future iteration.
+                "NSExtensionActivationRule": [
+                    "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+                    "NSExtensionActivationSupportsText": true,
+                ],
+            ],
+        ],
+    ]),
+    sources: ["ShareExtension/Sources/**"],
+    entitlements: .file(path: "ShareExtension/MINDShareExtension.entitlements"),
+    dependencies: [
+        .target(name: Module.graphCore.rawValue),
+    ],
+    settings: .settings(base: [
+        "SWIFT_VERSION": "6.0",
+    ])
+)
+
 let project = Project(
     name: appName,
     organizationName: "MIND",
@@ -105,5 +147,5 @@ let project = Project(
             .release(name: "Release"),
         ]
     ),
-    targets: [appTarget, widgetTarget, testTarget] + Module.allCases.map { $0.target() }
+    targets: [appTarget, widgetTarget, shareExtensionTarget, testTarget] + Module.allCases.map { $0.target() }
 )
