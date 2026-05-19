@@ -4,6 +4,7 @@ import AppIntents
 import DesignSystem
 import GraphCore
 import MINDIntents
+import RemindersKit
 import Sentry
 import Settings
 
@@ -39,6 +40,7 @@ struct MINDApp: App {
                 MINDTelemetry.info("lifecycle.foreground")
                 refreshGraphFromCloud()
                 drainShareInbox()
+                runRemindersSyncIfEnabled()
             case .background:
                 MINDTelemetry.info("lifecycle.background")
                 // Ask iOS to wake MIND in ~6h so the CloudKit mirror
@@ -157,6 +159,143 @@ struct MINDApp: App {
             MINDTelemetry.error(
                 "share.inbox.save.failed",
                 data: ["error": String(describing: error)]
+            )
+        }
+    }
+
+    /// Drains the bidirectional Reminders ↔ Tasks sync (v0.10) if the
+    /// user has flipped the opt-in toggle on in Settings → Préférences
+    /// AND already granted full-access reminders permission. The pure
+    /// diff lives in `RemindersSyncEngine`; this method is the I/O glue
+    /// that:
+    ///   1. Reads task-shaped Nodes from the main context
+    ///   2. Fetches the current `[ReminderSnapshot]` from EventKit
+    ///   3. Plans the diff
+    ///   4. Applies each action (creating reminders, minting nodes,
+    ///      writing back the paired identifier, propagating field
+    ///      updates each way)
+    ///
+    /// Skips silently when the toggle is off — EventKit is never
+    /// touched in that branch so the user doesn't see a permission
+    /// prompt they didn't ask for.
+    @MainActor
+    private func runRemindersSyncIfEnabled() {
+        guard MINDPreferences.currentRemindersSyncEnabled() else { return }
+
+        Task { @MainActor in
+            // Bail early if permission was revoked from iOS Settings
+            // since the last run. Soft-fail so the next foreground
+            // tries again without spamming the user. Distinguish the
+            // "denied / restricted" branch from "still pending" so we
+            // can correlate the Sentry timeline against user intent.
+            let auth = await RemindersStore.shared.currentAuthorization()
+            guard auth == .fullAccess else {
+                MINDTelemetry.info(
+                    "reminders.access.denied",
+                    data: ["status": String(describing: auth)]
+                )
+                return
+            }
+
+            let context = GraphCore.sharedContainer.mainContext
+            let taskRaw = NodeKind.task.rawValue
+            let descriptor = FetchDescriptor<Node>(
+                predicate: #Predicate { $0.kindRaw == taskRaw }
+            )
+            let allTasks = (try? context.fetch(descriptor)) ?? []
+            let projections = allTasks.compactMap { RemindersSyncEngine.NodeProjection(node: $0) }
+            let nodesByID = Dictionary(uniqueKeysWithValues: allTasks.map { ($0.id, $0) })
+
+            let snapshots = await RemindersStore.shared.fetchAll()
+            let plan = RemindersSyncEngine().plan(
+                nodes: projections,
+                reminders: snapshots
+            )
+
+            guard !plan.isEmpty else {
+                MINDTelemetry.info(
+                    "reminders.sync.noop",
+                    data: ["tasks": "\(projections.count)", "reminders": "\(snapshots.count)"]
+                )
+                return
+            }
+
+            var nodeCreates = 0
+            var reminderCreates = 0
+            var nodeUpdates = 0
+            var reminderUpdates = 0
+            var bindings = 0
+
+            for action in plan.actions {
+                switch action {
+                case let .createReminderFor(nodeID, title, notes, dueDate, isCompleted):
+                    if let externalID = await RemindersStore.shared.create(
+                        title: title,
+                        notes: notes,
+                        dueDate: dueDate,
+                        isCompleted: isCompleted
+                    ), let node = nodesByID[nodeID] {
+                        node.reminderExternalID = externalID
+                        reminderCreates += 1
+                    }
+                case let .createNodeFor(reminderID, title, notes, _, isCompleted):
+                    let node = Node(
+                        kind: .task,
+                        title: title,
+                        content: notes ?? "",
+                        tags: ["task"]
+                    )
+                    node.reminderExternalID = reminderID
+                    if isCompleted {
+                        node.completedAt = .now
+                    }
+                    context.insert(node)
+                    node.refreshEmbedding()
+                    nodeCreates += 1
+                case let .updateNode(nodeID, title, notes, isCompleted):
+                    guard let node = nodesByID[nodeID] else { continue }
+                    node.title = title
+                    node.content = notes ?? ""
+                    if isCompleted && node.completedAt == nil {
+                        node.completedAt = .now
+                    } else if !isCompleted {
+                        node.completedAt = nil
+                    }
+                    node.updatedAt = .now
+                    nodeUpdates += 1
+                case let .updateReminder(reminderID, title, notes, isCompleted):
+                    await RemindersStore.shared.update(
+                        id: reminderID,
+                        title: title,
+                        notes: notes,
+                        isCompleted: isCompleted
+                    )
+                    reminderUpdates += 1
+                case let .bindNodeToReminder(nodeID, reminderID):
+                    nodesByID[nodeID]?.reminderExternalID = reminderID
+                    bindings += 1
+                }
+            }
+
+            do {
+                try context.save()
+            } catch {
+                MINDTelemetry.error(
+                    "reminders.sync.save.failed",
+                    data: ["error": String(describing: error)]
+                )
+                return
+            }
+
+            MINDTelemetry.info(
+                "reminders.sync.applied",
+                data: [
+                    "nodeCreates": "\(nodeCreates)",
+                    "reminderCreates": "\(reminderCreates)",
+                    "nodeUpdates": "\(nodeUpdates)",
+                    "reminderUpdates": "\(reminderUpdates)",
+                    "bindings": "\(bindings)",
+                ]
             )
         }
     }

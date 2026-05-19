@@ -5,6 +5,7 @@ import DesignSystem
 import GraphCore
 import HealthInsights
 import Intelligence
+import RemindersKit
 import VisualKit
 
 public struct SettingsView: View {
@@ -193,6 +194,42 @@ public struct SettingsView: View {
                                         // the user sees nothing.
                                         Task {
                                             _ = await HealthReader.shared.requestAccess()
+                                        }
+                                    }
+                                }
+                            ))
+                        }
+
+                        Divider().background(.white.opacity(0.2))
+
+                        // v0.10 — Reminders bidirectional sync opt-in.
+                        // Toggle on triggers the EventKit reminders
+                        // permission sheet. Toggle off only flips the
+                        // local flag; iOS doesn't expose a programmatic
+                        // revoke, the user has to go to Réglages →
+                        // Confidentialité → Rappels → MIND to revoke
+                        // entirely.
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("settings.preferences.reminders.title", bundle: .main)
+                                    .font(.system(.body, design: .rounded, weight: .medium))
+                                Text("settings.preferences.reminders.detail", bundle: .main)
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            LiquidToggle(isOn: Binding(
+                                get: { prefs.remindersSyncEnabled },
+                                set: { newValue in
+                                    prefs.remindersSyncEnabled = newValue
+                                    if newValue {
+                                        // Kick the authorization sheet on
+                                        // toggle-on. requestAccess() is
+                                        // idempotent — already-granted
+                                        // permissions short-circuit and
+                                        // the user sees nothing.
+                                        Task {
+                                            _ = await RemindersStore.shared.requestAccess()
                                         }
                                     }
                                 }

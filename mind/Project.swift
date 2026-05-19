@@ -33,6 +33,12 @@ let appTarget: Target = .target(
         // knows the permission is local-only.
         "NSHealthShareUsageDescription": "MIND lit ton activité physique (pas, sommeil, minutes actives) sur 7 jours pour afficher un résumé hebdomadaire à côté de tes stats Focus. Aucune donnée ne quitte ton appareil.",
         "NSHealthUpdateUsageDescription": "MIND lit ton activité physique (pas, sommeil, minutes actives) sur 7 jours pour afficher un résumé hebdomadaire à côté de tes stats Focus. Aucune donnée ne quitte ton appareil.",
+        // v0.10 — Reminders bidirectional sync. Both keys are required
+        // on iOS 17+: the system prompts with the FullAccess string
+        // when we call `requestFullAccessToReminders()`, the legacy
+        // key remains as a fallback for any old framework code paths.
+        "NSRemindersFullAccessUsageDescription": "MIND mirroite tes tâches avec l'app Rappels pour que tu puisses cocher une tâche depuis Siri, l'Apple Watch ou ton Mac et la voir disparaître ici aussi.",
+        "NSRemindersUsageDescription": "MIND mirroite tes tâches avec l'app Rappels pour que tu puisses cocher une tâche depuis Siri, l'Apple Watch ou ton Mac et la voir disparaître ici aussi.",
         "UIBackgroundModes": ["audio", "processing", "fetch"],
         "BGTaskSchedulerPermittedIdentifiers": ["app.mind.ios.refresh"],
         "ITSAppUsesNonExemptEncryption": false,
@@ -77,6 +83,13 @@ let testTarget: Target = .target(
         // the HomeView "Cette semaine" health card. HealthReader itself
         // is exercised end-to-end via the simulator screenshot.
         .target(name: Module.healthInsights.rawValue),
+        // v0.10 — RemindersSyncEngineTests exercise the pure diff
+        // logic of the bidirectional Reminders sync — every action
+        // (create node, create reminder, update either side, bind a
+        // pre-existing pairing) is locked by a test. The EventKit-
+        // backed `RemindersStore` is exercised end-to-end via the
+        // simulator screenshot.
+        .target(name: Module.remindersKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

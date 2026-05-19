@@ -19,6 +19,7 @@ public final class MINDPreferences {
         static let auditNotificationsEnabled = "mind.pref.auditNotificationsEnabled"
         static let sentryDSN                 = "mind.pref.sentryDSN"
         static let healthInsightsEnabled     = "mind.pref.healthInsightsEnabled"
+        static let remindersSyncEnabled      = "mind.pref.remindersSyncEnabled"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -72,6 +73,16 @@ public final class MINDPreferences {
         }
     }
 
+    /// Reminders bidirectional sync opt-in (v0.10). False by default so
+    /// EventKit is never asked for reminders permission and no mirror
+    /// runs until the user explicitly enables it. Same toggle-then-
+    /// permission-sheet sequence as the health insights opt-in.
+    public var remindersSyncEnabled: Bool {
+        didSet {
+            defaults.set(remindersSyncEnabled, forKey: Key.remindersSyncEnabled)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -95,6 +106,11 @@ public final class MINDPreferences {
         // prompt at first launch. Nil → false, false → false, true → true.
         let storedHealth = suite.object(forKey: Key.healthInsightsEnabled) as? Bool
         self.healthInsightsEnabled = storedHealth ?? false
+
+        // Same opt-in contract for Reminders sync — EventKit is never
+        // queried until the user explicitly flips the toggle.
+        let storedReminders = suite.object(forKey: Key.remindersSyncEnabled) as? Bool
+        self.remindersSyncEnabled = storedReminders ?? false
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -132,6 +148,16 @@ public final class MINDPreferences {
     ) -> Bool {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         return suite.object(forKey: Key.healthInsightsEnabled) as? Bool ?? false
+    }
+
+    /// Non-Observable accessor for the Reminders sync opt-in. Lets
+    /// MINDApp read the flag in `onChange(of: scenePhase)` without
+    /// holding a reference to the @MainActor `Preferences` instance.
+    public static func currentRemindersSyncEnabled(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> Bool {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        return suite.object(forKey: Key.remindersSyncEnabled) as? Bool ?? false
     }
 }
 

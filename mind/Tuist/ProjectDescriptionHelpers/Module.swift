@@ -14,6 +14,7 @@ public enum Module: String, CaseIterable {
     case auditKit = "AuditKit"
     case calendarKit = "CalendarKit"
     case healthInsights = "HealthInsights"
+    case remindersKit = "RemindersKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -53,6 +54,11 @@ public enum Module: String, CaseIterable {
                 // never reach across module boundaries from RootView to
                 // trigger the authorization sheet.
                 .target(name: Module.healthInsights.rawValue),
+                // v0.10 — Settings owns the Reminders sync opt-in toggle
+                // and calls RemindersStore.requestAccess() on toggle-on
+                // so the EventKit permission sheet appears as a direct
+                // consequence of the user's tap.
+                .target(name: Module.remindersKit.rawValue),
             ]
         case .chat:
             return [
@@ -109,6 +115,17 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.designSystem.rawValue),
+            ]
+        case .remindersKit:
+            // v0.10 — Reminders bidirectional sync. Depends on GraphCore
+            // because the sync engine projects task-shaped Nodes into
+            // `NodeProjection` value types before diffing them against
+            // the EventKit snapshots, and writes back the paired
+            // `reminderExternalID`. EventKit is linked from the module
+            // source via `import EventKit` (same model as CalendarKit's
+            // EKEventStore usage).
+            return [
+                .target(name: Module.graphCore.rawValue),
             ]
         }
     }

@@ -58,6 +58,14 @@ public final class Node {
     public var sourceURL: String?
     public var embedding: [Float]?
 
+    /// EKReminder.calendarItemIdentifier for the iOS Reminder mirroring
+    /// this task-shaped Node (v0.10). `nil` when the Node has never been
+    /// synced — the next foreground sync pass mints a paired reminder
+    /// and writes the identifier here. Optional + nil default so the
+    /// field migrates cleanly into existing CloudKit stores. Safe to
+    /// ignore on non-task Nodes (notes, captures, audits, clients).
+    public var reminderExternalID: String?
+
     // nil default (not `[]`): SwiftData's CloudKit-backed initializer
     // crashes at boot when a to-many @Relationship optional carries an
     // empty-array default — investigated 2026-05-19 after the test

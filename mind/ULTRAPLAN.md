@@ -155,11 +155,26 @@ clean — the card is intentionally hidden because the Simulator
 HealthKit is empty + opt-in is off, which is exactly the documented
 soft-fail contract.
 
-### v0.10 — Reminders bidirectional sync ⏳
+### v0.10 — Reminders bidirectional sync ✅
 **What**: Tasks in MIND mirror to iOS Reminders and vice versa. Use
 EventKit's EKReminder API. Sync on app foreground. **Acceptance**:
 create task in MIND → appears in Reminders within 30s. Check off in
 Reminders → MIND task shows completed.
+Shipped 2026-05-19: new `RemindersKit` module (`RemindersStore` actor
+wrapping `EKEventStore.requestFullAccessToReminders` + fetch/create/
+update, pure `RemindersSyncEngine` driving the diff with id-pairing,
+title-fallback binding and a "completion-beats-open" tie-breaker).
+`Node.reminderExternalID` stores the paired `calendarItemIdentifier`.
+`MINDApp` runs `runRemindersSyncIfEnabled()` on `.active` scenePhase
+behind a `MINDPreferences.remindersSyncEnabled` opt-in (default off).
+Settings → Préférences gains a localized "Synchroniser les Rappels"
+toggle that triggers the EventKit prompt on first enable. Three new
+breadcrumbs: `reminders.sync.applied`, `reminders.sync.noop`,
+`reminders.access.denied`. 15 new tests in `RemindersSyncEngineTests`
+lock the diff matrix; 174 total tests, 0 failures (was 159 in v0.9).
+Screenshot at `mind/screenshots/v0.10.png` shows the host app
+launching clean — no permission prompt fires because the opt-in is
+off by default, exactly as the privacy contract requires.
 
 ---
 

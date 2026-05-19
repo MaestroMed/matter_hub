@@ -891,6 +891,20 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Wipe all data" } },
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer toutes les données" } }
       }
+    },
+    "settings.preferences.reminders.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync Reminders" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Synchroniser les Rappels" } }
+      }
+    },
+    "settings.preferences.reminders.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mirrors your MIND tasks with the Reminders app — check one off from Siri, Apple Watch or your Mac and it disappears here too." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mirroite tes tâches MIND avec l'app Rappels — coche depuis Siri, l'Apple Watch ou ton Mac et la tâche disparaît ici aussi." } }
+      }
     }
   }
 }
