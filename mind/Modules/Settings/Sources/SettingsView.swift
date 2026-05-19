@@ -1,10 +1,12 @@
 import SwiftUI
 import SwiftData
 import CloudKit
+import AuditKit
 import DesignSystem
 import GraphCore
 import HealthInsights
 import Intelligence
+import NotionKit
 import RemindersKit
 import VisualKit
 
@@ -18,6 +20,18 @@ public struct SettingsView: View {
     @State private var showKey: Bool = false
     @State private var showOpenAIKey: Bool = false
     @State private var prefs = MINDPreferences.shared
+
+    // v0.11 — Notion sync. Token in Keychain (paste integration token
+    // from notion.so/my-integrations), database ID in UserDefaults.
+    @State private var notionToken: String = ""
+    @State private var notionTokenSaved: Bool = false
+    @State private var showNotionToken: Bool = false
+    /// nil = unchecked / never validated. true / false = result of the
+    /// last `NotionClient.validateToken()` call. Drives the green /
+    /// red status dot next to the token field.
+    @State private var notionTokenValid: Bool? = nil
+    @State private var notionTestToast: String?
+    @State private var notionBusy: Bool = false
 
     // Danger-zone confirmation alerts. Two-step UX so the user can't
     // accidentally wipe their second brain by misclicking — the alert
@@ -123,6 +137,8 @@ public struct SettingsView: View {
                         }
                     }
                 }
+
+                notionSection
 
                 section(localized: "settings.section.sentry") {
                     VStack(alignment: .leading, spacing: 10) {
@@ -280,7 +296,18 @@ public struct SettingsView: View {
                 openAIKey = stored
                 openAIKeySaved = true
             }
+            if let stored = NotionTokenStore.read() {
+                notionToken = stored
+                notionTokenSaved = true
+            }
             refreshCloudKitStatus()
+        }
+        .alert(String(localized: "settings.notion.test.done", bundle: .main),
+               isPresented: Binding(get: { notionTestToast != nil },
+                                    set: { if !$0 { notionTestToast = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(notionTestToast ?? "")
         }
         .onReceive(
             NotificationCenter.default.publisher(for: .CKAccountChanged)
@@ -317,6 +344,223 @@ public struct SettingsView: View {
         } message: {
             Text(dangerZoneToast ?? "")
         }
+    }
+
+    // MARK: - Notion sync (v0.11)
+
+    /// Section that holds the paste-integration-token field, the
+    /// target database ID field, and a "Test sync" button. Token is
+    /// stored in `NotionTokenStore` (Keychain), database ID in
+    /// `MINDPreferences.notionDatabaseID` (App Group UserDefaults).
+    /// The green / red dot reflects the last `validateToken()` call —
+    /// blank until the user taps "Save token".
+    private var notionSection: some View {
+        section(localized: "settings.notion.section") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("settings.notion.subtitle", bundle: .main)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                notionTokenField
+
+                HStack(spacing: 8) {
+                    LiquidButton(
+                        title: notionTokenSaved
+                            ? String(localized: "settings.button.saved", bundle: .main)
+                            : String(localized: "settings.button.save", bundle: .main),
+                        systemImage: notionTokenSaved ? "checkmark" : "key.fill"
+                    ) {
+                        saveNotionToken()
+                    }
+                    .disabled(notionToken.isEmpty || notionBusy)
+
+                    Button(String(localized: "settings.button.clear", bundle: .main)) {
+                        NotionTokenStore.clear()
+                        notionToken = ""
+                        notionTokenSaved = false
+                        notionTokenValid = nil
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    notionStatusDot
+                }
+
+                Divider().background(.white.opacity(0.2))
+
+                Text("settings.notion.db.label", bundle: .main)
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                notionDatabaseIDField
+
+                LiquidButton(
+                    title: String(localized: "settings.notion.test.button", bundle: .main),
+                    systemImage: "arrow.up.right.circle.fill"
+                ) {
+                    runNotionTest()
+                }
+                .disabled(
+                    notionToken.isEmpty
+                    || prefs.notionDatabaseID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    || notionBusy
+                )
+            }
+        }
+    }
+
+    private var notionTokenField: some View {
+        HStack {
+            Group {
+                if showNotionToken {
+                    TextField("ntn_…", text: $notionToken)
+                } else {
+                    SecureField("ntn_…", text: $notionToken)
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(.system(.body, design: .monospaced))
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: notionToken) { _, _ in
+                notionTokenSaved = false
+                notionTokenValid = nil
+            }
+
+            Button {
+                showNotionToken.toggle()
+            } label: {
+                Image(systemName: showNotionToken ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    private var notionDatabaseIDField: some View {
+        HStack {
+            TextField("4f8e2c9f1a2b4c5d…", text: $prefs.notionDatabaseID)
+                .textFieldStyle(.plain)
+                .font(.system(.caption, design: .monospaced))
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var notionStatusDot: some View {
+        if let valid = notionTokenValid {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(valid ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: (valid ? Color.green : Color.red).opacity(0.5), radius: 4)
+                Text(valid
+                     ? String(localized: "settings.notion.status.ok", bundle: .main)
+                     : String(localized: "settings.notion.status.fail", bundle: .main))
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        } else if notionBusy {
+            ProgressView().controlSize(.mini)
+        } else {
+            EmptyView()
+        }
+    }
+
+    private func saveNotionToken() {
+        notionBusy = true
+        let trimmed = notionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        NotionTokenStore.save(trimmed)
+        notionTokenSaved = true
+        MINDTelemetry.info("notion.token.saved", data: ["length": "\(trimmed.count)"])
+        Task {
+            let valid = await NotionClient.shared.validateToken()
+            await MainActor.run {
+                notionTokenValid = valid
+                notionBusy = false
+                MINDTelemetry.info("notion.token.validated", data: ["valid": valid ? "true" : "false"])
+                if !valid {
+                    LiquidHaptics.warning()
+                } else {
+                    LiquidHaptics.success()
+                }
+            }
+        }
+    }
+
+    private func runNotionTest() {
+        notionBusy = true
+        let dbID = prefs.notionDatabaseID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let dummy = makeNotionTestReport()
+        Task {
+            do {
+                let url = try await NotionClient.shared.createAuditPage(dummy, in: dbID)
+                await MainActor.run {
+                    notionBusy = false
+                    notionTestToast = String(
+                        format: String(localized: "settings.notion.test.success", bundle: .main),
+                        url
+                    )
+                    LiquidHaptics.success()
+                    MINDTelemetry.info("notion.page.created", data: ["surface": "settings.test"])
+                }
+            } catch {
+                await MainActor.run {
+                    notionBusy = false
+                    notionTestToast = String(
+                        format: String(localized: "settings.notion.test.error", bundle: .main),
+                        String(describing: error)
+                    )
+                    LiquidHaptics.error()
+                    MINDTelemetry.warning("notion.page.failed", data: [
+                        "surface": "settings.test",
+                        "error": String(describing: error),
+                    ])
+                }
+            }
+        }
+    }
+
+    /// Builds a tiny AuditReport used solely by "Test sync" so the
+    /// real audit data never leaves the device during a connectivity
+    /// check. Title = "Test depuis MIND".
+    private func makeNotionTestReport() -> AuditReport {
+        let client = AuditClient(
+            url: URL(string: "https://mind.ios.app")!,
+            name: String(localized: "settings.notion.test.pageTitle", bundle: .main)
+        )
+        return AuditReport(
+            client: client,
+            persona: .other,
+            scoring: .init(overall: 0, performance: 0, seo: 0, security: 0, brand: 0, mobile: 0),
+            performance: nil,
+            findings: nil,
+            synthesis: String(localized: "settings.notion.test.body", bundle: .main),
+            quickWins: [],
+            strategicBets: [],
+            hiddenRisks: [],
+            pitch: ""
+        )
     }
 
     // MARK: - iCloud sync indicator

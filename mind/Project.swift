@@ -90,6 +90,12 @@ let testTarget: Target = .target(
         // backed `RemindersStore` is exercised end-to-end via the
         // simulator screenshot.
         .target(name: Module.remindersKit.rawValue),
+        // v0.11 — NotionPageBuilderTests exercise the pure builder
+        // that turns an `AuditReport` into the JSON dict POST
+        // /v1/pages expects. The `NotionClient` actor itself is
+        // exercised end-to-end via the Settings "Test sync" button
+        // on a real device + the simulator screenshot.
+        .target(name: Module.notionKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

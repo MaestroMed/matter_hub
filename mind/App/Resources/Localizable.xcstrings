@@ -905,6 +905,139 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Mirrors your MIND tasks with the Reminders app — check one off from Siri, Apple Watch or your Mac and it disappears here too." } },
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mirroite tes tâches MIND avec l'app Rappels — coche depuis Siri, l'Apple Watch ou ton Mac et la tâche disparaît ici aussi." } }
       }
+    },
+    "settings.notion.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notion sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Notion" } }
+      }
+    },
+    "settings.notion.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create an internal integration at notion.so/my-integrations, paste its secret here, then paste the database ID you want audits to land in. Token is stored in the Keychain." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crée une intégration interne sur notion.so/my-integrations, colle son secret ici, puis colle l'ID de la base où atterrissent les audits. Le token est stocké dans le trousseau." } }
+      }
+    },
+    "settings.notion.token.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ntn_…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ntn_…" } }
+      }
+    },
+    "settings.notion.db.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Database ID" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID de la base" } }
+      }
+    },
+    "settings.notion.db.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "4f8e2c9f1a2b4c5d…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "4f8e2c9f1a2b4c5d…" } }
+      }
+    },
+    "settings.notion.test.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Test sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tester la sync" } }
+      }
+    },
+    "settings.notion.test.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notion sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Notion" } }
+      }
+    },
+    "settings.notion.test.success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Test page created in Notion: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Page de test créée dans Notion : %@" } }
+      }
+    },
+    "settings.notion.test.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Test failed: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Échec du test : %@" } }
+      }
+    },
+    "settings.notion.test.pageTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Test from MIND" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Test depuis MIND" } }
+      }
+    },
+    "settings.notion.test.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "If you can read this, MIND can write to your Notion database. You're good to go — head to an audit and tap Sync to Notion in the export sheet." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Si tu lis ceci, MIND peut écrire dans ta base Notion. Tu peux y aller — ouvre un audit et touche Sync vers Notion dans la feuille d'export." } }
+      }
+    },
+    "settings.notion.status.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Token OK" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Token OK" } }
+      }
+    },
+    "settings.notion.status.fail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Token rejected" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Token refusé" } }
+      }
+    },
+    "audit.export.notion.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync to Notion" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync vers Notion" } }
+      }
+    },
+    "audit.export.notion.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Creates a Notion page in the database you configured in Settings." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crée une page Notion dans la base configurée dans Réglages." } }
+      }
+    },
+    "audit.export.notion.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync to Notion" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync vers Notion" } }
+      }
+    },
+    "audit.export.notion.success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Audit pushed to Notion: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audit envoyé sur Notion : %@" } }
+      }
+    },
+    "audit.export.notion.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notion sync failed: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Échec de la sync Notion : %@" } }
+      }
+    },
+    "audit.export.notion.toast.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notion sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Notion" } }
+      }
     }
   }
 }

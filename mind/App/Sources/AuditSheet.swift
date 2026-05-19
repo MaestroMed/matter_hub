@@ -3,6 +3,8 @@ import SwiftData
 import AuditKit
 import DesignSystem
 import GraphCore
+import NotionKit
+import Settings
 import VisualKit
 
 struct AuditSheet: View {
@@ -1140,6 +1142,22 @@ struct AuditSheet: View {
         @State private var htmlURL: URL?
         @State private var pdfURL: URL?
 
+        // v0.11 — Notion sync state. URL of the freshly-created page
+        // doubles as both "the sync completed" flag and the value the
+        // success toast surfaces to the user.
+        @State private var notionPageURL: String?
+        @State private var notionSyncing: Bool = false
+        @State private var notionError: String?
+
+        /// Computed: show the Sync to Notion row only when the user
+        /// has both pasted an integration token (Keychain) and a
+        /// database ID (UserDefaults). Otherwise the row would always
+        /// land on an error and clutter the export sheet.
+        private var notionConfigured: Bool {
+            NotionTokenStore.read() != nil
+            && MINDPreferences.currentNotionDatabaseID() != nil
+        }
+
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -1190,11 +1208,100 @@ struct AuditSheet: View {
                         url: jsonURL,
                         action: prepareJSON
                     )
+
+                    if notionConfigured {
+                        notionSyncRow
+                    }
                 }
                 .padding(20)
                 .padding(.bottom, 32)
             }
             .background { LiquidBackground().ignoresSafeArea() }
+            .alert(String(localized: "audit.export.notion.toast.title", bundle: .main),
+                   isPresented: Binding(get: { notionPageURL != nil || notionError != nil },
+                                        set: { if !$0 { notionPageURL = nil; notionError = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                if let url = notionPageURL {
+                    Text(String(format: String(localized: "audit.export.notion.success", bundle: .main), url))
+                } else if let err = notionError {
+                    Text(String(format: String(localized: "audit.export.notion.error", bundle: .main), err))
+                }
+            }
+        }
+
+        /// v0.11 — Sync to Notion row. Mirrors the visual rhythm of the
+        /// markdown / PDF / HTML / JSON rows but the trailing action is
+        /// an async network call rather than a `ShareLink`. We branch
+        /// inline because `exportRow(…)` is keyed off "do I have a file
+        /// URL yet?" — the Notion case has no file URL, only a
+        /// remote page URL.
+        @ViewBuilder
+        private var notionSyncRow: some View {
+            LiquidCard(cornerRadius: 18) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "rectangle.stack.badge.plus")
+                            .font(.system(.callout, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("audit.export.notion.title", bundle: .main)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
+                        Text("audit.export.notion.subtitle", bundle: .main)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    if notionSyncing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button(action: syncToNotion) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(.title3, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+
+        private func syncToNotion() {
+            guard let dbID = MINDPreferences.currentNotionDatabaseID() else { return }
+            notionSyncing = true
+            notionError = nil
+            notionPageURL = nil
+            Task {
+                do {
+                    let url = try await NotionClient.shared.createAuditPage(report, in: dbID)
+                    await MainActor.run {
+                        notionSyncing = false
+                        notionPageURL = url
+                        LiquidHaptics.success()
+                        MINDTelemetry.info("notion.page.created", data: [
+                            "surface": "audit.export",
+                            "client": report.client.displayName,
+                        ])
+                    }
+                } catch {
+                    await MainActor.run {
+                        notionSyncing = false
+                        notionError = String(describing: error)
+                        LiquidHaptics.error()
+                        MINDTelemetry.warning("notion.page.failed", data: [
+                            "surface": "audit.export",
+                            "error": String(describing: error),
+                        ])
+                    }
+                }
+            }
         }
 
         @ViewBuilder

@@ -15,6 +15,7 @@ public enum Module: String, CaseIterable {
     case calendarKit = "CalendarKit"
     case healthInsights = "HealthInsights"
     case remindersKit = "RemindersKit"
+    case notionKit = "NotionKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -59,6 +60,12 @@ public enum Module: String, CaseIterable {
                 // so the EventKit permission sheet appears as a direct
                 // consequence of the user's tap.
                 .target(name: Module.remindersKit.rawValue),
+                // v0.11 — Settings owns the Notion sync section (paste
+                // integration token, paste database ID, "Test sync"
+                // button). Depending on NotionKit here means the token
+                // save + validate flow stays inside the same view that
+                // shows its green/red dot status.
+                .target(name: Module.notionKit.rawValue),
             ]
         case .chat:
             return [
@@ -126,6 +133,18 @@ public enum Module: String, CaseIterable {
             // EKEventStore usage).
             return [
                 .target(name: Module.graphCore.rawValue),
+            ]
+        case .notionKit:
+            // v0.11 — One-way MIND → Notion sync. Depends on GraphCore
+            // for MINDTelemetry breadcrumbs (notion.token.saved /
+            // notion.page.created / …) and on AuditKit for the
+            // `AuditReport` value type the NotionPageBuilder consumes.
+            // No DesignSystem dep — NotionKit is pure model + actor
+            // client; the visible UI lives in Settings / App which
+            // already link DesignSystem.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.auditKit.rawValue),
             ]
         }
     }

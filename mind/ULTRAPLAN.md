@@ -182,12 +182,21 @@ off by default, exactly as the privacy contract requires.
 
 Polish wave before opening the TestFlight to 50+ external testers.
 
-### v0.11 — Notion sync (one-way: MIND → Notion) ⏳
-**What**: Settings → "Connect Notion". OAuth flow returns access token,
-stored in Keychain. Audits export to a configurable Notion database
-when "Sync to Notion" is enabled on the export sheet. **Acceptance**:
-OAuth completes, audit export creates a Notion page with all
-sections (synthesis, quick wins, bets, pitch).
+### v0.11 — Notion sync (one-way: MIND → Notion) ✅
+**What**: Settings → "Notion sync". Mehdi creates an internal
+integration at notion.so/my-integrations once and pastes the
+integration token into MIND — token stored in Keychain
+(`app.mind.ios.notion`). Database ID pasted into a second field,
+persisted in App-Group UserDefaults. Audits export to that database
+via `POST /v1/pages` when "Sync to Notion" is tapped on the export
+sheet. OAuth deferred to v0.11.1 because MIND is solo-user — the
+integration token route ships the same feature in one commit without
+client ID/secret plumbing or a callback URL. **Acceptance**: token
+validates against `/v1/users/me`, audit export creates a Notion
+page with all sections (synthesis, quick wins, bets, hidden risks,
+pitch). Shipped 2026-05-19: paste-integration-token approach
+(NotionKit module, Settings UI, AuditSheet sync button, 9 pure
+builder tests).
 
 ### v0.12 — Linear sync (audit → Linear projects) ⏳
 **What**: Audit's "Quick wins" can be one-tap-converted to Linear

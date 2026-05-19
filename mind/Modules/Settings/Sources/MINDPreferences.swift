@@ -20,6 +20,7 @@ public final class MINDPreferences {
         static let sentryDSN                 = "mind.pref.sentryDSN"
         static let healthInsightsEnabled     = "mind.pref.healthInsightsEnabled"
         static let remindersSyncEnabled      = "mind.pref.remindersSyncEnabled"
+        static let notionDatabaseID          = "mind.pref.notionDatabaseID"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -83,6 +84,20 @@ public final class MINDPreferences {
         }
     }
 
+    /// Notion database ID where MIND posts audit pages (v0.11).
+    /// Persisted in UserDefaults (not Keychain) because the database ID
+    /// is not a secret — it's a public identifier visible in the URL
+    /// of any Notion database. The integration token *is* a secret and
+    /// lives in `NotionTokenStore` (Keychain). Empty string = "not
+    /// configured", and the AuditSheet "Sync to Notion" button stays
+    /// hidden until both this and the token are set.
+    public var notionDatabaseID: String {
+        didSet {
+            let trimmed = notionDatabaseID.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.notionDatabaseID)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -111,6 +126,11 @@ public final class MINDPreferences {
         // queried until the user explicitly flips the toggle.
         let storedReminders = suite.object(forKey: Key.remindersSyncEnabled) as? Bool
         self.remindersSyncEnabled = storedReminders ?? false
+
+        // v0.11 — Notion database ID. Empty default = not configured;
+        // the AuditSheet "Sync to Notion" CTA checks for non-empty
+        // before showing the button.
+        self.notionDatabaseID = suite.string(forKey: Key.notionDatabaseID) ?? ""
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -158,6 +178,17 @@ public final class MINDPreferences {
     ) -> Bool {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         return suite.object(forKey: Key.remindersSyncEnabled) as? Bool ?? false
+    }
+
+    /// v0.11 — Non-Observable accessor for the Notion database ID.
+    /// Returns nil when empty so `AuditSheet` and downstream callers
+    /// can branch on optional-binding without an extra trim check.
+    public static func currentNotionDatabaseID(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.notionDatabaseID)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
     }
 }
 
