@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import GraphCore  // for MINDTelemetry
 
 /// Orchestrates a digital audit run end-to-end:
 ///   1. probe every free public source in parallel (PageSpeed + secondary
@@ -80,12 +81,18 @@ public final class AuditController {
     }
 
     private func execute(for client: AuditClient) async {
+        let host = client.url.host ?? client.url.absoluteString
+        MINDTelemetry.info(
+            "audit.start",
+            data: ["host": host, "client": client.name ?? host]
+        )
         do {
             phase = .probing
             let (performance, findings) = await runProbesInParallel(for: client)
             try Task.checkCancellation()
 
             phase = .synthesizing
+            MINDTelemetry.info("audit.synthesize.start", data: ["host": host])
             let synthesized = try await synthesizer.synthesize(
                 for: client,
                 performance: performance,
@@ -95,12 +102,24 @@ public final class AuditController {
 
             self.report = synthesized
             self.phase = .completed
+            MINDTelemetry.info(
+                "audit.completed",
+                data: [
+                    "host": host,
+                    "overall_score": String(synthesized.scoring.overall)
+                ]
+            )
             await notifier.notifyAuditCompleted(report: synthesized)
         } catch is CancellationError {
             self.phase = .idle
+            MINDTelemetry.info("audit.cancelled", data: ["host": host])
         } catch {
             self.error = error.localizedDescription
             self.phase = .failed
+            MINDTelemetry.error(
+                "audit.failed",
+                data: ["host": host, "error": error.localizedDescription]
+            )
             await notifier.notifyAuditFailed(
                 client: client,
                 message: error.localizedDescription

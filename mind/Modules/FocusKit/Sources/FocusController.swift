@@ -71,8 +71,19 @@ public final class FocusController {
             self.session = newSession
             self.activity = started
             observePushTokens(for: started)
+            MINDTelemetry.info(
+                "focus.start",
+                data: [
+                    "intention": intention,
+                    "duration_s": String(Int(duration))
+                ]
+            )
             return newSession
         } catch {
+            MINDTelemetry.error(
+                "focus.start.failed",
+                data: ["error": String(describing: error)]
+            )
             return nil
         }
     }
@@ -106,6 +117,10 @@ public final class FocusController {
     }
 
     public func end() {
+        MINDTelemetry.info(
+            "focus.end",
+            data: ["intention": session?.intention ?? "(none)"]
+        )
         Task { [weak self] in
             await self?.endActivity(phase: .completed, persistRecord: true)
         }
