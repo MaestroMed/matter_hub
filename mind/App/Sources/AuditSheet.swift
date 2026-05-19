@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
+import CoreImage
+import CoreImage.CIFilterBuiltins
 import AuditKit
 import ClientPortalKit
 import DesignSystem
 import GraphCore
 import LinearKit
+import LiveBroadcastKit
 import NotionKit
 import Settings
 import VisualKit
@@ -37,6 +40,15 @@ struct AuditSheet: View {
     /// Mehdi doesn't accidentally double-push the same QW.
     @State private var linearPushedIDs: Set<UUID> = []
     @State private var linearToast: String?
+
+    // v0.22 — Live broadcast state. `broadcastEnabled` is the form
+    // toggle; flipping it on doesn't mint a session yet — the share
+    // sheet only appears after Mehdi taps "Lancer l'audit" so the URL
+    // and QR code reflect the actual broadcast that just started.
+    @State private var broadcastEnabled: Bool = false
+    @State private var pendingBroadcast: BroadcastShareItem?
+    @State private var broadcastError: String?
+    @State private var broadcastCopiedToast: Bool = false
     @FocusState private var urlFocused: Bool
 
     init(initialURL: String? = nil) {
@@ -97,6 +109,34 @@ struct AuditSheet: View {
         } message: {
             Text(linearToast ?? "")
         }
+        // v0.22 — Broadcast share sheet. Presented once the session is
+        // minted (after the user taps "Lancer l'audit" with the toggle
+        // on). The audit itself starts in parallel — the sheet stays
+        // up so Mehdi can copy the link / show the QR code to the
+        // client while the probes fan out underneath.
+        .sheet(item: $pendingBroadcast) { item in
+            BroadcastShareSheet(
+                session: item.session,
+                clientName: item.clientName,
+                onCopied: {
+                    broadcastCopiedToast = true
+                }
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
+        }
+        .alert(String(localized: "audit.broadcast.error.title", bundle: .main),
+               isPresented: Binding(get: { broadcastError != nil },
+                                    set: { if !$0 { broadcastError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(broadcastError ?? "")
+        }
+        .alert(String(localized: "audit.broadcast.url.copied", bundle: .main),
+               isPresented: $broadcastCopiedToast) {
+            Button("OK", role: .cancel) {}
+        }
     }
 
     private struct ExportSheetReport: Identifiable {
@@ -107,6 +147,16 @@ struct AuditSheet: View {
     private struct VisualBoardReportItem: Identifiable {
         let id = UUID()
         let report: AuditReport
+    }
+
+    /// v0.22 — Wrapper around the freshly-minted broadcast session so
+    /// it can drive a SwiftUI `.sheet(item:)` binding without rolling
+    /// a separate Bool. Identifiable via the token, which is
+    /// guaranteed unique per broadcast.
+    fileprivate struct BroadcastShareItem: Identifiable {
+        let session: LiveBroadcastSession
+        let clientName: String
+        var id: String { session.token }
     }
 
     // MARK: - Header
@@ -175,6 +225,12 @@ struct AuditSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            // v0.22 — Diffuser en direct toggle. When ON, tapping
+            // "Lancer l'audit" mints a broadcast session, presents a
+            // share sheet with the URL + QR + copy CTA, then kicks
+            // off the audit with the live broadcaster attached.
+            broadcastToggleCard
+
             LiquidButton(title: String(localized: "audit.button.start"), systemImage: "magnifyingglass") {
                 startAudit()
             }
@@ -185,6 +241,35 @@ struct AuditSheet: View {
                 .font(.system(.caption, design: .rounded))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
+        }
+    }
+
+    @ViewBuilder
+    private var broadcastToggleCard: some View {
+        LiquidCard(cornerRadius: 18) {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(LiquidPalette.iris.opacity(0.18))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(.callout, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("audit.broadcast.toggle.title", bundle: .main)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    Text("audit.broadcast.toggle.subtitle", bundle: .main)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+                Spacer(minLength: 8)
+                Toggle("", isOn: $broadcastEnabled)
+                    .labelsHidden()
+                    .tint(LiquidPalette.iris)
+            }
+            .padding(16)
         }
     }
 
@@ -1210,10 +1295,43 @@ struct AuditSheet: View {
             url: url,
             name: trimmedName.isEmpty ? nil : trimmedName
         )
-        controller.run(for: client)
-        saved = false
-        pdfURL = nil
-        urlFocused = false
+
+        // v0.22 — If the broadcast toggle is armed, mint the session
+        // BEFORE calling run(for:) so the AuditController seeds the
+        // initial snapshot with the broadcaster attached. If the
+        // session can't be created we surface an error and bail out
+        // before triggering the audit — Mehdi shouldn't be left with
+        // a running audit whose mirror link silently 404s.
+        if broadcastEnabled {
+            Task { @MainActor in
+                do {
+                    let writer = LiveBroadcastWriter()
+                    let session = try await writer.create(for: client)
+                    let adapter = LiveBroadcastAdapter(
+                        session: session,
+                        writer: writer
+                    )
+                    controller.liveBroadcaster = adapter
+                    pendingBroadcast = BroadcastShareItem(
+                        session: session,
+                        clientName: client.displayName
+                    )
+                    controller.run(for: client)
+                    saved = false
+                    pdfURL = nil
+                    urlFocused = false
+                } catch {
+                    broadcastError = String(describing: error)
+                    LiquidHaptics.error()
+                }
+            }
+        } else {
+            controller.liveBroadcaster = nil
+            controller.run(for: client)
+            saved = false
+            pdfURL = nil
+            urlFocused = false
+        }
     }
 
     private func resetForNewAudit() {

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a14" />
+  <title>Audit live · Stripe — MIND</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" />
+  <style>
+  :root { color-scheme: dark; --iris:#6B5DD3; --iris-strong:#8C7DF3; --ink:#0a0a14; --fg:rgba(255,255,255,0.92); --fg-dim:rgba(255,255,255,0.62); --fg-mute:rgba(255,255,255,0.40); --green:#34d399; --red:#f87171; --yellow:#fbbf24; --glass:rgba(255,255,255,0.04); --glass-stroke:rgba(255,255,255,0.10); --radius-lg:24px; --radius-md:16px; --shadow:0 30px 60px rgba(0,0,0,0.45); --font-sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',SFMono-Regular,Menlo,monospace; --ease:cubic-bezier(0.22,1,0.36,1); }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--fg);font-family:var(--font-sans);min-height:100dvh;-webkit-font-smoothing:antialiased}
+  body{overflow-x:hidden}
+  .bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(1200px 600px at 20% -10%,rgba(107,93,211,0.45),transparent 60%),radial-gradient(900px 500px at 110% 10%,rgba(54,84,220,0.35),transparent 65%),linear-gradient(180deg,#0a0a14,#050510)}
+  .stage{position:relative;z-index:2;max-width:1140px;margin:0 auto;padding:clamp(24px,4vw,56px) clamp(16px,4vw,40px) 96px;display:flex;flex-direction:column;gap:28px}
+  .hero{text-align:center;padding:clamp(16px,4vw,40px) 0 8px}
+  .hero__client{font-size:clamp(48px,8vw,96px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin:16px 0 12px;background:linear-gradient(180deg,#fff,rgba(255,255,255,0.72));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero__host{font-family:var(--font-mono);font-size:clamp(14px,1.4vw,18px);color:var(--fg-dim);margin:0 0 4px}
+  .hero__byline{font-size:13px;color:var(--fg-mute);letter-spacing:0.18em;text-transform:uppercase;margin:12px 0 0}
+  .status-pill{display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-stroke);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:var(--fg-dim)}
+  .status-pill__dot{width:8px;height:8px;border-radius:999px;background:var(--iris);animation:pulse 1.8s var(--ease) infinite}
+  .status-pill.is-done .status-pill__dot{background:var(--green);animation:none}
+  .status-pill.is-failed .status-pill__dot{background:var(--red);animation:none}
+  .status-pill.is-done .status-pill__label,.status-pill.is-failed .status-pill__label{color:var(--fg)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(107,93,211,0.6)}70%{box-shadow:0 0 0 14px rgba(107,93,211,0)}100%{box-shadow:0 0 0 0 rgba(107,93,211,0)}}
+  .card{position:relative;background:var(--glass);border:1px solid var(--glass-stroke);border-radius:var(--radius-lg);padding:clamp(20px,3vw,32px);-webkit-backdrop-filter:blur(28px);backdrop-filter:blur(28px);box-shadow:var(--shadow)}
+  .card__header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+  .card__title{font-size:13px;margin:0;font-weight:600;letter-spacing:0.18em;color:var(--fg-mute);text-transform:uppercase}
+  .card__meta{font-family:var(--font-mono);font-size:12px;color:var(--fg-dim)}
+  .probes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .probe{display:flex;flex-direction:column;gap:8px;padding:16px 14px;border-radius:var(--radius-md);background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);transition:background .45s var(--ease),border-color .45s var(--ease)}
+  .probe[data-state="ok"]{background:linear-gradient(180deg,rgba(52,211,153,0.10),rgba(52,211,153,0.04));border-color:rgba(52,211,153,0.35)}
+  .probe[data-state="failed"]{background:linear-gradient(180deg,rgba(248,113,113,0.12),rgba(248,113,113,0.04));border-color:rgba(248,113,113,0.40)}
+  .probe[data-state="running"]{background:linear-gradient(180deg,rgba(107,93,211,0.18),rgba(107,93,211,0.04));border-color:rgba(107,93,211,0.55)}
+  .probe__top{display:flex;align-items:center;justify-content:space-between}
+  .probe__label{font-size:13px;font-weight:600;color:var(--fg)}
+  .probe__state{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:rgba(255,255,255,0.18);color:var(--ink);font-size:11px;font-weight:700}
+  .probe[data-state="ok"] .probe__state{background:var(--green);color:#042b1d}
+  .probe[data-state="failed"] .probe__state{background:var(--red);color:#2c0808}
+  .probe[data-state="running"] .probe__state{background:transparent;border:2px solid var(--iris-strong);border-top-color:transparent;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .probe__meta{font-family:var(--font-mono);font-size:11px;color:var(--fg-mute)}
+  .probe__error{font-size:11px;color:var(--red);opacity:.85}
+  .gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px}
+  .gauge{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .gauge__svg{width:110px;height:110px;transform:rotate(-90deg)}
+  .gauge__track{stroke:rgba(255,255,255,0.08)}
+  .gauge__bar{stroke:var(--iris-strong);stroke-linecap:round;transition:stroke-dashoffset .9s var(--ease)}
+  .gauge[data-tone="green"] .gauge__bar{stroke:var(--green)}
+  .gauge[data-tone="orange"] .gauge__bar{stroke:var(--yellow)}
+  .gauge[data-tone="red"] .gauge__bar{stroke:var(--red)}
+  .gauge__pct{position:relative;margin-top:-78px;font-size:24px;font-weight:700;font-feature-settings:"tnum"}
+  .gauge__label{font-size:11px;font-weight:600;color:var(--fg-dim);text-transform:uppercase;letter-spacing:0.12em}
+  .synthesis{font-size:15px;line-height:1.65;color:var(--fg);white-space:pre-wrap}
+  .synthesis__caret{display:inline-block;width:8px;height:18px;margin-left:2px;background:var(--iris-strong);vertical-align:-3px;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .cta-card{background:linear-gradient(135deg,rgba(107,93,211,0.32),rgba(28,28,60,0.85));border-color:rgba(107,93,211,0.45);text-align:center}
+  .cta-card__title{margin:0 0 8px;font-size:clamp(24px,3vw,36px);font-weight:700}
+  .cta-card__sub{margin:0 0 18px;color:var(--fg-dim)}
+  .cta-card__btn{display:inline-block;padding:14px 28px;border-radius:999px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none;transition:transform .4s var(--ease)}
+  .cta-card__btn:hover{transform:translateY(-2px)}
+  .footer{text-align:center;font-size:12px;color:var(--fg-mute);margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="stage">
+    <header class="hero">
+      <div class="status-pill" id="statusPill"><span class="status-pill__dot"></span><span class="status-pill__label" id="statusPillLabel">En attente</span></div>
+      <h1 class="hero__client" id="clientName">Stripe</h1>
+      <p class="hero__host" id="hostLine">stripe.com</p>
+      <p class="hero__byline">Audit MIND — diffusion en direct</p>
+    </header>
+    <section class="card"><div class="card__header"><h2 class="card__title">14 sondes</h2><span class="card__meta" id="probesMeta">— / —</span></div><div class="probes-grid" id="probesGrid"></div></section>
+    <section class="card" id="scoringCard" hidden><div class="card__header"><h2 class="card__title">Scoring</h2><span class="card__meta" id="overallLabel"></span></div><div class="gauges" id="gauges"></div></section>
+    <section class="card" id="synthesisCard" hidden><div class="card__header"><h2 class="card__title">Synthèse</h2></div><article class="synthesis" id="synthesis"></article></section>
+    <section class="card cta-card" id="ctaCard" hidden><div><h2 class="cta-card__title">Audit terminé.</h2><p class="cta-card__sub">Discutons des prochaines étapes.</p><a class="cta-card__btn" href="mailto:hello@mehdi.app">Discuter avec Mehdi</a></div></section>
+    <footer class="footer"><span>Diffusé par <strong>MIND</strong></span><span> · </span><span id="updatedAt">Mise à jour…</span></footer>
+  </main>
+  <script>
+  const PROBE_LABELS={pageSpeed:'PageSpeed',security:'Sécurité',email:'Email DNS',domain:'Domaine',mobile:'App iOS',schema:'Schema.org',openGraph:'OpenGraph',crawlability:'Crawlability',compliance:'Compliance',analytics:'Analytics',payment:'Paiement',cdn:'CDN',trust:'Trustpilot'};
+  const PROBE_ORDER=['pageSpeed','security','email','domain','mobile','schema','openGraph','crawlability','compliance','analytics','payment','cdn','trust'];
+  const SCORE_LABELS={performance:'Performance',seo:'SEO',security:'Sécurité',brand:'Brand',mobile:'Mobile'};
+  let lastHash='';
+  const esc=s=>(s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'));
+  const tone=v=>v>=80?'green':v>=50?'orange':'red';
+  function renderProbes(s){const g=document.getElementById('probesGrid');const byKind={};(s.probes||[]).forEach(p=>byKind[p.kind]=p);let ok=0,failed=0,html='';for(const k of PROBE_ORDER){const p=byKind[k]||{kind:k,state:'pending'};if(p.state==='ok')ok++;if(p.state==='failed')failed++;const lbl=PROBE_LABELS[k]||k;const icon=p.state==='ok'?'✓':p.state==='failed'?'✕':p.state==='running'?'':'·';const meta=p.durationMs!=null&&p.state==='ok'?(p.durationMs+' ms'):'';const err=p.error?'<div class="probe__error">'+esc(p.error)+'</div>':'';html+='<div class="probe" data-state="'+esc(p.state)+'"><div class="probe__top"><span class="probe__label">'+esc(lbl)+'</span><span class="probe__state">'+icon+'</span></div>'+(meta?'<div class="probe__meta">'+esc(meta)+'</div>':'')+err+'</div>'}g.innerHTML=html;document.getElementById('probesMeta').textContent=ok+' OK · '+failed+' erreurs · '+PROBE_ORDER.length+' au total'}
+  function renderScoring(s){const c=document.getElementById('scoringCard');if(!s.scoring){c.hidden=true;return}c.hidden=false;document.getElementById('overallLabel').textContent='Score global '+s.scoring.overall+' / 100';const axes=['performance','seo','security','brand','mobile'];const circ=2*Math.PI*42;let html='';for(const a of axes){const v=s.scoring[a]||0;const off=circ*(1-v/100);html+='<div class="gauge" data-tone="'+tone(v)+'"><svg class="gauge__svg" viewBox="0 0 100 100"><circle class="gauge__track" cx="50" cy="50" r="42" fill="none" stroke-width="8"/><circle class="gauge__bar" cx="50" cy="50" r="42" fill="none" stroke-width="8" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/></svg><div class="gauge__pct">'+v+'</div><div class="gauge__label">'+esc(SCORE_LABELS[a]||a)+'</div></div>'}document.getElementById('gauges').innerHTML=html}
+  function renderSynth(s){const c=document.getElementById('synthesisCard');const t=document.getElementById('synthesis');if(!s.synthesis){c.hidden=true;return}c.hidden=false;const caret=s.phase==='synthesizing'?'<span class="synthesis__caret"></span>':'';t.innerHTML=esc(s.synthesis)+caret}
+  function renderCTA(s){document.getElementById('ctaCard').hidden=s.phase!=='completed'}
+  function renderPill(s){const p=document.getElementById('statusPill');const l=document.getElementById('statusPillLabel');p.classList.remove('is-done','is-failed');let t='En direct';if(s.phase==='probing')t='Sondes en cours';else if(s.phase==='synthesizing')t='Synthèse en cours';else if(s.phase==='completed'){t='Terminé';p.classList.add('is-done')}else if(s.phase==='failed'){t='Échec';p.classList.add('is-failed')}l.textContent=t}
+  function render(s){if(!s)return;document.getElementById('clientName').textContent=s.clientName||'';document.getElementById('hostLine').textContent=s.host||'';renderPill(s);renderProbes(s);renderScoring(s);renderSynth(s);renderCTA(s);try{document.getElementById('updatedAt').textContent='Mis à jour à '+new Date(s.updatedAt).toLocaleTimeString('fr-FR')}catch(e){}}
+  async function poll(){try{const r=await fetch('./state.json',{cache:'no-store'});if(!r.ok)throw 0;const s=await r.json();const h=(s.updatedAt||'')+':'+(s.synthesis?s.synthesis.length:0)+':'+(s.probes?s.probes.map(p=>p.state).join(','):'');if(h!==lastHash){lastHash=h;render(s)}}catch(e){}}
+  renderProbes({probes:[]});poll();setInterval(poll,800);
+  </script>
+</body>
+</html>

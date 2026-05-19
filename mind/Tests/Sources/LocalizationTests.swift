@@ -223,4 +223,33 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("audit.export.portal.success.share",        lang: "en"), "Share folder")
         XCTAssertEqual(localized("audit.export.portal.success.share",        lang: "fr"), "Partager le dossier")
     }
+
+    /// v0.22 — Live broadcast strings. Locks every FR + EN key
+    /// surfaced by the AuditSheet toggle + the broadcast share sheet
+    /// so a careless catalogue edit can't ship a broadcast flow where
+    /// half the labels fall back to raw keys.
+    func test_liveBroadcastStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.broadcast.toggle.title",    lang: "en"), "Broadcast live")
+        XCTAssertEqual(localized("audit.broadcast.toggle.title",    lang: "fr"), "Diffuser en direct")
+
+        XCTAssertEqual(localized("audit.broadcast.toggle.subtitle", lang: "en"),
+                       "Your client can follow the audit live in their browser.")
+        XCTAssertEqual(localized("audit.broadcast.toggle.subtitle", lang: "fr"),
+                       "Le client peut suivre l'audit en temps réel sur son navigateur.")
+
+        XCTAssertEqual(localized("audit.broadcast.sheet.title",     lang: "en"), "Live broadcast ready")
+        XCTAssertEqual(localized("audit.broadcast.sheet.title",     lang: "fr"), "Diffusion en direct prête")
+
+        XCTAssertEqual(localized("audit.broadcast.url.copy",        lang: "en"), "Copy link")
+        XCTAssertEqual(localized("audit.broadcast.url.copy",        lang: "fr"), "Copier le lien")
+
+        XCTAssertEqual(localized("audit.broadcast.url.copied",      lang: "en"), "Link copied")
+        XCTAssertEqual(localized("audit.broadcast.url.copied",      lang: "fr"), "Lien copié")
+
+        XCTAssertEqual(localized("audit.broadcast.qr.title",        lang: "en"), "Scan to open")
+        XCTAssertEqual(localized("audit.broadcast.qr.title",        lang: "fr"), "Scanner pour ouvrir")
+
+        XCTAssertEqual(localized("audit.broadcast.error.title",     lang: "en"), "Broadcast failed")
+        XCTAssertEqual(localized("audit.broadcast.error.title",     lang: "fr"), "Échec de la diffusion")
+    }
 }

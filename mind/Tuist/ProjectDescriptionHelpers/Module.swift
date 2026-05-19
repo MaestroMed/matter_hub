@@ -18,6 +18,7 @@ public enum Module: String, CaseIterable {
     case notionKit = "NotionKit"
     case linearKit = "LinearKit"
     case clientPortalKit = "ClientPortalKit"
+    case liveBroadcastKit = "LiveBroadcastKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -179,6 +180,27 @@ public enum Module: String, CaseIterable {
             // an in-memory `ClientPortalArchive`, then hands it to the
             // `PortalWriter` actor which writes every file to
             // `Documents/client-portals/<slug>-<date>/`.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.auditKit.rawValue),
+            ]
+        case .liveBroadcastKit:
+            // v0.22 — Live Audit Broadcasting. Spawns a self-contained
+            // static site under `Documents/live-broadcasts/<token>/`
+            // (an `index.html` template + a `state.json` snapshot the
+            // template polls every 800 ms). AuditController mirrors
+            // every probe transition + the final synthesis to that
+            // folder via a `LiveBroadcastSession` handle. Mehdi then
+            // exposes the folder over `cloudflared tunnel` / `ngrok`
+            // / `tailscale serve` / Vercel — no MIND backend required.
+            //
+            // Depends on AuditKit because the writer mirrors the
+            // `ProbeKind` / `Phase` enums + the `AuditReport` value
+            // type. Depends on GraphCore for `MINDTelemetry`
+            // breadcrumbs (`liveBroadcast.created` / `liveBroadcast.
+            // updated` / `liveBroadcast.closed` / `liveBroadcast.
+            // failed`). No DesignSystem dep — the output is HTML and
+            // CSS strings, not SwiftUI.
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),

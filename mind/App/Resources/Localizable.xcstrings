@@ -487,6 +487,186 @@
         }
       }
     },
+    "audit.broadcast.toggle.title": {
+      "comment": "v0.22 · AuditSheet form toggle that arms live broadcasting for the next run.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broadcast live"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diffuser en direct"
+          }
+        }
+      }
+    },
+    "audit.broadcast.toggle.subtitle": {
+      "comment": "v0.22 · Subtitle under the live broadcast toggle, explaining the prospect-side experience.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your client can follow the audit live in their browser."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le client peut suivre l'audit en temps réel sur son navigateur."
+          }
+        }
+      }
+    },
+    "audit.broadcast.sheet.title": {
+      "comment": "v0.22 · Title of the share sheet that appears once a live broadcast is minted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live broadcast ready"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diffusion en direct prête"
+          }
+        }
+      }
+    },
+    "audit.broadcast.sheet.subtitle": {
+      "comment": "v0.22 · Subtitle below the broadcast sheet header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this link to your client — they'll watch the audit unfold live."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoie ce lien à ton client — il verra l'audit se dérouler en direct."
+          }
+        }
+      }
+    },
+    "audit.broadcast.url.copy": {
+      "comment": "v0.22 · Primary CTA inside the broadcast share sheet — copies the URL to the clipboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy link"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le lien"
+          }
+        }
+      }
+    },
+    "audit.broadcast.url.copied": {
+      "comment": "v0.22 · Confirmation toast after the user taps the copy-link button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link copied"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lien copié"
+          }
+        }
+      }
+    },
+    "audit.broadcast.qr.title": {
+      "comment": "v0.22 · Label above the QR code in the broadcast share sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan to open"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanner pour ouvrir"
+          }
+        }
+      }
+    },
+    "audit.broadcast.deploy.hint": {
+      "comment": "v0.22 · Footer hint in the broadcast share sheet — explains how to expose the local folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serve the broadcast folder with `npx serve` and expose it via `cloudflared tunnel`, ngrok, or tailscale serve — or drag-drop it onto Vercel."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoste le dossier de diffusion avec `npx serve` et expose-le via `cloudflared tunnel`, ngrok ou tailscale serve — ou drag-drop sur Vercel."
+          }
+        }
+      }
+    },
+    "audit.broadcast.start.cta": {
+      "comment": "v0.22 · Primary CTA inside the broadcast sheet — starts the audit with the broadcaster attached.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the audit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer l'audit"
+          }
+        }
+      }
+    },
+    "audit.broadcast.error.title": {
+      "comment": "v0.22 · Alert title when the broadcast folder cannot be created.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broadcast failed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la diffusion"
+          }
+        }
+      }
+    },
     "audit.field.name": {
       "extractionState": "manual",
       "localizations": {

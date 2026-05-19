@@ -127,6 +127,11 @@ let testTarget: Target = .target(
         // ceiling) and the actor write helper. AuditKit is already
         // linked transitively via the target.
         .target(name: Module.clientPortalKit.rawValue),
+        // v0.22 — LiveBroadcastWriterTests lock the JSON wire format,
+        // the actor's atomic write contract, the token format, the
+        // HTML template byte budget, and the determinism of the
+        // canonical encoder. AuditKit is already linked transitively.
+        .target(name: Module.liveBroadcastKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

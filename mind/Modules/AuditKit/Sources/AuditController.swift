@@ -117,6 +117,14 @@ public final class AuditController {
     /// to surface the "Retry failed probes" CTA.
     public private(set) var probeStates: [ProbeKind: ProbeState] = [:]
 
+    /// v0.22 — Optional live broadcaster. When non-nil, every probe
+    /// transition + the final synthesis is mirrored to disk via the
+    /// `AuditLiveBroadcaster` protocol so a static HTML viewer can
+    /// follow the audit in real time. Nil = legacy behaviour, zero
+    /// overhead. The host App layer sets this on the singleton just
+    /// before calling `run(for:)`.
+    public var liveBroadcaster: AuditLiveBroadcaster?
+
     /// Cached probe results for the current run. Retry merges new
     /// results on top of these so a re-run only touches failed probes.
     private var lastPerformance: AuditReport.PerformanceMetrics?
@@ -194,9 +202,17 @@ public final class AuditController {
         )
         phase = .probing
 
+        // v0.22 — Mirror the initial snapshot to the broadcaster so a
+        // polling browser sees the 14 probes light up as `running`
+        // immediately, before the first network call returns.
+        let broadcaster = self.liveBroadcaster
+        let seed = self.probeStates
         currentTask = Task { [weak self] in
             guard let self else { return }
             await self.notifier.requestPermissionIfNeeded()
+            if let broadcaster {
+                await broadcaster.runStarted(client: client, probeStates: seed)
+            }
             await self.execute(for: client, retryOnly: nil)
         }
     }
@@ -275,9 +291,15 @@ public final class AuditController {
                 ]
             )
             await notifier.notifyAuditCompleted(report: synthesized)
+            if let broadcaster = self.liveBroadcaster {
+                await broadcaster.auditCompleted(report: synthesized)
+            }
         } catch is CancellationError {
             self.phase = .idle
             MINDTelemetry.info("audit.cancelled", data: ["host": host])
+            if let broadcaster = self.liveBroadcaster {
+                await broadcaster.auditFailed(message: "Audit annulé")
+            }
         } catch {
             self.error = error.localizedDescription
             self.phase = .failed
@@ -289,6 +311,9 @@ public final class AuditController {
                 client: client,
                 message: error.localizedDescription
             )
+            if let broadcaster = self.liveBroadcaster {
+                await broadcaster.auditFailed(message: error.localizedDescription)
+            }
         }
     }
 
@@ -366,17 +391,32 @@ public final class AuditController {
     /// Runs a single probe, recording state transitions on the MainActor.
     /// `enabled == false` is the "skip this probe" branch used by retry
     /// — the prior state (`.ok`) is preserved.
+    ///
+    /// v0.22 — Probe transitions also mirror to the optional
+    /// `liveBroadcaster`. The duration is measured here (in ms) so the
+    /// JSON snapshot can render a "PageSpeed · 312 ms" sub-label.
     private func runProbe<T: Sendable>(
         _ kind: ProbeKind,
         enabled: Bool = true,
         _ body: @Sendable @escaping () async throws -> T
     ) async -> T? {
         guard enabled else { return nil }
+        let start = ContinuousClock.now
+        let broadcaster = self.liveBroadcaster
         do {
             let value = try await body()
+            let durationMs = Self.elapsedMs(since: start)
             await MainActor.run { self.probeStates[kind] = .ok }
+            if let broadcaster {
+                await broadcaster.probeStateChanged(
+                    kind: kind,
+                    state: .ok,
+                    durationMs: durationMs
+                )
+            }
             return value
         } catch {
+            let durationMs = Self.elapsedMs(since: start)
             let reason = error.localizedDescription
             await MainActor.run {
                 self.probeStates[kind] = .failed(reason: reason)
@@ -385,8 +425,24 @@ public final class AuditController {
                 "audit.probe.failed",
                 data: ["probe": kind.rawValue, "reason": reason]
             )
+            if let broadcaster {
+                await broadcaster.probeStateChanged(
+                    kind: kind,
+                    state: .failed(reason: reason),
+                    durationMs: durationMs
+                )
+            }
             return nil
         }
+    }
+
+    /// Wall-time elapsed since `start`, rounded to milliseconds.
+    /// Pulled out so tests can assert against it without dragging in
+    /// a `ContinuousClock` mock.
+    private nonisolated static func elapsedMs(since start: ContinuousClock.Instant) -> Int {
+        let elapsed = ContinuousClock.now - start
+        return Int((elapsed.components.attoseconds / 1_000_000_000_000_000)
+                   + elapsed.components.seconds * 1_000)
     }
 
     /// Best-effort label when the user didn't provide a name. "stripe.com"
