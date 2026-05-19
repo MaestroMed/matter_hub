@@ -341,7 +341,7 @@ transcribes via SFSpeech → creates Node on CloudKit → syncs to iPhone.
 **Acceptance**: 10-second voice capture appears on iPhone within
 30s.
 
-### v0.22.2 — Direct WebSocket broadcasting (Option B) ⏳
+### v0.22.2 — Direct WebSocket broadcasting (Option B) ✅
 **What**: Replace the polling JSON+static-HTML pipeline with an
 embedded HTTP+WebSocket server inside the iOS app via `NWListener`
 (Network framework). State updates push directly to connected
@@ -349,6 +349,7 @@ browsers instead of polling. More magic, more fragile — needs the
 viewer to be on the same Wi-Fi or expose via tailscale / ngrok.
 **Acceptance**: zero-latency probe transitions on a browser
 connected to the iPhone's local HTTP server.
+Shipped 2026-05-19: new `LiveBroadcastWebSocketServer` actor in LiveBroadcastKit — binds `NWListener` on `127.0.0.1:<port>` (default 8787, `0` requests an ephemeral port returned via `boundPort`), serves the HTML template on `GET /`, upgrades `GET /ws` to a WebSocket via RFC 6455 (computes `Sec-WebSocket-Accept` from `Sec-WebSocket-Key + 258EAFA5-E914-47DA-95CA-C5AB0DC85B11` magic via an inlined pure-Swift SHA-1 implementation so no extra framework import is needed), tracks connected `NWConnection` clients with a 16-client ceiling (503 on overflow), broadcasts `LiveBroadcastState.encoded()` JSON as unmasked text frames (FIN=1, opcode=1, RFC 6455 §5.2 length forms for <126 / 16-bit / 64-bit payloads), caches the last snapshot so newly-connected clients hydrate immediately, prunes failed/cancelled connections via `stateUpdateHandler`, and posts `liveBroadcast.ws.{ready,started,stopped,clientConnected,clientFailed,encodeFailed}` telemetry. New `LiveBroadcastWebSocketAdapter` concrete `AuditLiveBroadcaster` (mirrors the polling adapter but pushes through the server instead of the disk writer — keeps cached state under `NSLock` so simultaneous `MainActor` callbacks + connection-queue prune events stay consistent). New `LiveBroadcastHTMLTemplate.renderWebSocket(clientName:host:)` variant — same Liquid Glass dark cinematic CSS as the polling template but the trailing `<script>` opens a `new WebSocket(location.protocol === 'https:' ? 'wss:' : 'ws:' + '//' + location.host + '/ws')` and re-renders on `message` events; auto-reconnects every 1 s on `close`/`error` with the status pill flipping to "Reconnexion…". Public `HTTPRequestHead` parser ships alongside for unit testing the upgrade detection (`isWebSocketUpgrade(forPath:)` accepts `Connection: keep-alive, Upgrade` as browsers actually send). Both pipelines (polling + WebSocket) can run side by side — the WebSocket layer doesn't replace the disk writer, it offers a zero-latency alternative for same-LAN viewers. Tests: 14 new `LiveBroadcastWebSocketServerTests` cover frame encoding (short / 16-bit / mask-bit-clear), `Sec-WebSocket-Accept` derivation (RFC 6455 sample `s3pPLMBiTxaQ9kYGzzhZRbK+xOo=` + input-dependence), HTTP request parsing (case-insensitive header lookup, mixed `Connection` header detection, plain GET rejection), URL helper (`makeURL(host:port:)`), WebSocket template variant (no polling references, contains `new WebSocket(`, stays under 50 KB), server end-to-end (boots on ephemeral port, raw `GET /` returns the WebSocket HTML), broadcast-without-clients is safe (no-op when no clients yet, snapshot cached for next connect), and adapter lifecycle mirroring (initial probes pending → probe ok → audit completed with scoring + synthesis + pitch). 424 tests total, 12 skipped, 0 failures (was 410 in v0.26). Build SUCCEEDED on iPhone 17 Pro simulator. Screenshot at `mind/screenshots/v0.22.2.png` shows the host app launching clean on HomeView — the WebSocket server only spins inside the AuditSheet flow, matching the v0.22 host-launches-clean vision-verify bar.
 
 ### v0.23 — Generative Before/After Site Mockups ✅
 Shipped 2026-05-19: new `RedesignMockup` value type lives in AuditKit alongside `AuditReport.mockups: [RedesignMockup]` (optional, defaults to `[]`, backward-compatible custom Codable decoder so payloads serialised before v0.23 still round-trip). New `RedesignMockupSource` protocol declared in AuditKit is the inversion point the controller plugs into. New `RedesignMockupPrompt` (pure namespace) + `RedesignMockupGenerator` (actor) + `RedesignMockupSourceAdapter` (conforms VisualKit's generator to AuditKit's protocol) live in VisualKit, reusing the existing `OpenAIImageClient` + `OpenAIAPIKeyStore` so the OpenAI key + endpoint configuration stay centralised. `RedesignMockupGenerator.generate(…)` fans out the 3 prompts in parallel via TaskGroup with per-mockup soft-fail (one rate-limited request leaves the carousel with 2 tiles instead of nuking the batch); telemetry breadcrumbs (`redesignMockup.generation.started/completed/failed`) bounce onto MainActor through async shims so the actor stays off the main thread. `AuditController` gains `mockupSource: RedesignMockupSource?` + `kickOffMockupGeneration(source:report:)` that fires a detached Task after the report lands and folds the result back into `report.mockups` via a `generatedAt` guard so a fresh audit in flight doesn't get poisoned. `AuditSheet` adds a "Vision : votre site, refait" section between "Synthèse" and "Quick Wins" with 3 branches — populated → horizontal scroll-snap carousel of 320×180 `LiquidCard`-tinted tiles tap → full-screen modal showing the high-res PNG + the quick-win brief; empty + key configured → 3 shimmer skeletons + "Génération en cours…" progress label; empty + key missing → soft hint card pointing to Settings (rendered only when there's at least 1 quick win to visualize). `startAudit` re-reads `OpenAIAPIKeyStore` on every run so a freshly pasted key takes effect on the next audit without relaunch. `HTMLTemplates.visionSection(report:)` injects a matching gallery into the Client Portal HTML between Synthesis + Quick Wins — each mockup embedded as a `data:image/png;base64,…` URL so the portal folder stays single-file self-contained; gallery uses the same `scroll-snap-type: x mandatory` pattern as the Strategic Bets timeline for visual consistency. 11 KB of Vision CSS (gallery + card + media + caption) sits next to the Quick Wins block. 4 new MINDTelemetry breadcrumbs (`redesignMockup.generation.started/completed/failed/aborted` + `redesignMockup.tapped`). 6 new FR/EN xcstrings keys (`audit.vision.section.title`, `audit.vision.generating`, `audit.vision.empty.keyMissing`, `audit.vision.tap.detail`, `portal.vision.section.title`, `portal.vision.caption.prefix`). Tests: 11 new `RedesignMockupPromptTests` lock the pure builder — client name + host surface in the body, quick-win title + detail thread through verbatim, iris/aqua hex palette (`#5E5BD8` / `#5EE9D8`) anchored in every prompt, FR copy-language hint preserved for every persona, "no logos, no UI chrome" tail constraint, fallback prompt grounds in the prospect when client name is empty, `selectQuickWins` truncates at 3 + preserves priority order + empty-input → empty-output, determinism for identical inputs, `derivedMockupTitle` strips trailing punctuation + truncates at 48 chars with ellipsis. `LocalizationTests` extended with `test_redesignVisionStrings_resolveBothLanguages` (12 asserts FR + EN). 356 tests total, 12 skipped, 0 failures (was 344 in v0.22). Build SUCCEEDED on iPhone 17 Pro simulator. Screenshot at `mind/screenshots/v0.23.png` shows the host app launching clean on HomeView — the Vision section only renders inside AuditSheet after a real audit completes, which matches the documented vision-verify bar (host-launches-clean). Sample portal at `mind/screenshots/v0.23-portal.html` (10 KB) shows the structure end-to-end with placeholder SVG rectangles standing in for the GPT Image 2 PNGs — open in any browser to inspect the Liquid Glass gallery aesthetic.
@@ -537,11 +538,29 @@ Same SFSpeech flow as iPhone. Useful for hands-free note-taking
 while driving. **Acceptance**: app appears in CarPlay menu, voice
 capture creates Node. Blocked on Apple CarPlay entitlement request.
 
-### v0.27 — Lock Screen widgets ⏳
+### v0.27 — Lead Scoring Engine ✅
+**What**: Every client/prospect Node gets a 0–100 lead score every
+render — ICP fit (0–40) + buying signals (0–40) + engagement (0–20)
+— with three-tier colour-coded badges (🔥 hot 80+, ☀️ warm 50–79,
+❄️ cold <50). ClientsView sorts by score desc by default with a
+segmented control for recent / alphabetical, the badge taps into a
+breakdown modal explaining the 3 sub-scores + reasoning bullets,
+and HomeView gains a "Top leads 🔥" card listing the 3 hottest
+non-completed prospects. **Acceptance**: heuristic is pure +
+deterministic, breakdown modal opens on tap, sort segmented control
+flips order live, Home Top leads card lists 3 hottest with badges.
+Shipped 2026-05-19: new `LeadScore` + `LeadTemperature` + `LeadScorer`
+in AuditKit (pure heuristic + optional aiEnhanced), 23 new pure
+tests in `LeadScorerTests`, 14 new FR/EN localizable keys, README
+section added.
+
+### v0.27.1 — Lock Screen widgets ⏳
 **What**: Lock Screen widgets (circular, rectangular, inline) for
 focus timer + quick capture + today's brief. **Acceptance**: all 3
 widget styles render correctly on lock screen, tap deep-links into
-app.
+app. (Deferred from v0.27 to make room for the Lead Scoring Engine
+pivot — the score is the load-bearing "who do I call next" signal
+that the Lock Screen widgets will eventually surface anyway.)
 
 ### v0.28 — Standby mode dashboard ⏳
 **What**: When iPhone is docked in landscape (Standby), show a full-

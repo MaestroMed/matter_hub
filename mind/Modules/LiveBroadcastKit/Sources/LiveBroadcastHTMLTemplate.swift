@@ -125,6 +125,113 @@ public enum LiveBroadcastHTMLTemplate {
     /// at 50 KB per ULTRAPLAN acceptance.
     public static let maxBytes: Int = 50_000
 
+    /// v0.22.2 — WebSocket-driven variant of the template. Same CSS
+    /// + DOM as `render(...)`, but the bottom `<script>` opens a
+    /// WebSocket connection to `ws://<host>/ws` instead of polling
+    /// `./state.json` every 800 ms. Renders state updates the moment
+    /// they arrive (no 800 ms tax).
+    ///
+    /// Designed for the in-app embedded HTTP server (`LiveBroadcastWebSocketServer`).
+    /// The server hands out this HTML on `GET /` and accepts the
+    /// upgrade on `GET /ws`. Connection is anchored at `location.host`
+    /// so the same template works whether the user opens
+    /// `http://192.168.1.42:8787/`, `http://iphone.local:8787/`, or
+    /// a tailscale-forwarded URL.
+    public static func renderWebSocket(
+        clientName: String,
+        host: String
+    ) -> String {
+        let escapedClient = htmlEscape(clientName)
+        let escapedHost = htmlEscape(host)
+        return """
+        <!doctype html>
+        <html lang="fr">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+          <meta name="theme-color" content="#0a0a14" />
+          <meta name="referrer" content="no-referrer" />
+          <meta name="robots" content="noindex" />
+          <title>Audit live · \(escapedClient) — MIND</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" />
+          <style>
+        \(inlineCSS)
+          </style>
+        </head>
+        <body>
+          <div class="bg-layer bg-grain" aria-hidden="true"></div>
+          <div class="bg-layer bg-gradient" aria-hidden="true"></div>
+          <div class="bg-layer bg-noise" aria-hidden="true"></div>
+
+          <main class="stage" id="stage">
+            <header class="hero" id="hero">
+              <div class="status-pill" id="statusPill">
+                <span class="status-pill__dot"></span>
+                <span class="status-pill__label" id="statusPillLabel">Connexion…</span>
+              </div>
+              <h1 class="hero__client" id="clientName">\(escapedClient)</h1>
+              <p class="hero__host" id="hostLine">\(escapedHost)</p>
+              <p class="hero__byline">Audit MIND — diffusion WebSocket</p>
+            </header>
+
+            <section class="card probes-card" aria-label="Sondes">
+              <div class="card__header">
+                <h2 class="card__title">14 sondes</h2>
+                <span class="card__meta" id="probesMeta">— / —</span>
+              </div>
+              <div class="probes-grid" id="probesGrid">
+                <!-- probe cards injected by render() -->
+              </div>
+            </section>
+
+            <section class="card scoring-card" id="scoringCard" hidden>
+              <div class="card__header">
+                <h2 class="card__title">Scoring</h2>
+                <span class="card__meta" id="overallLabel"></span>
+              </div>
+              <div class="gauges" id="gauges">
+                <!-- 5 axis gauges injected by render() -->
+              </div>
+            </section>
+
+            <section class="card synthesis-card" id="synthesisCard" hidden>
+              <div class="card__header">
+                <h2 class="card__title">Synthèse</h2>
+              </div>
+              <article class="synthesis" id="synthesis"></article>
+            </section>
+
+            <section class="card cta-card" id="ctaCard" hidden>
+              <div class="cta-card__inner">
+                <h2 class="cta-card__title">Audit terminé.</h2>
+                <p class="cta-card__sub">Discutons des prochaines étapes.</p>
+                <a class="cta-card__btn" id="ctaButton" href="mailto:hello@mehdi.app">Discuter avec Mehdi</a>
+              </div>
+            </section>
+
+            <footer class="footer">
+              <span>Diffusé par <strong>MIND</strong></span>
+              <span class="footer__sep">·</span>
+              <span id="updatedAt">En attente…</span>
+            </footer>
+          </main>
+
+          <noscript>
+            <p style="color:#fff;padding:24px;text-align:center;">
+              JavaScript est nécessaire pour suivre l'audit en direct.
+            </p>
+          </noscript>
+
+          <script>
+        \(inlineWebSocketJS)
+          </script>
+        </body>
+        </html>
+        """
+    }
+
     // MARK: - HTML helpers
 
     /// Bare-minimum HTML escaping for the static interpolated values
@@ -658,5 +765,205 @@ public enum LiveBroadcastHTMLTemplate {
               renderProbes({ probes: [] });
               poll();
               setInterval(poll, POLL_INTERVAL_MS);
+        """
+
+    /// v0.22.2 — WebSocket variant of the JS. Shares the same
+    /// renderer functions as `inlineJS` but replaces the `fetch +
+    /// setInterval` boot with a `WebSocket` opened against
+    /// `ws(s)://<location.host>/ws`. State updates arrive as
+    /// `MessageEvent` payloads (one canonical JSON per frame) and
+    /// re-trigger `render(state)` immediately.
+    ///
+    /// Auto-reconnect: on close / error, we wait 1 s then retry. The
+    /// status pill flips to "Reconnexion…" so the user sees the
+    /// retry visually.
+    private static let inlineWebSocketJS: String = """
+              const PROBE_LABELS = {
+                pageSpeed: 'PageSpeed', security: 'Sécurité', email: 'Email DNS',
+                domain: 'Domaine', mobile: 'App iOS', schema: 'Schema.org',
+                openGraph: 'OpenGraph', crawlability: 'Crawlability',
+                compliance: 'Compliance', analytics: 'Analytics',
+                payment: 'Paiement', cdn: 'CDN', trust: 'Trustpilot'
+              };
+              const PROBE_ORDER = [
+                'pageSpeed','security','email','domain','mobile','schema','openGraph',
+                'crawlability','compliance','analytics','payment','cdn','trust'
+              ];
+              const SCORE_LABELS = {
+                performance: 'Performance', seo: 'SEO', security: 'Sécurité',
+                brand: 'Brand', mobile: 'Mobile'
+              };
+
+              let lastSynthesisLength = 0;
+              let lastPhase = '';
+              let ws = null;
+              let retryTimer = null;
+
+              function escapeHTML(s) {
+                if (s == null) return '';
+                return String(s)
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#39;');
+              }
+
+              function gaugeTone(value) {
+                if (value >= 80) return 'green';
+                if (value >= 50) return 'orange';
+                return 'red';
+              }
+
+              function renderProbes(state) {
+                const grid = document.getElementById('probesGrid');
+                const probesByKind = {};
+                (state.probes || []).forEach(p => { probesByKind[p.kind] = p; });
+
+                let ok = 0, failed = 0;
+                let html = '';
+                for (const kind of PROBE_ORDER) {
+                  const p = probesByKind[kind] || { kind, state: 'pending' };
+                  if (p.state === 'ok') ok++;
+                  if (p.state === 'failed') failed++;
+                  const label = PROBE_LABELS[kind] || kind;
+                  const stateIcon = p.state === 'ok' ? '✓'
+                                  : p.state === 'failed' ? '✕'
+                                  : p.state === 'running' ? '' : '·';
+                  const meta = p.durationMs != null && p.state === 'ok' ? (p.durationMs + ' ms') : '';
+                  const errorLine = p.error ? '<div class="probe__error">' + escapeHTML(p.error) + '</div>' : '';
+                  html += '<div class="probe" data-state="' + escapeHTML(p.state) + '" data-kind="' + escapeHTML(kind) + '">'
+                       +   '<div class="probe__top">'
+                       +     '<span class="probe__label">' + escapeHTML(label) + '</span>'
+                       +     '<span class="probe__state" aria-label="' + escapeHTML(p.state) + '">' + stateIcon + '</span>'
+                       +   '</div>'
+                       +   (meta ? '<div class="probe__meta">' + escapeHTML(meta) + '</div>' : '')
+                       +   errorLine
+                       + '</div>';
+                }
+                grid.innerHTML = html;
+                document.getElementById('probesMeta').textContent =
+                  ok + ' OK · ' + failed + ' erreurs · ' + PROBE_ORDER.length + ' au total';
+              }
+
+              function renderScoring(state) {
+                const card = document.getElementById('scoringCard');
+                if (!state.scoring) { card.hidden = true; return; }
+                card.hidden = false;
+                document.getElementById('overallLabel').textContent =
+                  'Score global ' + state.scoring.overall + ' / 100';
+                const axes = ['performance','seo','security','brand','mobile'];
+                const gauges = document.getElementById('gauges');
+                const circumference = 2 * Math.PI * 42;
+                let html = '';
+                for (const axis of axes) {
+                  const value = state.scoring[axis] != null ? state.scoring[axis] : 0;
+                  const tone = gaugeTone(value);
+                  const offset = circumference * (1 - value / 100);
+                  html += '<div class="gauge" data-tone="' + tone + '">'
+                       +   '<svg class="gauge__svg" viewBox="0 0 100 100">'
+                       +     '<circle class="gauge__track" cx="50" cy="50" r="42" fill="none" stroke-width="8"/>'
+                       +     '<circle class="gauge__bar" cx="50" cy="50" r="42" fill="none" stroke-width="8"'
+                       +       ' stroke-dasharray="' + circumference + '"'
+                       +       ' stroke-dashoffset="' + offset + '"/>'
+                       +   '</svg>'
+                       +   '<div class="gauge__pct">' + value + '</div>'
+                       +   '<div class="gauge__label">' + escapeHTML(SCORE_LABELS[axis] || axis) + '</div>'
+                       + '</div>';
+                }
+                gauges.innerHTML = html;
+              }
+
+              function renderSynthesis(state) {
+                const card = document.getElementById('synthesisCard');
+                const target = document.getElementById('synthesis');
+                if (!state.synthesis) { card.hidden = true; return; }
+                card.hidden = false;
+                const full = state.synthesis;
+                const isGrowing = full.length > lastSynthesisLength;
+                lastSynthesisLength = full.length;
+                const caret = state.phase === 'synthesizing' ? '<span class="synthesis__caret" aria-hidden="true"></span>' : '';
+                target.innerHTML = escapeHTML(full) + caret;
+                if (isGrowing) {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+              }
+
+              function renderCTA(state) {
+                const card = document.getElementById('ctaCard');
+                if (state.phase !== 'completed') { card.hidden = true; return; }
+                card.hidden = false;
+              }
+
+              function renderStatusPill(state, override) {
+                const pill = document.getElementById('statusPill');
+                const label = document.getElementById('statusPillLabel');
+                pill.classList.remove('is-done', 'is-failed');
+                if (override) { label.textContent = override; return; }
+                let text = 'En direct';
+                if (state.phase === 'probing') text = 'Sondes en cours';
+                else if (state.phase === 'synthesizing') text = 'Synthèse en cours';
+                else if (state.phase === 'completed') { text = 'Terminé'; pill.classList.add('is-done'); }
+                else if (state.phase === 'failed') { text = 'Échec'; pill.classList.add('is-failed'); }
+                label.textContent = text;
+              }
+
+              function renderUpdated(state) {
+                const el = document.getElementById('updatedAt');
+                try {
+                  const d = new Date(state.updatedAt);
+                  el.textContent = 'Mis à jour à ' + d.toLocaleTimeString('fr-FR');
+                } catch (e) { el.textContent = ''; }
+              }
+
+              function render(state) {
+                if (!state) return;
+                document.getElementById('clientName').textContent = state.clientName || '';
+                document.getElementById('hostLine').textContent = state.host || '';
+                renderStatusPill(state);
+                renderProbes(state);
+                renderScoring(state);
+                renderSynthesis(state);
+                renderCTA(state);
+                renderUpdated(state);
+                lastPhase = state.phase;
+              }
+
+              function connect() {
+                if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+                const proto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
+                const url = proto + '//' + location.host + '/ws';
+                try {
+                  ws = new WebSocket(url);
+                } catch (e) {
+                  scheduleReconnect();
+                  return;
+                }
+                ws.onopen = function () {
+                  renderStatusPill(null, 'En direct');
+                };
+                ws.onmessage = function (event) {
+                  try {
+                    const state = JSON.parse(event.data);
+                    render(state);
+                  } catch (e) {
+                    // Ignore malformed frame; next message will retry.
+                  }
+                };
+                ws.onclose = function () { scheduleReconnect(); };
+                ws.onerror = function () { try { ws.close(); } catch (e) {} };
+              }
+
+              function scheduleReconnect() {
+                renderStatusPill(null, 'Reconnexion…');
+                if (retryTimer) return;
+                retryTimer = setTimeout(function () {
+                  retryTimer = null;
+                  connect();
+                }, 1000);
+              }
+
+              renderProbes({ probes: [] });
+              connect();
         """
 }
