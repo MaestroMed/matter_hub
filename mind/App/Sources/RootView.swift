@@ -21,11 +21,17 @@ enum MINDTab: Hashable {
 
 struct RootView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.horizontalSizeClass) private var hSizeClass
     @Query private var allNodes: [Node]
 
     @State private var selection: MINDTab = .home
     @State private var isCapturing: Bool = false
     @State private var selectedNode: Node?
+    /// Sidebar visibility on regular-width layouts. SwiftUI manages it
+    /// but binding lets us collapse the sidebar after the user picks
+    /// a row on iPad portrait, where the auto behaviour can leave the
+    /// sidebar covering half the screen.
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     /// Flipped to `true` by OnboardingView's final "Start" button on
     /// first launch. Persisted in standard UserDefaults (not the app
     /// group) because the widget doesn't need to know; only this view
@@ -33,30 +39,15 @@ struct RootView: View {
     @AppStorage("mind.onboarding.completed") private var onboardingDone: Bool = false
 
     var body: some View {
-        ZStack {
-            LiquidBackground()
-                .ignoresSafeArea()
-
-            content
-                .transition(.opacity)
-                .animation(LiquidMetrics.spring, value: selection)
-
-            VStack {
-                Spacer()
-                LiquidTabBar(
-                    selection: $selection,
-                    leading: [
-                        LiquidTab(icon: "house.fill", tag: MINDTab.home),
-                        LiquidTab(icon: "doc.text.fill", tag: MINDTab.notes),
-                    ],
-                    trailing: [
-                        LiquidTab(icon: "person.text.rectangle.fill", tag: MINDTab.clients),
-                        LiquidTab(icon: "gearshape.fill", tag: MINDTab.settings),
-                    ],
-                    onCapture: { isCapturing = true }
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
+        Group {
+            // iPad (and iPhone Plus landscape) get a proper two-column
+            // NavigationSplitView so the sidebar is always visible and
+            // the central pane has more breathing room. iPhone portrait
+            // keeps the Liquid Glass tab bar that defines the brand.
+            if hSizeClass == .regular {
+                regularBody
+            } else {
+                compactBody
             }
         }
         .sheet(isPresented: $isCapturing) {
@@ -107,6 +98,139 @@ struct RootView: View {
         }
     }
 
+    // MARK: - Compact (iPhone portrait, the brand-defining layout)
+
+    private var compactBody: some View {
+        ZStack {
+            LiquidBackground()
+                .ignoresSafeArea()
+
+            content
+                .transition(.opacity)
+                .animation(LiquidMetrics.spring, value: selection)
+
+            VStack {
+                Spacer()
+                LiquidTabBar(
+                    selection: $selection,
+                    leading: [
+                        LiquidTab(icon: "house.fill", tag: MINDTab.home),
+                        LiquidTab(icon: "doc.text.fill", tag: MINDTab.notes),
+                    ],
+                    trailing: [
+                        LiquidTab(icon: "person.text.rectangle.fill", tag: MINDTab.clients),
+                        LiquidTab(icon: "gearshape.fill", tag: MINDTab.settings),
+                    ],
+                    onCapture: { isCapturing = true }
+                )
+                .padding(.horizontal, 24)
+                .padding(.bottom, 12)
+            }
+        }
+    }
+
+    // MARK: - Regular (iPad / iPhone Plus landscape)
+
+    private var regularBody: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            sidebar
+                .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 320)
+                .background {
+                    LiquidBackground()
+                        .ignoresSafeArea()
+                }
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        } detail: {
+            NavigationStack {
+                ZStack {
+                    LiquidBackground()
+                        .ignoresSafeArea()
+                    content
+                        .transition(.opacity)
+                        .animation(LiquidMetrics.spring, value: selection)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            LiquidHaptics.select()
+                            isCapturing = true
+                        } label: {
+                            Label("Quick capture", systemImage: "plus.circle.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        .accessibilityLabel("Quick capture")
+                    }
+                }
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+    }
+
+    /// Liquid Glass sidebar — 4 destinations + a section header that
+    /// doubles as the app's wordmark on tablet.
+    private var sidebar: some View {
+        List(selection: sidebarBinding) {
+            Section {
+                ForEach(MINDTab.allCasesOrdered, id: \.self) { tab in
+                    NavigationLink(value: tab) {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(tab.tint.opacity(0.18))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: tab.icon)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(tab.tint)
+                            }
+                            Text(tab.title)
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .listRowBackground(Color.clear)
+                }
+            } header: {
+                HStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidGradient.primary)
+                            .frame(width: 28, height: 28)
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    Text("MIND")
+                        .font(.system(.title3, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                }
+                .textCase(nil)
+                .padding(.vertical, 8)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .listStyle(.sidebar)
+        .navigationTitle("MIND")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// Bridges the optional-Tab selection NavigationSplitView wants
+    /// (nil = nothing selected on cold start) with our non-optional
+    /// `@State selection`. We default back to `.home` if the user
+    /// somehow lands on nil.
+    private var sidebarBinding: Binding<MINDTab?> {
+        Binding(
+            get: { selection },
+            set: { newValue in
+                if let newValue {
+                    LiquidHaptics.tap()
+                    selection = newValue
+                }
+            }
+        )
+    }
+
     @ViewBuilder
     private var content: some View {
         switch selection {
@@ -120,6 +244,42 @@ struct RootView: View {
             ClientsView()
         case .settings:
             SettingsView()
+        }
+    }
+}
+
+extension MINDTab {
+    /// Stable ordering used by the regular-width sidebar so the
+    /// destinations always appear in the same sequence the iPhone tab
+    /// bar uses, top-to-bottom: Home, Notes, Clients, Settings.
+    static var allCasesOrdered: [MINDTab] {
+        [.home, .notes, .clients, .settings]
+    }
+
+    var title: String {
+        switch self {
+        case .home:     return "Home"
+        case .notes:    return "Notes"
+        case .clients:  return "Clients"
+        case .settings: return "Settings"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .home:     return "house.fill"
+        case .notes:    return "doc.text.fill"
+        case .clients:  return "person.text.rectangle.fill"
+        case .settings: return "gearshape.fill"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .home:     return LiquidPalette.iris
+        case .notes:    return LiquidPalette.iris
+        case .clients:  return .orange
+        case .settings: return .gray
         }
     }
 }
