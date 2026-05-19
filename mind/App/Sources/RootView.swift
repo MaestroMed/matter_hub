@@ -547,6 +547,31 @@ private struct HomeView: View {
             .map { $0 }
     }
 
+    /// v0.27 — Top 3 hottest leads surfaced on the Home screen.
+    /// Reads every non-completed client, computes the heuristic
+    /// score (cheap), keeps the top 3 by total descending. Excludes
+    /// completed clients (`completedAt != nil`) so wrapped deals
+    /// don't pollute the "who do I call next" view.
+    ///
+    /// Stored as a computed property — recomputed on every render.
+    /// At 50µs per node and typical scales (< 100 clients), the
+    /// scan is < 5ms and SwiftUI never feels the work.
+    private var topLeads: [(node: Node, score: LeadScore)] {
+        allNodes
+            .filter { $0.kindRaw == "client" && $0.completedAt == nil }
+            .map { ($0, LeadScorer.heuristic(node: $0)) }
+            .sorted { $0.1.total > $1.1.total }
+            .prefix(3)
+            .map { ($0, $1) }
+    }
+
+    /// v0.27 — Set when the user taps a row in the Top leads card.
+    /// Drives the LeadScoreBreakdownSheet so the user lands on the
+    /// "why is this one hot?" explanation, then a follow-up tap on
+    /// the title routes them to NodeDetailView. Distinct from
+    /// `selectedClient` so the two sheets don't collide.
+    @State private var topLeadBreakdown: LeadBreakdownTarget?
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -570,6 +595,17 @@ private struct HomeView: View {
                     ResumeCarousel(clients: resumableClients) { client in
                         selectedClient = client
                     }
+                }
+
+                // v0.27 — Top leads 🔥 — the three hottest non-
+                // completed prospects, scored live via the
+                // heuristic. Tap the row to open the breakdown
+                // modal; tap the client name to jump straight into
+                // NodeDetailView. Hidden when there are no clients
+                // at all so an empty-state user isn't shown an
+                // empty card.
+                if !topLeads.isEmpty {
+                    topLeadsCard
                 }
 
                 deepFocusCard
@@ -735,6 +771,16 @@ private struct HomeView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
             }
+        }
+        // v0.27 — Top leads breakdown modal. Tapping the LeadScoreBadge
+        // on a Home "Top leads" row opens the same explanatory sheet
+        // ClientsView uses, so the user gets a consistent breakdown
+        // surface regardless of which tab they entered from.
+        .sheet(item: $topLeadBreakdown) { target in
+            LeadScoreBreakdownSheet(client: target.client, score: target.score)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .task {
             // v0.8 — load today's calendar events on appear. Soft-fails
@@ -1368,6 +1414,98 @@ private struct HomeView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    /// v0.27 — Top leads 🔥 card. Lists the 3 hottest non-completed
+    /// prospects with their lead score capsule and a chevron into
+    /// the breakdown modal. Tap the row body → NodeDetailView for
+    /// the client; tap the badge → breakdown modal. Empty-data
+    /// branch shouldn't fire since the parent gate already checks
+    /// `!topLeads.isEmpty`, but we ship a fallback string anyway.
+    private var topLeadsCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 32, height: 32)
+                        Text("🔥")
+                            .font(.system(.subheadline, design: .rounded))
+                    }
+                    Text("home.topLeads.title")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("\(topLeads.count)")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                }
+
+                if topLeads.isEmpty {
+                    Text("home.topLeads.empty")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(topLeads, id: \.node.id) { entry in
+                            topLeadRow(entry.node, score: entry.score)
+                        }
+                    }
+                    .task {
+                        // One telemetry breadcrumb per render to
+                        // confirm the card actually appeared. Cheap
+                        // — fires on every body recomputation when
+                        // the card is visible.
+                        MINDTelemetry.info(
+                            "lead.topLeads.opened",
+                            data: ["count": String(topLeads.count)]
+                        )
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// One row of the top-leads list. Whole row taps into the
+    /// NodeDetailView; the trailing badge stops propagation and
+    /// opens the breakdown modal instead.
+    private func topLeadRow(_ client: Node, score: LeadScore) -> some View {
+        HStack(spacing: 12) {
+            Button {
+                selectedClient = client
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(client.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .lineLimit(1)
+                        .foregroundStyle(.primary)
+                    if let host = Self.topLeadHost(of: client) {
+                        Text(host)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            LeadScoreBadge(score: score) {
+                topLeadBreakdown = LeadBreakdownTarget(client: client, score: score)
+            }
+        }
+    }
+
+    private static func topLeadHost(of node: Node) -> String? {
+        guard let url = URL(string: node.content),
+              let host = url.host(percentEncoded: false) else { return nil }
+        return host.replacingOccurrences(of: "www.", with: "")
     }
 
     private var auditCard: some View {

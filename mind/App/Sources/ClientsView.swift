@@ -3,6 +3,17 @@ import SwiftData
 import DesignSystem
 import GraphCore
 import OutreachKit
+import AuditKit   // v0.27 — LeadScorer + LeadScore + LeadTemperature
+
+/// v0.27 — Sort modes for the ClientsView segmented control.
+/// `.score` is the default so Mehdi opens the Clients tab and
+/// immediately sees who to call next.
+enum ClientSortMode: String, CaseIterable, Identifiable {
+    case score
+    case recent
+    case alphabetical
+    var id: String { rawValue }
+}
 
 struct ClientsView: View {
     @Query(sort: \Node.createdAt, order: .reverse) private var allNodes: [Node]
@@ -18,18 +29,62 @@ struct ClientsView: View {
     /// pre-populated with that client's identity. Distinct from
     /// `selected` so the two sheets don't conflict on dismissal.
     @State private var outreachClient: Node?
+    /// v0.27 — Set when the user taps the LeadScoreBadge on any
+    /// ClientCard. Drives the LeadScoreBreakdownSheet that explains
+    /// the 0–100 score and surfaces the per-axis reasoning bullets.
+    @State private var breakdownTarget: LeadBreakdownTarget?
+    /// v0.27 — Active sort mode. Defaults to .score so the freshest
+    /// "who do I call next" lead lands at the top of the list every
+    /// time Mehdi opens the tab.
+    @State private var sortMode: ClientSortMode = .score
 
     private var clients: [Node] {
         allNodes.filter { $0.kindRaw == "client" }
     }
 
+    /// v0.27 — Search + sort pipeline. Score sort is the default;
+    /// recent sort = lastAccessedAt ?? createdAt, desc; alphabetical
+    /// sort = `title`, ascending, case-insensitive. The score path
+    /// re-computes the heuristic per render — cheap enough (< 50µs
+    /// per node) that we don't bother caching.
     private var filtered: [Node] {
-        guard !searchText.isEmpty else { return clients }
-        let needle = searchText.lowercased()
-        return clients.filter {
-            $0.title.lowercased().contains(needle) ||
-            $0.tags.joined().lowercased().contains(needle) ||
-            $0.content.lowercased().contains(needle)
+        let base: [Node]
+        if searchText.isEmpty {
+            base = clients
+        } else {
+            let needle = searchText.lowercased()
+            base = clients.filter {
+                $0.title.lowercased().contains(needle) ||
+                $0.tags.joined().lowercased().contains(needle) ||
+                $0.content.lowercased().contains(needle)
+            }
+        }
+        return ClientsView.sort(base, mode: sortMode)
+    }
+
+    /// Pure sort helper extracted so the same projection can power
+    /// the HomeView "Top leads" card. Score sort uses
+    /// `LeadScorer.heuristic` desc with `createdAt` as a tie-breaker
+    /// (newest wins on identical scores).
+    static func sort(_ clients: [Node], mode: ClientSortMode) -> [Node] {
+        switch mode {
+        case .score:
+            return clients.sorted { lhs, rhs in
+                let l = LeadScorer.heuristic(node: lhs).total
+                let r = LeadScorer.heuristic(node: rhs).total
+                if l != r { return l > r }
+                return lhs.createdAt > rhs.createdAt
+            }
+        case .recent:
+            return clients.sorted { lhs, rhs in
+                let l = lhs.lastAccessedAt ?? lhs.createdAt
+                let r = rhs.lastAccessedAt ?? rhs.createdAt
+                return l > r
+            }
+        case .alphabetical:
+            return clients.sorted {
+                $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+            }
         }
     }
 
@@ -38,6 +93,9 @@ struct ClientsView: View {
             VStack(alignment: .leading, spacing: 20) {
                 header
                 searchField
+                if !clients.isEmpty {
+                    sortPicker
+                }
                 if filtered.isEmpty {
                     emptyState
                 } else {
@@ -48,7 +106,14 @@ struct ClientsView: View {
                             } label: {
                                 ClientCard(
                                     client: client,
-                                    audits: ClientsView.audits(for: client)
+                                    audits: ClientsView.audits(for: client),
+                                    onBadgeTap: { score in
+                                        LiquidHaptics.select()
+                                        breakdownTarget = LeadBreakdownTarget(
+                                            client: client,
+                                            score: score
+                                        )
+                                    }
                                 )
                             }
                             .buttonStyle(.plain)
@@ -112,6 +177,17 @@ struct ClientsView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(.ultraThinMaterial)
         }
+        // v0.27 — Lead score breakdown modal. Triggered by tapping
+        // the LeadScoreBadge on any ClientCard. Shows the 0–100
+        // total, the three sub-scores with progress bars, and the
+        // reasoning bullets verbatim so Mehdi can audit the
+        // heuristic at any time.
+        .sheet(item: $breakdownTarget) { target in
+            LeadScoreBreakdownSheet(client: target.client, score: target.score)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
     }
 
     /// Best-effort host extraction from a client Node's stored URL.
@@ -160,6 +236,24 @@ struct ClientsView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
         }
+    }
+
+    /// v0.27 — Sort segmented control. Three modes: by lead score
+    /// (default), by most-recently-opened, alphabetical. Picker
+    /// style `.segmented` matches iOS standard so the affordance
+    /// reads instantly. Wrapped in a LiquidCard so it shares the
+    /// glass aesthetic of the search field above.
+    private var sortPicker: some View {
+        Picker(
+            String(localized: "lead.sort.label"),
+            selection: $sortMode
+        ) {
+            Text(String(localized: "lead.sort.score")).tag(ClientSortMode.score)
+            Text(String(localized: "lead.sort.recent")).tag(ClientSortMode.recent)
+            Text(String(localized: "lead.sort.alphabetical")).tag(ClientSortMode.alphabetical)
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal, 4)
     }
 
     @ViewBuilder
@@ -330,6 +424,18 @@ struct DemoAuditTarget: Identifiable, Hashable {
 private struct ClientCard: View {
     let client: Node
     let audits: [Node]
+    /// v0.27 — Tap callback for the LeadScoreBadge. Receives the
+    /// computed score so the parent doesn't have to re-run the
+    /// heuristic when opening the breakdown modal.
+    var onBadgeTap: ((LeadScore) -> Void)? = nil
+
+    /// v0.27 — Live heuristic score. Recomputed on every render
+    /// (cheap — ~50µs per node) so the badge always reflects the
+    /// freshest tags / lastAccessedAt without any cache to
+    /// invalidate.
+    private var leadScore: LeadScore {
+        LeadScorer.heuristic(node: client)
+    }
 
     var body: some View {
         LiquidCard(cornerRadius: 20) {
@@ -348,14 +454,25 @@ private struct ClientCard: View {
                         }
                     }
                     Spacer(minLength: 8)
-                    if let lastAudit = audits.first {
-                        ScoreBadge(score: Self.score(of: lastAudit))
+                    // v0.27 — Lead score badge always renders (every
+                    // prospect gets a number, even if 0). Audit score
+                    // tile renders only when an audit exists,
+                    // tucked underneath in the second row so the
+                    // hierarchy reads: who do I call → audit health.
+                    LeadScoreBadge(score: leadScore) {
+                        onBadgeTap?(leadScore)
                     }
                 }
 
                 HStack(spacing: 10) {
                     if let persona = personaTag {
                         PersonaPill(raw: persona)
+                    }
+                    if let lastAudit = audits.first {
+                        Label("\(Self.score(of: lastAudit))",
+                              systemImage: "speedometer")
+                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
                     }
                     Label(auditCountLabel, systemImage: "doc.text.magnifyingglass")
                         .font(.system(.caption, design: .rounded, weight: .medium))
@@ -448,6 +565,262 @@ struct PersonaPill: View {
         case "tpePme":       return "TPE / PME"
         case "lifestyleDTC": return "DTC"
         default:             return "Other"
+        }
+    }
+}
+
+// MARK: - v0.27 Lead score UI
+
+/// v0.27 — Identifiable wrapper used by the
+/// `breakdownTarget` `.sheet(item:)` presentation in ClientsView.
+/// Carries the computed score so the breakdown modal doesn't have
+/// to re-run the heuristic — keeps the sheet render perfectly in
+/// sync with the badge the user tapped.
+struct LeadBreakdownTarget: Identifiable, Hashable {
+    let client: Node
+    let score: LeadScore
+    var id: UUID { client.id }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(client.id)
+        hasher.combine(score.total)
+    }
+
+    static func == (lhs: LeadBreakdownTarget, rhs: LeadBreakdownTarget) -> Bool {
+        lhs.client.id == rhs.client.id && lhs.score == rhs.score
+    }
+}
+
+/// v0.27 — Color-coded lead score capsule. Three temperatures map
+/// to three gradients: iris-red (hot 🔥), orange (warm ☀️), sky-blue
+/// (cold ❄️). Tap fires the parent's breakdown-modal callback +
+/// emits a `lead.score.breakdown.opened` telemetry breadcrumb.
+///
+/// Why a capsule, not a circle: capsule comfortably holds two
+/// digits + emoji at Dynamic Type sizes without elliptical
+/// distortion, while still being unmistakably a "score" affordance.
+struct LeadScoreBadge: View {
+    let score: LeadScore
+    let onTap: () -> Void
+
+    var body: some View {
+        Button {
+            MINDTelemetry.info(
+                "lead.score.breakdown.opened",
+                data: [
+                    "total": String(score.total),
+                    "temperature": score.temperature.rawValue,
+                ]
+            )
+            onTap()
+        } label: {
+            HStack(spacing: 4) {
+                Text(score.temperature.emoji)
+                    .font(.system(.caption, design: .rounded))
+                Text("\(score.total)")
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(Self.gradient(for: score.temperature))
+            }
+            .overlay {
+                Capsule(style: .continuous)
+                    .stroke(.white.opacity(0.25), lineWidth: 1)
+            }
+            .shadow(color: Self.shadowColor(for: score.temperature), radius: 6, y: 2)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("lead.score.label"))
+        .accessibilityValue(Text("\(score.total), \(Self.tempLabel(score.temperature))"))
+    }
+
+    /// Three palette-aligned gradients. Hot leans on `iris` (the
+    /// brand red-purple) — the visual cue is "this needs heat".
+    /// Warm uses an orange/blush mix to read as sun. Cold blends
+    /// `aqua` + `sky` for an unmistakable cool-blue band.
+    static func gradient(for temp: LeadTemperature) -> LinearGradient {
+        switch temp {
+        case .hot:
+            return LinearGradient(
+                colors: [LiquidPalette.iris, LiquidPalette.blush],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .warm:
+            return LinearGradient(
+                colors: [Color.orange, LiquidPalette.blush],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .cold:
+            return LinearGradient(
+                colors: [LiquidPalette.sky, LiquidPalette.aqua],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
+    static func shadowColor(for temp: LeadTemperature) -> Color {
+        switch temp {
+        case .hot:  return LiquidPalette.iris.opacity(0.35)
+        case .warm: return Color.orange.opacity(0.30)
+        case .cold: return LiquidPalette.sky.opacity(0.30)
+        }
+    }
+
+    static func tempLabel(_ temp: LeadTemperature) -> String {
+        switch temp {
+        case .hot:  return String(localized: "lead.temperature.hot")
+        case .warm: return String(localized: "lead.temperature.warm")
+        case .cold: return String(localized: "lead.temperature.cold")
+        }
+    }
+}
+
+/// v0.27 — Modal that explains the 0–100 lead score: the temperature
+/// band, the three sub-scores as horizontal bars, and the verbatim
+/// reasoning bullets so Mehdi can sanity-check the heuristic at any
+/// time. Presented from ClientsView when the LeadScoreBadge is
+/// tapped, and from HomeView when a "Top leads" row is tapped.
+struct LeadScoreBreakdownSheet: View {
+    let client: Node
+    let score: LeadScore
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                header
+                totalCard
+                breakdownBars
+                reasoningCard
+            }
+            .padding(24)
+            .padding(.top, 24)
+            .padding(.bottom, 80)
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(client.title)
+                .font(.system(.title2, design: .rounded, weight: .semibold))
+                .lineLimit(2)
+            Text(String(localized: "lead.breakdown.title"))
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var totalCard: some View {
+        LiquidCard(cornerRadius: 24) {
+            HStack(alignment: .center, spacing: 16) {
+                Text(score.temperature.emoji)
+                    .font(.system(size: 44))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(score.total) / 100")
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .monospacedDigit()
+                    Text(LeadScoreBadge.tempLabel(score.temperature))
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var breakdownBars: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            BreakdownRow(
+                label: String(localized: "lead.breakdown.icpFit"),
+                value: score.icpFit,
+                ceiling: 40,
+                tint: LiquidPalette.iris
+            )
+            BreakdownRow(
+                label: String(localized: "lead.breakdown.buyingSignals"),
+                value: score.buyingSignals,
+                ceiling: 40,
+                tint: Color.orange
+            )
+            BreakdownRow(
+                label: String(localized: "lead.breakdown.engagement"),
+                value: score.engagement,
+                ceiling: 20,
+                tint: LiquidPalette.sky
+            )
+        }
+    }
+
+    private var reasoningCard: some View {
+        LiquidCard(cornerRadius: 20) {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(score.reasoning, id: \.self) { bullet in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "circle.fill")
+                            .font(.system(size: 6))
+                            .foregroundStyle(LiquidPalette.iris)
+                            .padding(.top, 6)
+                        Text(bullet)
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// v0.27 — One row of the breakdown sheet: label, current value,
+/// gradient bar fill against a ceiling, current/ceiling label on
+/// the right. Pure presentational helper — no business logic.
+private struct BreakdownRow: View {
+    let label: String
+    let value: Int
+    let ceiling: Int
+    let tint: Color
+
+    private var fraction: CGFloat {
+        guard ceiling > 0 else { return 0 }
+        return min(1, max(0, CGFloat(value) / CGFloat(ceiling)))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(label)
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                Spacer()
+                Text("\(value) / \(ceiling)")
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(.ultraThinMaterial)
+                    Capsule()
+                        .fill(LinearGradient(
+                            colors: [tint, tint.opacity(0.6)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        .frame(width: proxy.size.width * fraction)
+                }
+            }
+            .frame(height: 10)
         }
     }
 }

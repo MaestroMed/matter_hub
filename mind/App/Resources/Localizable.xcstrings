@@ -4671,6 +4671,118 @@
         "en": { "stringUnit": { "state": "translated", "value": "Generate outreach" } },
         "fr": { "stringUnit": { "state": "translated", "value": "Générer outreach" } }
       }
+    },
+    "lead.score.label": {
+      "comment": "v0.27 · Accessibility label for the LeadScoreBadge on ClientCard / Top leads row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lead score" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Score de lead" } }
+      }
+    },
+    "lead.temperature.hot": {
+      "comment": "v0.27 · Lead temperature label — call today. 80+.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hot — call today" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chaud — à appeler aujourd'hui" } }
+      }
+    },
+    "lead.temperature.warm": {
+      "comment": "v0.27 · Lead temperature label — call this week. 50–79.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Warm — call this week" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tiède — à relancer cette semaine" } }
+      }
+    },
+    "lead.temperature.cold": {
+      "comment": "v0.27 · Lead temperature label — let cool. <50.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cold — let cool" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Froid — à laisser reposer" } }
+      }
+    },
+    "lead.sort.label": {
+      "comment": "v0.27 · Accessibility label for the ClientsView sort segmented control.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sort by" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Trier par" } }
+      }
+    },
+    "lead.sort.score": {
+      "comment": "v0.27 · ClientsView sort segmented control — by lead score, default.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Score" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Score" } }
+      }
+    },
+    "lead.sort.recent": {
+      "comment": "v0.27 · ClientsView sort segmented control — by lastAccessedAt desc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recent" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Récent" } }
+      }
+    },
+    "lead.sort.alphabetical": {
+      "comment": "v0.27 · ClientsView sort segmented control — alphabetical asc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A→Z" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Alpha" } }
+      }
+    },
+    "lead.breakdown.title": {
+      "comment": "v0.27 · LeadScoreBreakdownSheet — subtitle below the client name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lead score breakdown" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Décomposition du score" } }
+      }
+    },
+    "lead.breakdown.icpFit": {
+      "comment": "v0.27 · Breakdown row — ICP fit (0–40).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ICP fit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Fit ICP" } }
+      }
+    },
+    "lead.breakdown.buyingSignals": {
+      "comment": "v0.27 · Breakdown row — buying signals (0–40).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Buying signals" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Signaux d'achat" } }
+      }
+    },
+    "lead.breakdown.engagement": {
+      "comment": "v0.27 · Breakdown row — engagement (0–20).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Engagement" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Engagement" } }
+      }
+    },
+    "home.topLeads.title": {
+      "comment": "v0.27 · HomeView Top leads card header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Top leads" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Top leads" } }
+      }
+    },
+    "home.topLeads.empty": {
+      "comment": "v0.27 · HomeView Top leads card empty-state message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No prospect to call right now." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun prospect à appeler pour l'instant." } }
+      }
     }
   }
 }

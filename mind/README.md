@@ -386,3 +386,57 @@ quote with consultant byline. Respects `prefers-color-scheme` and
 `prefers-reduced-motion`. Hard page-weight ceiling locked at 200 KB
 by the test suite so no future template addition can silently bloat
 the export.
+
+## Lead Scoring (v0.27)
+
+Every client / prospect Node gets a **lead score 0–100** the moment
+the Clients tab renders. The score answers a single question Mehdi
+asks every morning: *which prospect should I call next?*
+
+Three sub-scores feed the total:
+
+* **ICP fit (0–40)** — does this prospect look like the kind of
+  client Mehdi closes? Industry tags (`saasB2B`, `fintech`),
+  hostnames on the known-SaaS allowlist (`stripe.com`,
+  `linear.app`, …), and whether an audit is already attached all
+  push the number up.
+* **Buying signals (0–40)** — is there tangible pain that justifies
+  a call right now? Audit overall scores in the 60–85 sweet spot for
+  consulting (+20), low security / performance scores as pain
+  triggers (+10, capped), and free-text keywords like "funding",
+  "hiring", "launch" in the recent notes (+10).
+* **Engagement (0–20)** — has Mehdi touched the node lately? Reads
+  `lastAccessedAt`: ≤7 days +20, ≤30 days +10, > 30 days or never
+  opened 0.
+
+The total clamps to 0–100 and projects onto three temperatures via
+`LeadTemperature.from`: 🔥 hot 80+, ☀️ warm 50–79, ❄️ cold < 50.
+Each ClientCard sprouts a colour-coded `LeadScoreBadge` in the top
+right; tapping the badge opens the breakdown modal that shows the
+three sub-scores as gradient bars plus the verbatim reasoning
+bullets ("ICP : SaaS B2B (+20)", "Audit score 72 — sweet spot
+consulting (+20)", "Consulté il y a ≤ 7 jours (+20)").
+
+The Clients tab now sorts by score desc by default, with a
+segmented control to switch to recent or alphabetical when needed.
+The Home screen gained a "Top leads 🔥" card listing the three
+hottest non-completed prospects with their score badge; tap the row
+to jump into NodeDetailView, tap the badge to see the breakdown.
+
+Two scoring paths live behind the same `LeadScore` value type:
+
+* `LeadScorer.heuristic(node:)` — pure, deterministic, < 50µs per
+  node. Safe to run on every render, no caching required.
+* `LeadScorer.aiEnhanced(node:cloud:)` — optional cloud round-trip
+  that asks Claude to re-rank the prospect against the full text of
+  the attached notes / audit. Falls back to the heuristic on any
+  failure so the UI never spins forever. v0.27.1 will persist the
+  AI-enhanced result in a `leadScoreCache` JSON field so it survives
+  launches.
+
+Telemetry surfaces three breadcrumbs on critical paths:
+`lead.score.computed`, `lead.score.breakdown.opened`, and
+`lead.topLeads.opened`. Locked by 18 pure tests in `LeadScorerTests`
+covering empty input, clamps at 0 and 100, sweet-spot detection,
+engagement boundaries, the `LeadTemperature.from` band table, and
+determinism for identical input.
