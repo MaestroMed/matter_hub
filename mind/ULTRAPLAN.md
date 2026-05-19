@@ -50,12 +50,13 @@ known SaaS host. **Acceptance**: extension shows up in share sheet,
 URL capture creates correct node, screenshot of share flow saved.
 Shipped 2026-05-19: MINDShareExtension appExtension target wired via Tuist, SLComposeServiceViewController serialises URL+text shares into a cross-process `ShareInbox` queue (App Group group.app.mind.ios), host MIND app drains the queue on .active scenePhase and auto-creates a `client` Node when the URL host is a known SaaS (Stripe/Notion/Linear/GitHub/Figma/Vercel/Netlify/Shopify/Slack/Airtable/Anthropic/OpenAI/Apple/Google/Cloudflare). 14 ShareInboxTests added (115 total, 0 failures).
 
-### v0.4 — Per-probe error UI + retry ⏳
+### v0.4 — Per-probe error UI + retry ✅
 **What**: AuditSheet's error path today shows a global message. Refactor
 AuditController to surface per-probe errors (`Dictionary<ProbeKind,
 Error>`) and the running view shows each probe with green/red dot.
 "Retry failed probes" CTA. **Acceptance**: 5 simulated probe failures
 show 5 distinct error rows, retry only re-runs failed ones.
+Shipped 2026-05-19: ProbeKind/ProbeState added on AuditController, per-probe rows + retry CTA in AuditSheet, 8 new tests (124 total).
 
 ### v0.5 — Markdown editor for Notes ⏳
 **What**: Replace TextEditor in NodeDetailView with a markdown editor

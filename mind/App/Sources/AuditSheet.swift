@@ -171,29 +171,171 @@ struct AuditSheet: View {
     // MARK: - Running
 
     private var runningView: some View {
-        LiquidCard(cornerRadius: 22) {
-            VStack(spacing: 22) {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(LiquidPalette.iris)
-                Text(controller.progressLabel)
-                    .font(.system(.headline, design: .rounded, weight: .semibold))
-                    .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            LiquidCard(cornerRadius: 22) {
+                VStack(spacing: 22) {
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(LiquidPalette.iris)
+                    Text(controller.progressLabel)
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .multilineTextAlignment(.center)
 
-                phaseStepIndicator
+                    phaseStepIndicator
 
-                Text("Tu peux fermer la sheet, l'audit continue en arrière-plan.")
-                    .font(.system(.caption, design: .rounded))
+                    Text("Tu peux fermer la sheet, l'audit continue en arrière-plan.")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Annuler") {
+                        controller.cancel()
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
                     .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Button("Annuler") {
-                    controller.cancel()
                 }
-                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                .foregroundStyle(.secondary)
+                .padding(32)
+                .frame(maxWidth: .infinity)
             }
-            .padding(32)
-            .frame(maxWidth: .infinity)
+
+            probeStatusList
+
+            if controller.hasFailedProbes {
+                LiquidButton(
+                    title: "Réessayer les sondes en échec (\(controller.failedProbes.count))",
+                    systemImage: "arrow.counterclockwise",
+                    haptic: .select
+                ) {
+                    controller.retryFailedProbes()
+                }
+            }
+        }
+    }
+
+    /// One row per probe — yellow dot while running, green for ok, red
+    /// for failed. The list is the source of truth for the per-probe
+    /// retry CTA: tapping "Réessayer" re-runs only the rows with red dots.
+    @ViewBuilder
+    private var probeStatusList: some View {
+        if !controller.probeStates.isEmpty {
+            LiquidCard(cornerRadius: 18) {
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Sondes")
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.8)
+                        Spacer()
+                        probeSummaryBadge
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    .padding(.bottom, 8)
+
+                    ForEach(Array(AuditController.ProbeKind.allCases.enumerated()), id: \.element) { index, kind in
+                        probeRow(kind: kind, state: controller.probeStates[kind] ?? .running)
+                        if index < AuditController.ProbeKind.allCases.count - 1 {
+                            Divider()
+                                .background(.white.opacity(0.10))
+                                .padding(.leading, 46)
+                        }
+                    }
+                    .padding(.bottom, 6)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var probeSummaryBadge: some View {
+        let states = controller.probeStates
+        let ok = states.values.filter { $0.isOK }.count
+        let failed = states.values.filter { $0.isFailed }.count
+        let running = states.values.filter { $0.isRunning }.count
+        return HStack(spacing: 8) {
+            badgePill(count: ok, color: .green)
+            badgePill(count: running, color: .yellow)
+            badgePill(count: failed, color: .red)
+        }
+    }
+
+    @ViewBuilder
+    private func badgePill(count: Int, color: Color) -> some View {
+        if count > 0 {
+            HStack(spacing: 4) {
+                Circle().fill(color).frame(width: 6, height: 6)
+                Text("\(count)")
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func probeRow(
+        kind: AuditController.ProbeKind,
+        state: AuditController.ProbeState
+    ) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 28, height: 28)
+                Image(systemName: kind.systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(kind.label)
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.primary)
+                if case .failed(let reason) = state {
+                    Text(reason)
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(.red.opacity(0.85))
+                        .lineLimit(2)
+                }
+            }
+            Spacer()
+            probeStateDot(state)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func probeStateDot(_ state: AuditController.ProbeState) -> some View {
+        switch state {
+        case .running:
+            ZStack {
+                Circle()
+                    .fill(Color.yellow.opacity(0.25))
+                    .frame(width: 14, height: 14)
+                Circle()
+                    .fill(Color.yellow)
+                    .frame(width: 8, height: 8)
+            }
+            .accessibilityLabel("En cours")
+        case .ok:
+            ZStack {
+                Circle()
+                    .fill(Color.green.opacity(0.25))
+                    .frame(width: 14, height: 14)
+                Circle()
+                    .fill(Color.green)
+                    .frame(width: 8, height: 8)
+            }
+            .accessibilityLabel("Réussi")
+        case .failed:
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.25))
+                    .frame(width: 14, height: 14)
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+            }
+            .accessibilityLabel("Échec")
         }
     }
 
@@ -311,6 +453,10 @@ struct AuditSheet: View {
     private func reportView(_ report: AuditReport) -> some View {
         VStack(alignment: .leading, spacing: 20) {
             scoreHeroCard(report)
+
+            if controller.hasFailedProbes {
+                failedProbesBanner
+            }
 
             section("Synthèse") {
                 LiquidCard(cornerRadius: 18) {
@@ -872,6 +1018,38 @@ struct AuditSheet: View {
                 persist(report)
             }
         }
+    }
+
+    /// Surfaced inside the report view when ≥1 probe failed during
+    /// the most recent run. Reuses the AuditController retry contract:
+    /// only failed probes re-fetch, successful results stay cached.
+    private var failedProbesBanner: some View {
+        LiquidCard(cornerRadius: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                    Text("\(controller.failedProbes.count) sonde(s) en échec")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                }
+                Text(failedProbeLabels)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+                LiquidButton(
+                    title: "Réessayer les sondes en échec",
+                    systemImage: "arrow.counterclockwise",
+                    haptic: .select
+                ) {
+                    controller.retryFailedProbes()
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var failedProbeLabels: String {
+        controller.failedProbes.map(\.label).joined(separator: " · ")
     }
 
     // MARK: - Helpers

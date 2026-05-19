@@ -24,9 +24,104 @@ public final class AuditController {
         case failed
     }
 
+    /// One identifier per network probe. AuditSheet uses these as the
+    /// ordered list of rows in the running view and the retry CTA only
+    /// re-runs the probes whose `probeStates` entry is `.failed`.
+    /// Raw values are persistence-stable and feed MINDTelemetry events.
+    public enum ProbeKind: String, CaseIterable, Sendable, Hashable {
+        case pageSpeed
+        case security
+        case email
+        case domain
+        case mobile
+        case schema
+        case openGraph
+        case crawlability
+        case compliance
+        case analytics
+        case payment
+        case cdn
+        case trust
+
+        /// French human label shown in the per-probe row. FR for
+        /// user-facing strings (Mehdi convention).
+        public var label: String {
+            switch self {
+            case .pageSpeed:    return "PageSpeed"
+            case .security:     return "Sécurité"
+            case .email:        return "Email DNS"
+            case .domain:       return "Domaine"
+            case .mobile:       return "App iOS"
+            case .schema:       return "Schema.org"
+            case .openGraph:    return "OpenGraph"
+            case .crawlability: return "Crawlability"
+            case .compliance:   return "Compliance"
+            case .analytics:    return "Analytics"
+            case .payment:      return "Paiement"
+            case .cdn:          return "CDN"
+            case .trust:        return "Trustpilot"
+            }
+        }
+
+        /// SF Symbol drawn left of the row label.
+        public var systemImage: String {
+            switch self {
+            case .pageSpeed:    return "speedometer"
+            case .security:     return "lock.shield.fill"
+            case .email:        return "envelope.fill"
+            case .domain:       return "globe"
+            case .mobile:       return "apple.logo"
+            case .schema:       return "curlybraces"
+            case .openGraph:    return "square.on.square.dashed"
+            case .crawlability: return "magnifyingglass.circle.fill"
+            case .compliance:   return "checkmark.shield.fill"
+            case .analytics:    return "chart.line.uptrend.xyaxis"
+            case .payment:      return "creditcard.fill"
+            case .cdn:          return "cloud.fill"
+            case .trust:        return "star.fill"
+            }
+        }
+    }
+
+    /// Per-probe lifecycle state. The view layer renders a yellow dot
+    /// for `.running`, green dot for `.ok`, red dot (with the localized
+    /// reason) for `.failed`.
+    public enum ProbeState: Sendable, Equatable {
+        case running
+        case ok
+        case failed(reason: String)
+
+        public var isOK: Bool {
+            if case .ok = self { return true } else { return false }
+        }
+
+        public var isFailed: Bool {
+            if case .failed = self { return true } else { return false }
+        }
+
+        public var isRunning: Bool {
+            if case .running = self { return true } else { return false }
+        }
+
+        public var failureReason: String? {
+            if case .failed(let reason) = self { return reason } else { return nil }
+        }
+    }
+
     public private(set) var phase: Phase = .idle
     public private(set) var report: AuditReport?
     public private(set) var error: String?
+
+    /// Per-probe state for the current run. Empty before the first run.
+    /// AuditSheet reads this to render per-probe rows + decide whether
+    /// to surface the "Retry failed probes" CTA.
+    public private(set) var probeStates: [ProbeKind: ProbeState] = [:]
+
+    /// Cached probe results for the current run. Retry merges new
+    /// results on top of these so a re-run only touches failed probes.
+    private var lastPerformance: AuditReport.PerformanceMetrics?
+    private var lastFindings: AuditFindings = AuditFindings()
+    private var lastClient: AuditClient?
 
     private var currentTask: Task<Void, Never>?
     private let synthesizer: ClaudeSynthesizer
@@ -67,6 +162,14 @@ public final class AuditController {
         }
     }
 
+    /// All probes whose state is `.failed`, in declaration order. Used
+    /// by the retry CTA and exposed for tests.
+    public var failedProbes: [ProbeKind] {
+        ProbeKind.allCases.filter { probeStates[$0]?.isFailed == true }
+    }
+
+    public var hasFailedProbes: Bool { !failedProbes.isEmpty }
+
     public func cancel() {
         currentTask?.cancel()
         currentTask = nil
@@ -80,25 +183,77 @@ public final class AuditController {
         cancel()
         report = nil
         error = nil
+        lastPerformance = nil
+        lastFindings = AuditFindings()
+        lastClient = client
+        // Seed all probes as `.running` so the per-probe rows render
+        // immediately under the spinner, even before the first probe
+        // returns.
+        probeStates = Dictionary(
+            uniqueKeysWithValues: ProbeKind.allCases.map { ($0, .running) }
+        )
         phase = .probing
 
         currentTask = Task { [weak self] in
             guard let self else { return }
             await self.notifier.requestPermissionIfNeeded()
-            await self.execute(for: client)
+            await self.execute(for: client, retryOnly: nil)
         }
     }
 
-    private func execute(for client: AuditClient) async {
+    /// Re-run only the probes whose state is `.failed`. Succeeded
+    /// results from the prior run are preserved. If everything is
+    /// already green this is a no-op. Caller is AuditSheet's
+    /// "Réessayer les sondes en échec" CTA — surfaced when at least
+    /// one probe failed during the most recent run.
+    public func retryFailedProbes() {
+        guard let client = lastClient else { return }
+        let failed = failedProbes
+        guard !failed.isEmpty else { return }
+        cancel()
+        error = nil
+        // Mark only the failed probes as running again; keep the
+        // successful ones at `.ok` so the per-probe UI doesn't flicker
+        // between green and yellow.
+        for kind in failed { probeStates[kind] = .running }
+        phase = .probing
+        let retrySet = Set(failed)
+
+        currentTask = Task { [weak self] in
+            guard let self else { return }
+            await self.execute(for: client, retryOnly: retrySet)
+        }
+    }
+
+    private func execute(
+        for client: AuditClient,
+        retryOnly: Set<ProbeKind>?
+    ) async {
         let host = client.url.host ?? client.url.absoluteString
-        MINDTelemetry.info(
-            "audit.start",
-            data: ["host": host, "client": client.name ?? host]
-        )
+        if retryOnly == nil {
+            MINDTelemetry.info(
+                "audit.start",
+                data: ["host": host, "client": client.name ?? host]
+            )
+        } else {
+            MINDTelemetry.info(
+                "audit.retry",
+                data: [
+                    "host": host,
+                    "probes": (retryOnly ?? []).map(\.rawValue).sorted().joined(separator: ","),
+                ]
+            )
+        }
         do {
             phase = .probing
-            let (performance, findings) = await runProbesInParallel(for: client)
+            let (performance, findings) = await runProbesInParallel(
+                for: client,
+                retryOnly: retryOnly
+            )
             try Task.checkCancellation()
+
+            self.lastPerformance = performance
+            self.lastFindings = findings
 
             phase = .synthesizing
             MINDTelemetry.info("audit.synthesize.start", data: ["host": host])
@@ -115,7 +270,8 @@ public final class AuditController {
                 "audit.completed",
                 data: [
                     "host": host,
-                    "overall_score": String(synthesized.scoring.overall)
+                    "overall_score": String(synthesized.scoring.overall),
+                    "failed_probes": failedProbes.map(\.rawValue).joined(separator: ","),
                 ]
             )
             await notifier.notifyAuditCompleted(report: synthesized)
@@ -137,56 +293,100 @@ public final class AuditController {
     }
 
     /// Fans out all probe calls concurrently and folds them into a
-    /// PerformanceMetrics + AuditFindings pair. Every probe is allowed to
-    /// soft-fail to nil so a single bad upstream never sinks the audit.
-    /// Total wall time is bounded by the slowest probe (PageSpeed
-    /// Insights, usually 15-40s).
+    /// PerformanceMetrics + AuditFindings pair. Every probe is allowed
+    /// to soft-fail — its state flips to `.failed(reason:)` so the UI
+    /// shows a red dot, but a single bad upstream never sinks the audit.
+    /// On a retry (`retryOnly` non-nil), only the listed probes run;
+    /// successful results from the previous run are spliced in from
+    /// `lastPerformance` / `lastFindings`.
     private func runProbesInParallel(
-        for client: AuditClient
+        for client: AuditClient,
+        retryOnly: Set<ProbeKind>?
     ) async -> (AuditReport.PerformanceMetrics?, AuditFindings) {
         let url = client.url
         let host = url.host(percentEncoded: false) ?? ""
         let searchName = client.name?.trimmingCharacters(in: .whitespaces) ?? hostLabel(for: host)
 
+        func shouldRun(_ kind: ProbeKind) -> Bool {
+            retryOnly?.contains(kind) ?? true
+        }
+
         // First wave (Session 2)
-        async let perf      = softFetch { try await PageSpeedProbe.fetch(for: url) }
-        async let security  = softFetch { try await SecurityHeadersProbe.fetch(for: url) }
-        async let email     = softFetch { try await DNSProbe.fetch(for: host) }
-        async let domain    = softFetch { try await WhoisProbe.fetch(for: host) }
-        async let mobile    = softFetch { try await AppStoreProbe.search(name: searchName) }
+        async let perf      = runProbe(.pageSpeed,    enabled: shouldRun(.pageSpeed))    { try await PageSpeedProbe.fetch(for: url) }
+        async let security  = runProbe(.security,     enabled: shouldRun(.security))     { try await SecurityHeadersProbe.fetch(for: url) }
+        async let email     = runProbe(.email,        enabled: shouldRun(.email))        { try await DNSProbe.fetch(for: host) }
+        async let domain    = runProbe(.domain,       enabled: shouldRun(.domain))       { try await WhoisProbe.fetch(for: host) }
+        async let mobile    = runProbe(.mobile,       enabled: shouldRun(.mobile))       { try await AppStoreProbe.search(name: searchName) }
 
         // Second wave (ULTRAPLAN BLOC B)
-        async let schema       = softFetch { try await SchemaOrgProbe.fetch(for: url) }
-        async let openGraph    = softFetch { try await OpenGraphProbe.fetch(for: url) }
-        async let crawlability = softFetch { try await RobotsSitemapProbe.fetch(for: url) }
-        async let compliance   = softFetch { try await CookieBannerProbe.fetch(for: url) }
-        async let analytics    = softFetch { try await AnalyticsProbe.fetch(for: url) }
-        async let payment      = softFetch { try await PaymentProbe.fetch(for: url) }
-        async let cdn          = softFetch { try await CDNProbe.fetch(for: url) }
-        async let trust        = softFetch { try await TrustpilotProbe.fetch(for: url) }
+        async let schema       = runProbe(.schema,       enabled: shouldRun(.schema))       { try await SchemaOrgProbe.fetch(for: url) }
+        async let openGraph    = runProbe(.openGraph,    enabled: shouldRun(.openGraph))    { try await OpenGraphProbe.fetch(for: url) }
+        async let crawlability = runProbe(.crawlability, enabled: shouldRun(.crawlability)) { try await RobotsSitemapProbe.fetch(for: url) }
+        async let compliance   = runProbe(.compliance,   enabled: shouldRun(.compliance))   { try await CookieBannerProbe.fetch(for: url) }
+        async let analytics    = runProbe(.analytics,    enabled: shouldRun(.analytics))    { try await AnalyticsProbe.fetch(for: url) }
+        async let payment      = runProbe(.payment,      enabled: shouldRun(.payment))      { try await PaymentProbe.fetch(for: url) }
+        async let cdn          = runProbe(.cdn,          enabled: shouldRun(.cdn))          { try await CDNProbe.fetch(for: url) }
+        async let trust        = runProbe(.trust,        enabled: shouldRun(.trust))        { try await TrustpilotProbe.fetch(for: url) }
 
-        let findings = AuditFindings(
-            security:     await security,
-            email:        await email,
-            domain:       await domain,
-            mobile:       await mobile,
-            schema:       await schema,
-            openGraph:    await openGraph,
-            crawlability: await crawlability,
-            compliance:   await compliance,
-            analytics:    await analytics,
-            payment:      await payment,
-            cdn:          await cdn,
-            trust:        await trust
+        let perfValue       = await perf
+        let securityValue   = await security
+        let emailValue      = await email
+        let domainValue     = await domain
+        let mobileValue     = await mobile
+        let schemaValue     = await schema
+        let ogValue         = await openGraph
+        let crawlValue      = await crawlability
+        let complianceValue = await compliance
+        let analyticsValue  = await analytics
+        let paymentValue    = await payment
+        let cdnValue        = await cdn
+        let trustValue      = await trust
+
+        // Splice: on a retry, an `enabled: false` probe returns nil
+        // here — we keep the previous successful value instead so the
+        // synthesizer still sees the full picture.
+        let mergedPerf = perfValue ?? (retryOnly != nil ? lastPerformance : nil)
+        let mergedFindings = AuditFindings(
+            security:     securityValue   ?? (retryOnly != nil ? lastFindings.security     : nil),
+            email:        emailValue      ?? (retryOnly != nil ? lastFindings.email        : nil),
+            domain:       domainValue     ?? (retryOnly != nil ? lastFindings.domain       : nil),
+            mobile:       mobileValue     ?? (retryOnly != nil ? lastFindings.mobile       : nil),
+            schema:       schemaValue     ?? (retryOnly != nil ? lastFindings.schema       : nil),
+            openGraph:    ogValue         ?? (retryOnly != nil ? lastFindings.openGraph    : nil),
+            crawlability: crawlValue      ?? (retryOnly != nil ? lastFindings.crawlability : nil),
+            compliance:   complianceValue ?? (retryOnly != nil ? lastFindings.compliance   : nil),
+            analytics:    analyticsValue  ?? (retryOnly != nil ? lastFindings.analytics    : nil),
+            payment:      paymentValue    ?? (retryOnly != nil ? lastFindings.payment      : nil),
+            cdn:          cdnValue        ?? (retryOnly != nil ? lastFindings.cdn          : nil),
+            trust:        trustValue      ?? (retryOnly != nil ? lastFindings.trust        : nil)
         )
-        return (await perf, findings)
+        return (mergedPerf, mergedFindings)
     }
 
-    private func softFetch<T: Sendable>(
+    /// Runs a single probe, recording state transitions on the MainActor.
+    /// `enabled == false` is the "skip this probe" branch used by retry
+    /// — the prior state (`.ok`) is preserved.
+    private func runProbe<T: Sendable>(
+        _ kind: ProbeKind,
+        enabled: Bool = true,
         _ body: @Sendable @escaping () async throws -> T
     ) async -> T? {
-        do { return try await body() }
-        catch { return nil }
+        guard enabled else { return nil }
+        do {
+            let value = try await body()
+            await MainActor.run { self.probeStates[kind] = .ok }
+            return value
+        } catch {
+            let reason = error.localizedDescription
+            await MainActor.run {
+                self.probeStates[kind] = .failed(reason: reason)
+            }
+            MINDTelemetry.warning(
+                "audit.probe.failed",
+                data: ["probe": kind.rawValue, "reason": reason]
+            )
+            return nil
+        }
     }
 
     /// Best-effort label when the user didn't provide a name. "stripe.com"
