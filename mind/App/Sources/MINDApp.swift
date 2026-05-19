@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AppIntents
+import CalendarKit
 import DesignSystem
 import GraphCore
 import MINDIntents
@@ -55,6 +56,13 @@ struct MINDApp: App {
                 // re-establishes the trigger after iOS permission was
                 // granted from the Settings.app between sessions.
                 DailyBriefScheduler.scheduleIfEnabled()
+                // v0.28 — Refresh meeting briefs + reschedule the
+                // morning-of notifications. Cheap soft-fail when no
+                // calendar permission. HomeView's own `.task` also
+                // covers the cold-launch path; the foreground hook
+                // ensures a meeting added or moved while MIND was
+                // backgrounded re-prints its notification correctly.
+                refreshMeetingBriefsIfPossible()
             case .background:
                 MINDTelemetry.info("lifecycle.background")
                 // Ask iOS to wake MIND in ~6h so the CloudKit mirror
@@ -474,6 +482,21 @@ struct MINDApp: App {
         let new = Node(kind: .client, title: name)
         context.insert(new)
         return new
+    }
+
+    /// v0.28 — Reads the next 7 days of calendar events and asks
+    /// MeetingBriefScheduler to (re)queue a morning-of notification
+    /// for every event that looks like a prospect/client meeting.
+    /// Soft-fails when the user hasn't granted calendar access yet
+    /// (the actor returns []), so there's no risk of spamming the
+    /// permission sheet from the foreground transition.
+    @MainActor
+    private func refreshMeetingBriefsIfPossible() {
+        Task { @MainActor in
+            let upcoming = await CalendarReader.shared.upcomingEvents(dayWindow: 7)
+            let prospectMeetings = upcoming.filter { !$0.attendeeEmails.isEmpty }
+            await MeetingBriefScheduler.scheduleBriefs(for: prospectMeetings)
+        }
     }
 
     /// Starts Sentry if the user has saved a DSN in Settings. Silently

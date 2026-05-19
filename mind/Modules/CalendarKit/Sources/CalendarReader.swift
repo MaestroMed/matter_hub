@@ -88,12 +88,44 @@ public actor CalendarReader {
             return []
         }
 
-        let predicate = store.predicateForEvents(
-            withStart: startOfDay,
-            end: endOfDay,
-            calendars: nil  // nil = every calendar the user has surfaced
-        )
+        return await events(in: startOfDay..<endOfDay)
+    }
 
+    /// v0.28 — Returns every event happening over the next `dayWindow`
+    /// days (default 7). Powers the MeetingBriefScheduler so we can
+    /// queue a "Demain 14h : brief Stripe prêt" notification 24h ahead
+    /// of each meeting, and powers the HomeView "Briefs à venir" card
+    /// which lists the next 7 days at a glance.
+    ///
+    /// Soft-fails identically to `todayEvents()` — no permission, no
+    /// events, just `[]`.
+    public func upcomingEvents(
+        dayWindow: Int = 7,
+        now: Date = .now,
+        calendar: Calendar = .current
+    ) async -> [CalendarEvent] {
+        guard currentAuthorization() == .fullAccess else { return [] }
+        guard dayWindow > 0 else { return [] }
+        let startOfDay = calendar.startOfDay(for: now)
+        guard let end = calendar.date(
+            byAdding: .day,
+            value: dayWindow + 1,
+            to: startOfDay
+        ) else {
+            return []
+        }
+        return await events(in: startOfDay..<end)
+    }
+
+    /// Internal helper consumed by both `todayEvents` and
+    /// `upcomingEvents` so the predicate-build / dedupe / sort path
+    /// stays in one place.
+    private func events(in range: Range<Date>) async -> [CalendarEvent] {
+        let predicate = store.predicateForEvents(
+            withStart: range.lowerBound,
+            end: range.upperBound,
+            calendars: nil
+        )
         let raw = store.events(matching: predicate)
         return raw
             .map { CalendarEvent(ekEvent: $0) }
@@ -126,6 +158,38 @@ extension CalendarEvent {
             let name = participant.name?.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let name, !name.isEmpty else { return nil }
             return name
+        }
+        // v0.28 — Pull mailto: emails out of EKParticipant.url so
+        // MeetingBriefBuilder.detectClient can match an event to a
+        // client Node by domain. Some calendar providers (iCloud) put
+        // the address under the `url` mailto: scheme; others store a
+        // bare string. We accept both shapes, then trim+lowercase for
+        // stable comparison.
+        self.attendeeEmails = (ekEvent.attendees ?? []).compactMap { participant in
+            let raw = participant.url.absoluteString
+            let lowered = raw.lowercased()
+            let prefix = "mailto:"
+            let stripped: String
+            if lowered.hasPrefix(prefix) {
+                stripped = String(raw.dropFirst(prefix.count))
+            } else {
+                stripped = raw
+            }
+            let trimmed = stripped.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            // Require the bare-minimum @ to call this an email; this
+            // filters out invite URLs (https://teams.microsoft.com/…)
+            // that EventKit sometimes returns through the same field.
+            guard trimmed.contains("@"), !trimmed.isEmpty else { return nil }
+            return trimmed
+        }
+        // v0.28 — Carry the EKEvent.notes through unchanged. We trim
+        // pure-whitespace strings to nil so the dossier doesn't render
+        // an empty "Notes" section when the field is just `"  "`.
+        if let raw = ekEvent.notes {
+            let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            self.notes = trimmed.isEmpty ? nil : raw
+        } else {
+            self.notes = nil
         }
     }
 }

@@ -339,4 +339,50 @@ final class LocalizationTests: XCTestCase {
         XCTAssertNotNil(localized("roi.methodology.body", lang: "en"))
         XCTAssertNotNil(localized("roi.methodology.body", lang: "fr"))
     }
+
+    /// v0.28 — Discovery Call Prep Dossier strings. Locks every
+    /// FR + EN key surfaced by the HomeView "Briefs à venir" card,
+    /// the MeetingBriefSheet sections, the copy buttons, and the
+    /// morning-of notification body. The 15 keys map 1:1 to the
+    /// v0.28 spec — a careless catalogue edit can't ship a brief
+    /// where the section header falls back to the raw key on FR.
+    func test_meetingBriefStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("home.meetingBriefs.title",         lang: "en"), "Upcoming briefs")
+        XCTAssertEqual(localized("home.meetingBriefs.title",         lang: "fr"), "Briefs à venir")
+        XCTAssertNotNil(localized("home.meetingBriefs.subtitle",     lang: "en"))
+        XCTAssertNotNil(localized("home.meetingBriefs.subtitle",     lang: "fr"))
+
+        XCTAssertEqual(localized("meetingBrief.detail.title",        lang: "en"), "Discovery brief")
+        XCTAssertEqual(localized("meetingBrief.detail.title",        lang: "fr"), "Brief discovery")
+        XCTAssertEqual(localized("meetingBrief.detail.noClient",     lang: "en"), "No linked client")
+        XCTAssertEqual(localized("meetingBrief.detail.noClient",     lang: "fr"), "Aucun client lié")
+
+        XCTAssertEqual(localized("meetingBrief.section.opening",     lang: "en"), "Opening line")
+        XCTAssertEqual(localized("meetingBrief.section.opening",     lang: "fr"), "Ouverture")
+        XCTAssertEqual(localized("meetingBrief.section.news",        lang: "en"), "Recent news")
+        XCTAssertEqual(localized("meetingBrief.section.news",        lang: "fr"), "Actualité récente")
+        XCTAssertEqual(localized("meetingBrief.section.audit",       lang: "en"), "Audit highlights")
+        XCTAssertEqual(localized("meetingBrief.section.audit",       lang: "fr"), "Points clés de l'audit")
+        XCTAssertEqual(localized("meetingBrief.section.attendees",   lang: "en"), "Your attendees")
+        XCTAssertEqual(localized("meetingBrief.section.attendees",   lang: "fr"), "Vos interlocuteurs")
+        XCTAssertEqual(localized("meetingBrief.section.questions",   lang: "en"), "Discovery questions")
+        XCTAssertEqual(localized("meetingBrief.section.questions",   lang: "fr"), "Questions discovery")
+
+        XCTAssertEqual(localized("meetingBrief.copy.action",         lang: "en"), "Copy")
+        XCTAssertEqual(localized("meetingBrief.copy.action",         lang: "fr"), "Copier")
+        XCTAssertEqual(localized("meetingBrief.copy.done",           lang: "en"), "Copied")
+        XCTAssertEqual(localized("meetingBrief.copy.done",           lang: "fr"), "Copié")
+
+        XCTAssertEqual(localized("meetingBrief.bullet.source",       lang: "en"), "Open source")
+        XCTAssertEqual(localized("meetingBrief.bullet.source",       lang: "fr"), "Voir la source")
+        XCTAssertEqual(localized("meetingBrief.bullet.auditSource",  lang: "en"), "From your MIND audit")
+        XCTAssertEqual(localized("meetingBrief.bullet.auditSource",  lang: "fr"), "Depuis votre audit MIND")
+
+        XCTAssertEqual(localized("meetingBrief.notification.title",  lang: "en"), "Your discovery brief is ready")
+        XCTAssertEqual(localized("meetingBrief.notification.title",  lang: "fr"), "Ton brief discovery est prêt")
+        XCTAssertNotNil(localized("meetingBrief.notification.body.format", lang: "en"))
+        XCTAssertNotNil(localized("meetingBrief.notification.body.format", lang: "fr"))
+        XCTAssertNotNil(localized("meetingBrief.notification.body.generic", lang: "en"))
+        XCTAssertNotNil(localized("meetingBrief.notification.body.generic", lang: "fr"))
+    }
 }

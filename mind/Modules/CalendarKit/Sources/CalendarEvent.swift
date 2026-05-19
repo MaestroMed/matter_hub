@@ -23,6 +23,17 @@ public struct CalendarEvent: Identifiable, Sendable, Hashable {
     /// (most personal events) or when we lack contacts permission to
     /// resolve names — the card still renders, just without the chips.
     public let attendees: [String]
+    /// v0.28 — Raw attendee email addresses (when EventKit exposes them
+    /// via `EKParticipant.url` with a `mailto:` scheme). Empty when the
+    /// event has no attendee URLs OR the URLs aren't mailto-shaped
+    /// (Teams/Zoom invites land in the `location` field, not here).
+    /// Used by `MeetingBriefBuilder.detectClient(in:from:)` to match an
+    /// event to an existing client Node by email domain.
+    public let attendeeEmails: [String]
+    /// v0.28 — Optional pre-meeting note left by the organizer (EKEvent.
+    /// notes). Often carries the agenda/context that MIND folds into the
+    /// dossier. Nil when the event was created without a note.
+    public let notes: String?
 
     public init(
         id: String,
@@ -30,7 +41,9 @@ public struct CalendarEvent: Identifiable, Sendable, Hashable {
         startDate: Date,
         endDate: Date,
         location: String? = nil,
-        attendees: [String] = []
+        attendees: [String] = [],
+        attendeeEmails: [String] = [],
+        notes: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -38,6 +51,8 @@ public struct CalendarEvent: Identifiable, Sendable, Hashable {
         self.endDate = endDate
         self.location = location
         self.attendees = attendees
+        self.attendeeEmails = attendeeEmails
+        self.notes = notes
     }
 
     /// `HH:mm` rendering in the user's current locale so the home card

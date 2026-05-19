@@ -562,11 +562,75 @@ app. (Deferred from v0.27 to make room for the Lead Scoring Engine
 pivot — the score is the load-bearing "who do I call next" signal
 that the Lock Screen widgets will eventually surface anyway.)
 
-### v0.28 — Standby mode dashboard ⏳
-**What**: When iPhone is docked in landscape (Standby), show a full-
-screen dashboard: time, today's brief, focus timer if running.
-**Acceptance**: standby triggers MIND dashboard, brightness adapts
-to ambient light.
+### v0.28 — Discovery Call Prep Dossier ✅
+**What** (pivoted from original "Standby mode dashboard", deferred to
+v0.28.1): the day before any prospect/client meeting, MIND generates
+a 1-pager brief — recent company news, audit findings, attendees +
+LinkedIn, 5 calibrated discovery questions, a 30-second elevator
+opening in Mehdi's voice. Push notif fires at 7am the morning of the
+meeting; tap → modal dossier with per-line "Copier" buttons.
+**Acceptance**: pure detection + question + opening builders are
+deterministic and FR-only, morning-of notification scheduled with
+prefixed identifier so it replaces idempotently, HomeView "Briefs à
+venir" card lists upcoming dossiers, `mind://brief/<eventID>` deep
+link opens the same sheet.
+Shipped 2026-05-20: new `MeetingBrief` + `DetectedClient` + `BriefBullet`
++ `AttendeeIntel` value types in CalendarKit, pure `MeetingBriefBuilder`
+(detectClient by attendee-email root-domain matching against client
+Node URLs, draftDiscoveryQuestions returns exactly 5 FR questions
+biased on `security:low` / `traffic:high` / `seo:weak` / `conversion:weak`
+tags, draftElevatorOpening name-checks first attendee + client brand
+with 4 fallback branches, auditHighlights mints up to 3 BriefBullets
+from client tags). `MeetingBriefScheduler` schedules a `UNCalendarNotificationTrigger`
+per upcoming event with at least one attendee email — fires at 7am
+the morning of the meeting (configurable via `morningHour`), falls
+back to `start - 1h` when the morning slot is already past, identifier
+prefix `mind.meetingBrief.<eventID>` so re-runs replace pending requests,
+prunes stale identifiers on every call. Optional `MeetingBriefEnricher`
+actor (soft-fails to heuristics). `MeetingBriefSheet` SwiftUI view
+with header (date + time + matched client capsule), elevator card,
+news section, audit highlights, attendees, 5 question rows, Copier
+button per question + opening with checkmark feedback; tap → opens
+`NodeDetailView` for the matched client. HomeView "Briefs à venir"
+card surfaces the next 7 days, taps preview the dossier. `mind://brief/<eventID>`
+path-segment deep link in RootView posts `.mindOpenMeetingBrief` so
+HomeView's `.onReceive` hydrator routes to `selectedMeetingBrief`.
+MINDApp `.active` scenePhase calls `refreshMeetingBriefsIfPossible()`
+to re-queue notifications when a meeting moves while MIND was backgrounded.
+`CalendarEvent` gains `attendeeEmails: [String]` + `notes: String?`
+(backward-compatible defaults; EKEvent bridge strips `mailto:` prefix,
+trims to apex, lowercases). `CalendarReader.upcomingEvents(dayWindow:)`
+serves the next 7 days. 15 new FR/EN xcstrings keys (`home.meetingBriefs.{title,subtitle}`,
+`meetingBrief.detail.{title,noClient}`, `meetingBrief.section.{opening,news,audit,attendees,questions}`,
+`meetingBrief.copy.{action,done}`, `meetingBrief.bullet.{source,auditSource}`,
+`meetingBrief.notification.{title,body.format,body.generic}`). 6 new
+telemetry breadcrumbs (`meetingBrief.scheduled`, `meetingBrief.opened`,
+`meetingBrief.questionCopied`, `meetingBrief.cardTapped`, `meetingBrief.deepLink.opened`,
+`meetingBrief.clientTapped`, `meetingBrief.enriched`). 16 new
+`MeetingBriefBuilderTests` cover: email-domain match across subdomains,
+deterministic first-match wins on multi-client tie, nil on no attendees,
+nil on empty clients, exactly-5 generic questions, security-low bias
+includes security question, no-client returns 5 FR questions ending in
+`?`, opening includes attendee firstname + client brand, no-attendees
+fallback never leaks `nil`, assemble determinism, FR-only language
+(no `the`/`your` leakage), scheduler identifier prefix contract, deep
+link URL composition, plannedFireDate morning-slot branch, past-morning
+fallback to start-1h, notification body includes time + title.
+`LocalizationTests` extended with `test_meetingBriefStrings_resolveBothLanguages`
+(28 asserts). 464 tests total, 12 skipped, 0 failures (was 424 in
+v0.22.2). Build SUCCEEDED on iPhone 17 Pro simulator. Screenshot at
+`mind/screenshots/v0.28.png` shows the host app launching clean on
+HomeView with the "Upcoming briefs" card rendering between the beta
+banner and the Deep Focus card — iris glyph + section header + count
+chip + subtitle + Thursday row with time + client placeholder, matching
+the v0.28 acceptance criteria end-to-end.
+
+### v0.28.1 — Standby mode dashboard ⏳
+**What** (original v0.28 scope, deferred when Discovery Call Prep
+Dossier took the v0.28 slot): when iPhone is docked in landscape
+(Standby), show a full-screen dashboard with time, today's brief,
+and the focus timer if running. **Acceptance**: standby triggers
+MIND dashboard, brightness adapts to ambient light.
 
 ### v0.29 — Live Activities for audits ⏳
 **What**: When an audit runs in background, show a Live Activity with

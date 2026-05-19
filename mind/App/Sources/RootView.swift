@@ -102,15 +102,36 @@ struct RootView: View {
             selectedNode = match
         }
         // v0.17 — Deep link `mind://brief` opens the DailyBriefSheet.
-        // Fired by tapping the daily morning brief local notification
-        // (after a future UNUserNotificationCenterDelegate hooks the
-        // userInfo dict) or by an "Open Brief" shortcut. Switching the
-        // selected tab to .home guarantees the HomeView host that owns
-        // `showDailyBrief` is on screen so the sheet actually presents.
+        // v0.28 — `mind://brief/<eventID>` opens the MeetingBriefSheet
+        // for the matching upcoming meeting. The path segment is the
+        // CalendarEvent's stable id (EKEvent.eventIdentifier).
+        //
+        // Fired by tapping the morning-of meeting-brief notification
+        // (v0.28) or the legacy daily morning brief notification
+        // (v0.17). Switching the selected tab to .home guarantees the
+        // HomeView host that owns the relevant sheet bools is on
+        // screen so the sheet actually presents.
         .onOpenURL { url in
             guard let scheme = url.scheme, scheme.lowercased() == "mind" else { return }
             guard url.host?.lowercased() == "brief" else { return }
             selection = .home
+            // v0.28 — Path-segment routing: `mind://brief/<eventID>`
+            // opens the meeting brief; `mind://brief` (no path) opens
+            // the legacy daily brief.
+            let trimmed = url.path
+                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            if !trimmed.isEmpty {
+                MINDTelemetry.info(
+                    "meetingBrief.deepLink.opened",
+                    data: ["eventID": trimmed]
+                )
+                NotificationCenter.default.post(
+                    name: .mindOpenMeetingBrief,
+                    object: nil,
+                    userInfo: ["eventID": trimmed]
+                )
+                return
+            }
             MINDTelemetry.info("brief.deepLink.opened")
             // Post a NotificationCenter signal so HomeView (the actual
             // owner of `showDailyBrief`) flips its sheet bool. HomeView
@@ -421,6 +442,18 @@ private struct HomeView: View {
     /// chosen hour).
     @State private var dailyBrief: DailyBrief?
     @State private var showDailyBrief: Bool = false
+    /// v0.28 — Upcoming events with at least one attendee email,
+    /// surfaced in the "Briefs à venir" card. Loaded by the same
+    /// `.task` that hydrates today's events; covers the next 7 days
+    /// so the user can scan their meeting week at a glance and tap
+    /// any row to preview the dossier MIND has assembled.
+    @State private var upcomingMeetingBriefs: [MeetingBrief] = []
+    /// v0.28 — Brief presented by `MeetingBriefSheet`. nil when no
+    /// row tapped (or the deep-link target wasn't resolvable). Driven
+    /// by both the HomeView card tap AND the
+    /// `.mindOpenMeetingBrief` deep-link bridge so a notification tap
+    /// lands on the same sheet as an in-app preview.
+    @State private var selectedMeetingBrief: MeetingBrief?
     /// v0.8 — events fetched from the user's primary calendar(s) for the
     /// "Aujourd'hui" card. Stays empty when permission is denied or there
     /// are no events today; the card hides itself in either case so the
@@ -589,6 +622,15 @@ private struct HomeView: View {
 
                 if !todayEvents.isEmpty {
                     todayCard
+                }
+
+                // v0.28 — Discovery Call Prep Dossiers for the next
+                // 7 days. Rendered only when at least one upcoming
+                // meeting matches a prospect/client heuristic; the
+                // morning-of notification will buzz from the
+                // background thanks to MeetingBriefScheduler.
+                if !upcomingMeetingBriefs.isEmpty {
+                    upcomingBriefsCard
                 }
 
                 if !resumableClients.isEmpty {
@@ -772,6 +814,22 @@ private struct HomeView: View {
                 .presentationBackground(.ultraThinMaterial)
             }
         }
+        // v0.28 — Meeting brief modal: tapping a row in the "Briefs
+        // à venir" card OR the morning-of notification deep link
+        // lands here. The sheet's `onSelectClient` callback dismisses
+        // this sheet and routes into NodeDetailView for the matched
+        // client.
+        .sheet(item: $selectedMeetingBrief) { brief in
+            MeetingBriefSheet(brief: brief, onSelectClient: { detected in
+                selectedMeetingBrief = nil
+                if let node = allNodes.first(where: { $0.id == detected.nodeID }) {
+                    selectedClient = node
+                }
+            })
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
+        }
         // v0.27 — Top leads breakdown modal. Tapping the LeadScoreBadge
         // on a Home "Top leads" row opens the same explanatory sheet
         // ClientsView uses, so the user gets a consistent breakdown
@@ -791,6 +849,10 @@ private struct HomeView: View {
             // which is the natural moment to grant.
             _ = await CalendarReader.shared.requestAccess()
             todayEvents = await CalendarReader.shared.todayEvents()
+            // v0.28 — Hydrate the upcoming-meeting briefs and queue
+            // the morning-of notifications. Same task body for
+            // simplicity; soft-fails when permission is missing.
+            await hydrateMeetingBriefs()
 
             // v0.9 — load the weekly health summary only when the user
             // has explicitly opted in via Settings. We never call
@@ -916,6 +978,191 @@ private struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: .mindOpenDailyBrief)) { _ in
             showDailyBrief = true
         }
+        // v0.28 — Same bridge for the meeting-brief deep link.
+        // userInfo["eventID"] carries the EKEvent id; we resolve it
+        // against the already-hydrated `upcomingMeetingBriefs` list
+        // and present the matching brief. If the brief hasn't been
+        // assembled yet (cold launch, list still loading) we kick the
+        // hydrator and try once more on the next pass.
+        .onReceive(NotificationCenter.default.publisher(for: .mindOpenMeetingBrief)) { notif in
+            guard let eventID = notif.userInfo?["eventID"] as? String else { return }
+            if let brief = upcomingMeetingBriefs.first(where: { $0.event.id == eventID }) {
+                selectedMeetingBrief = brief
+                return
+            }
+            // Re-hydrate then retry.
+            Task { @MainActor in
+                await hydrateMeetingBriefs()
+                if let brief = upcomingMeetingBriefs.first(where: { $0.event.id == eventID }) {
+                    selectedMeetingBrief = brief
+                }
+            }
+        }
+    }
+
+    /// v0.28 — Loads upcoming events for the next 7 days, derives a
+    /// `MeetingBrief` per event with at least one attendee email
+    /// (the heuristic for "prospect/client meeting"), and schedules
+    /// the morning-of notifications via `MeetingBriefScheduler`.
+    @MainActor
+    private func hydrateMeetingBriefs() async {
+        let upcoming = await CalendarReader.shared.upcomingEvents(dayWindow: 7)
+        let candidateEvents = upcoming.filter { !$0.attendeeEmails.isEmpty }
+        let clientNodes = allNodes.filter { $0.kindRaw == NodeKind.client.rawValue }
+        let briefs = candidateEvents.map { event in
+            MeetingBriefBuilder.assemble(for: event, clients: clientNodes)
+        }
+        upcomingMeetingBriefs = briefs
+
+        #if DEBUG
+        // Synthesize one sample brief so the vision-verify screenshot
+        // captures the actual card geometry even on a freshly-installed
+        // simulator where the user has zero calendar events. Release
+        // builds skip this branch entirely.
+        if upcomingMeetingBriefs.isEmpty {
+            let demoStart = Calendar.current.date(
+                bySettingHour: 14,
+                minute: 0,
+                second: 0,
+                of: Date.now.addingTimeInterval(24 * 3600)
+            ) ?? Date.now.addingTimeInterval(24 * 3600)
+            let demoEvent = CalendarEvent(
+                id: "demo.meeting.stripe",
+                title: "Discovery Stripe",
+                startDate: demoStart,
+                endDate: demoStart.addingTimeInterval(3600),
+                location: "Visio",
+                attendees: ["Jane Doe"],
+                attendeeEmails: ["jane.doe@stripe.com"],
+                notes: nil
+            )
+            let demoBrief = MeetingBriefBuilder.assemble(
+                for: demoEvent,
+                clients: clientNodes
+            )
+            upcomingMeetingBriefs = [demoBrief]
+        }
+        #endif
+
+        await MeetingBriefScheduler.scheduleBriefs(for: candidateEvents)
+    }
+
+    /// v0.28 — "Briefs à venir" Home card. Lists up to 4 upcoming
+    /// briefs (next 7 days), with the matched client name + the time
+    /// of the meeting + a chevron tap-target opening the dossier.
+    @ViewBuilder
+    private var upcomingBriefsCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    Text("home.meetingBriefs.title")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("\(upcomingMeetingBriefs.count)")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                Text("home.meetingBriefs.subtitle")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 10) {
+                    ForEach(upcomingMeetingBriefs.prefix(4)) { brief in
+                        upcomingBriefRow(brief)
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func upcomingBriefRow(_ brief: MeetingBrief) -> some View {
+        Button {
+            LiquidHaptics.tap()
+            selectedMeetingBrief = brief
+            MINDTelemetry.info(
+                "meetingBrief.cardTapped",
+                data: ["eventID": brief.event.id]
+            )
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(spacing: 2) {
+                    Text(Self.shortDay(for: brief.event.startDate))
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Text(brief.event.formattedTime)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(LiquidPalette.iris)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(width: 64, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(brief.event.title.isEmpty
+                         ? String(localized: "home.today.untitled")
+                         : brief.event.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                    if let client = brief.detectedClient {
+                        HStack(spacing: 4) {
+                            Image(systemName: "building.2.fill")
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(LiquidPalette.iris)
+                            Text(client.title)
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                        }
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(systemName: "questionmark.circle.fill")
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(.tertiary)
+                            Text("meetingBrief.detail.noClient")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.system(.footnote, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Short day label ("MAR", "MER", …) in the user's locale.
+    private static func shortDay(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.setLocalizedDateFormatFromTemplate("EEE")
+        return formatter.string(from: date).uppercased()
     }
 
     // MARK: - "Bilan de la semaine" card (v0.16 — WeeklyDigest)
@@ -2200,4 +2447,11 @@ extension Notification.Name {
     /// tap). Observed by HomeView's `.onReceive` to flip its
     /// `showDailyBrief` sheet on so the brief presents.
     static let mindOpenDailyBrief = Notification.Name("app.mind.ios.openDailyBrief")
+
+    /// v0.28 — Posted by `RootView.onOpenURL` when iOS hands us a
+    /// `mind://brief/<eventID>` deep link (typically from the
+    /// morning-of meeting-brief notification). `userInfo["eventID"]`
+    /// carries the EKEvent id so HomeView can resolve the matching
+    /// brief and present `MeetingBriefSheet`.
+    static let mindOpenMeetingBrief = Notification.Name("app.mind.ios.openMeetingBrief")
 }

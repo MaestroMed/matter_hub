@@ -1319,6 +1319,294 @@
         }
       }
     },
+    "home.meetingBriefs.title": {
+      "comment": "v0.28 — Header of the HomeView card listing upcoming Discovery Call Prep Dossiers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upcoming briefs"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Briefs à venir"
+          }
+        }
+      }
+    },
+    "home.meetingBriefs.subtitle": {
+      "comment": "v0.28 — Subtitle under the Upcoming briefs card explaining the heuristic.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIND prepares a dossier the day before every client meeting."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIND prépare un dossier la veille de chaque rendez-vous client."
+          }
+        }
+      }
+    },
+    "meetingBrief.detail.title": {
+      "comment": "v0.28 — Navigation title of the MeetingBriefSheet (Discovery Call Prep Dossier).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovery brief"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brief discovery"
+          }
+        }
+      }
+    },
+    "meetingBrief.detail.noClient": {
+      "comment": "v0.28 — Inline caption on the brief header when no client Node matched the attendee email domains.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No linked client"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun client lié"
+          }
+        }
+      }
+    },
+    "meetingBrief.section.opening": {
+      "comment": "v0.28 — MeetingBriefSheet section header for the 30-second elevator opening line.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening line"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouverture"
+          }
+        }
+      }
+    },
+    "meetingBrief.section.news": {
+      "comment": "v0.28 — MeetingBriefSheet section header for recent company news.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent news"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualité récente"
+          }
+        }
+      }
+    },
+    "meetingBrief.section.audit": {
+      "comment": "v0.28 — MeetingBriefSheet section header for the MIND audit findings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit highlights"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Points clés de l'audit"
+          }
+        }
+      }
+    },
+    "meetingBrief.section.attendees": {
+      "comment": "v0.28 — MeetingBriefSheet section header for attendee intelligence (roles + LinkedIn).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your attendees"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos interlocuteurs"
+          }
+        }
+      }
+    },
+    "meetingBrief.section.questions": {
+      "comment": "v0.28 — MeetingBriefSheet section header for the 5 calibrated discovery questions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovery questions"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions discovery"
+          }
+        }
+      }
+    },
+    "meetingBrief.copy.action": {
+      "comment": "v0.28 — Copy-to-pasteboard CTA next to each discovery question and the opening line.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier"
+          }
+        }
+      }
+    },
+    "meetingBrief.copy.done": {
+      "comment": "v0.28 — Confirmation label that replaces Copy once the line is pinned to the pasteboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copié"
+          }
+        }
+      }
+    },
+    "meetingBrief.bullet.source": {
+      "comment": "v0.28 — Label shown next to a brief bullet whose source is an external URL.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open source"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir la source"
+          }
+        }
+      }
+    },
+    "meetingBrief.bullet.auditSource": {
+      "comment": "v0.28 — Label shown next to a brief bullet sourced from a MIND-internal audit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your MIND audit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis votre audit MIND"
+          }
+        }
+      }
+    },
+    "meetingBrief.notification.title": {
+      "comment": "v0.28 — Title of the morning-of meeting brief local notification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your discovery brief is ready"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton brief discovery est prêt"
+          }
+        }
+      }
+    },
+    "meetingBrief.notification.body.format": {
+      "comment": "v0.28 — Body of the morning-of meeting brief local notification. Placeholders: 1=time, 2=event title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today %1$@: brief for %2$@ is ready."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd'hui %1$@ : brief %2$@ prêt."
+          }
+        }
+      }
+    },
+    "meetingBrief.notification.body.generic": {
+      "comment": "v0.28 — Fallback label for the morning-of meeting brief notification when the event has no title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the meeting"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "du rendez-vous"
+          }
+        }
+      }
+    },
     "capture.banner.subtitle": {
       "extractionState": "manual",
       "localizations": {
