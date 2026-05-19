@@ -904,6 +904,74 @@
         }
       }
     },
+    "capture.photo.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a photo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturer une photo"
+          }
+        }
+      }
+    },
+    "capture.photo.ocrInProgress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the photo…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture de la photo…"
+          }
+        }
+      }
+    },
+    "capture.photo.ocrComplete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text extracted from the photo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texte extrait de la photo"
+          }
+        }
+      }
+    },
+    "capture.photo.empty.fallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No text recognised on this photo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun texte reconnu sur cette photo."
+          }
+        }
+      }
+    },
     "capture.button.capture": {
       "extractionState": "manual",
       "localizations": {

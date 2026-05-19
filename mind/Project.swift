@@ -115,6 +115,13 @@ let testTarget: Target = .target(
         // `LinearClient` actor is exercised end-to-end through the
         // simulator screenshot.
         .target(name: Module.linearKit.rawValue),
+        // v0.19 — OCRServiceTests link Capture so we can lock the
+        // pure `assemble(from:)` helper, the soft-fail contract on
+        // empty input, the OCRResult Sendable + Equatable shape,
+        // and the language-thread default. Vision itself runs in
+        // the simulator at test time but most tests don't depend
+        // on it — the assembly helper is the load-bearing path.
+        .target(name: Module.capture.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

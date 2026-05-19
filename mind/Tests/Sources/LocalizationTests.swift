@@ -160,4 +160,20 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("home.weekly.detail.title",         lang: "en"), "Your week, in detail")
         XCTAssertEqual(localized("home.weekly.detail.title",         lang: "fr"), "Ta semaine, en détail")
     }
+
+    /// v0.19 — Photo OCR strings. The Photo button + the spinner + the
+    /// "no text found" empty-state all live in the QuickCaptureSheet,
+    /// which is the first surface every user touches once they install
+    /// MIND. Lock both translations so the FR build never falls back
+    /// to the EN copy on a non-trivial path.
+    func test_capturePhotoStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("capture.photo.button",         lang: "en"), "Capture a photo")
+        XCTAssertEqual(localized("capture.photo.button",         lang: "fr"), "Capturer une photo")
+        XCTAssertEqual(localized("capture.photo.ocrInProgress",  lang: "en"), "Reading the photo…")
+        XCTAssertEqual(localized("capture.photo.ocrInProgress",  lang: "fr"), "Lecture de la photo…")
+        XCTAssertEqual(localized("capture.photo.ocrComplete",    lang: "en"), "Text extracted from the photo")
+        XCTAssertEqual(localized("capture.photo.ocrComplete",    lang: "fr"), "Texte extrait de la photo")
+        XCTAssertEqual(localized("capture.photo.empty.fallback", lang: "en"), "No text recognised on this photo.")
+        XCTAssertEqual(localized("capture.photo.empty.fallback", lang: "fr"), "Aucun texte reconnu sur cette photo.")
+    }
 }
