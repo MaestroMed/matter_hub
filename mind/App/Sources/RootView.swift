@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import CoreSpotlight
 import AuditKit
+import CalendarKit
 import DesignSystem
 import FocusKit
 import GraphCore
@@ -333,6 +334,7 @@ extension MINDTab {
 }
 
 private struct HomeView: View {
+    @Environment(\.modelContext) private var context
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
     @Query private var focusSessions: [FocusSessionRecord]
     @State private var focus = FocusController.shared
@@ -348,6 +350,11 @@ private struct HomeView: View {
     @State private var showJournal: Bool = false
     @State private var showGoals: Bool = false
     @State private var showSearch: Bool = false
+    /// v0.8 — events fetched from the user's primary calendar(s) for the
+    /// "Aujourd'hui" card. Stays empty when permission is denied or there
+    /// are no events today; the card hides itself in either case so the
+    /// rest of HomeView keeps its rhythm.
+    @State private var todayEvents: [CalendarEvent] = []
 
     private var habitsTodayCount: Int {
         HabitsView.checkedTodayCount(in: allNodes)
@@ -412,6 +419,10 @@ private struct HomeView: View {
                 greeting
 
                 quickSearchPill
+
+                if !todayEvents.isEmpty {
+                    todayCard
+                }
 
                 if !resumableClients.isEmpty {
                     ResumeCarousel(clients: resumableClients) { client in
@@ -518,6 +529,130 @@ private struct HomeView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .task {
+            // v0.8 — load today's calendar events on appear. Soft-fails
+            // to [] when permission is denied / undetermined so the card
+            // simply doesn't render and the user is never blocked.
+            // Asking for access here (rather than at app launch) means
+            // the first prompt fires the moment the user lands on Home,
+            // which is the natural moment to grant.
+            _ = await CalendarReader.shared.requestAccess()
+            todayEvents = await CalendarReader.shared.todayEvents()
+        }
+    }
+
+    // MARK: - "Aujourd'hui" card (v0.8 — CalendarKit)
+
+    /// Surfaces up to 3 of today's events. Tapping a row creates a
+    /// `.meeting` Node and routes through `selectedNote` so it lands in
+    /// the same NodeDetailView the rest of HomeView uses — keeps the UX
+    /// consistent and means the user immediately has a place to dump
+    /// notes for that meeting.
+    private var todayCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.aqua.opacity(0.28))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "calendar")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    Text("home.today.header")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("\(todayEvents.count)")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                }
+
+                VStack(spacing: 10) {
+                    ForEach(todayEvents.prefix(3)) { event in
+                        todayRow(event: event)
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func todayRow(event: CalendarEvent) -> some View {
+        Button {
+            LiquidHaptics.tap()
+            createMeetingNode(from: event)
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(spacing: 2) {
+                    Text(event.formattedTime)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(LiquidPalette.iris)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(width: 56, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(event.title.isEmpty
+                         ? String(localized: "home.today.untitled")
+                         : event.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                    if let location = event.location {
+                        HStack(spacing: 4) {
+                            Image(systemName: "mappin.circle.fill")
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(.secondary)
+                            Text(location)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
+                        }
+                    }
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.system(.footnote, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Materialises a `.meeting` Node from a CalendarEvent, persists it,
+    /// touches the Spotlight index, and routes the user into NodeDetailView
+    /// via `selectedNote`. Attendees become tags so the graph can later
+    /// link the meeting to existing `.person` Nodes without a schema change.
+    private func createMeetingNode(from event: CalendarEvent) {
+        let node = Node(
+            kind: .meeting,
+            title: event.title.isEmpty
+                ? String(localized: "home.today.untitled")
+                : event.title,
+            content: event.location ?? "",
+            tags: event.attendees,
+            sourceURL: nil
+        )
+        node.createdAt = event.startDate
+        node.updatedAt = .now
+        context.insert(node)
+        try? context.save()
+        SpotlightIndexer.index(node)
+        selectedNote = node
     }
 
     private var askMindCard: some View {

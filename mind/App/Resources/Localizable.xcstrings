@@ -522,6 +522,22 @@
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Focus cette semaine" } }
       }
     },
+    "home.today.header" : {
+      "comment" : "Header of the HomeView 'Aujourd'hui' card (v0.8 — CalendarKit).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aujourd'hui" } }
+      }
+    },
+    "home.today.untitled" : {
+      "comment" : "Fallback label for calendar events that have no title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled meeting" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réunion sans titre" } }
+      }
+    },
     "onboarding.anthropic.body" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -12,6 +12,7 @@ public enum Module: String, CaseIterable {
     case focusKit = "FocusKit"
     case visualKit = "VisualKit"
     case auditKit = "AuditKit"
+    case calendarKit = "CalendarKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -78,6 +79,16 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.intelligence.rawValue),
+            ]
+        case .calendarKit:
+            // EventKit reader + lightweight CalendarEvent value type used
+            // by the HomeView "Aujourd'hui" card. Depends on GraphCore so
+            // the card can mint a .meeting Node from a tap, and on
+            // DesignSystem so any future in-module UI can reuse Liquid
+            // Glass tokens without reaching across the layering boundary.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.designSystem.rawValue),
             ]
         }
     }

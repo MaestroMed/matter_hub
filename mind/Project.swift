@@ -20,6 +20,12 @@ let appTarget: Target = .target(
         "NSSpeechRecognitionUsageDescription": "MIND transcribes your voice locally so you can capture thoughts hands-free.",
         "NSCameraUsageDescription": "MIND scans documents and images so they become part of your second brain.",
         "NSPhotoLibraryUsageDescription": "MIND can pull photos to enrich your knowledge graph.",
+        // v0.8 — Calendar (EventKit) integration. Both keys are required
+        // on iOS 17+: the system prompts with the FullAccess string when
+        // we call `requestFullAccessToEvents()`, and falls back to the
+        // legacy key for write-only paths we may add later.
+        "NSCalendarsFullAccessUsageDescription": "MIND lit ton agenda pour surfacer les rendez-vous du jour sur l'accueil et créer un nœud par réunion en un tap.",
+        "NSCalendarsUsageDescription": "MIND lit ton agenda pour surfacer les rendez-vous du jour sur l'accueil et créer un nœud par réunion en un tap.",
         "UIBackgroundModes": ["audio", "processing", "fetch"],
         "BGTaskSchedulerPermittedIdentifiers": ["app.mind.ios.refresh"],
         "ITSAppUsesNonExemptEncryption": false,
@@ -57,6 +63,9 @@ let testTarget: Target = .target(
         // v0.5 — MarkdownRenderingTests link DesignSystem to verify the
         // pure markdown → AttributedString helper used by the Note editor.
         .target(name: Module.designSystem.rawValue),
+        // v0.8 — CalendarEventTests cover the pure value type + Array
+        // helpers used by the HomeView "Aujourd'hui" card.
+        .target(name: Module.calendarKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

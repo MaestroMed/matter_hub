@@ -122,7 +122,10 @@ public enum SpotlightIndexer {
             return .plainText
         case .task, .habit, .goal:
             return .item
-        case .event:
+        case .event, .meeting:
+            // v0.8 — `.meeting` is a CalendarKit-sourced event captured
+            // into the graph. Same Spotlight UTType so the system renders
+            // a calendar glyph next to it in search results.
             return .calendarEvent
         case .person, .client:
             return .contact

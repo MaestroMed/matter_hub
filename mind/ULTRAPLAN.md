@@ -105,12 +105,30 @@ NodeDetail / Chat / FocusHistory / Habits / Journal / Goals / Tasks views remain
 on their original strings — they're not on the first-launch path and translate as a
 follow-up v0.7.1 patch.
 
-### v0.8 — Calendar (EventKit) integration ⏳
+### v0.8 — Calendar (EventKit) integration ✅
 **What**: Read events from the user's primary calendar, surface
 upcoming meetings on HomeView in a new "Aujourd'hui" card. Tap an
 event → create a `meeting` Node with date/participants pre-filled.
 **Acceptance**: events render with name + time + location, tap creates
 node, permission flow handled gracefully.
+Shipped 2026-05-19: new `CalendarKit` module wraps EKEventStore via an
+actor that soft-fails to `[]` when permission is denied; pure
+`CalendarEvent` value type with `sortedByStart()` / `deduplicatedByID()`
+helpers is reused by the new HomeView "Aujourd'hui" card. Card lists up
+to 3 events with locale-formatted time + title + location, taps create a
+`.meeting` Node (new NodeKind case) with attendees → tags and route into
+`NodeDetailView`. `NSCalendarsFullAccessUsageDescription` +
+`NSCalendarsUsageDescription` added in `Project.swift` with FR copy.
+PrivacyInfo.xcprivacy untouched — EventKit has no Required Reason API
+entry and calendar metadata stays in the user's CloudKit zone, so no
+new collected-data declaration. 8 new tests in
+`Tests/Sources/CalendarReaderTests.swift` cover init/defaults, sorting,
+deduplication, locale-aware time formatting, and the
+permission-denied soft-fail of `todayEvents()`. 153 tests, 0 failures
+(was 145 in v0.7). Screenshot at `mind/screenshots/v0.8.png` shows the
+calendar permission prompt firing on first launch with the exact French
+copy, validating both the EventKit request path and the Info.plist
+string.
 
 ### v0.9 — HealthKit weekly insights ⏳
 **What**: New module HealthKit. Pulls last 7 days of sleep, steps,

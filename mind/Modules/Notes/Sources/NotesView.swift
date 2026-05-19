@@ -252,6 +252,7 @@ public struct NodeKindBadge: View {
         case .habit:   return ("repeat.circle",                       .teal)
         case .goal:    return ("target",                              .purple)
         case .journal: return ("book.closed",                         .brown)
+        case .meeting: return ("calendar.badge.clock",                LiquidPalette.iris)
         }
     }
 }
