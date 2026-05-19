@@ -41,6 +41,10 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.designSystem.rawValue),
                 .target(name: Module.intelligence.rawValue),
                 .target(name: Module.visualKit.rawValue),
+                // Needed so Settings → Danger Zone can reach
+                // GraphCore.sharedContainer for the "Wipe all data"
+                // action and SpotlightIndexer for "Reset Spotlight".
+                .target(name: Module.graphCore.rawValue),
             ]
         case .chat:
             return [

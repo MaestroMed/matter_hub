@@ -1,5 +1,7 @@
 import SwiftUI
+import SwiftData
 import DesignSystem
+import GraphCore
 import Intelligence
 import VisualKit
 
@@ -13,6 +15,13 @@ public struct SettingsView: View {
     @State private var showKey: Bool = false
     @State private var showOpenAIKey: Bool = false
     @State private var prefs = MINDPreferences.shared
+
+    // Danger-zone confirmation alerts. Two-step UX so the user can't
+    // accidentally wipe their second brain by misclicking — the alert
+    // is the second tap.
+    @State private var confirmClearAllData: Bool = false
+    @State private var confirmResetSpotlight: Bool = false
+    @State private var dangerZoneToast: String?
 
     private let availableModels: [(id: String, name: String)] = [
         ("claude-sonnet-4-6", "Claude Sonnet 4.6"),
@@ -169,11 +178,15 @@ public struct SettingsView: View {
 
                 section(title: "About") {
                     VStack(alignment: .leading, spacing: 6) {
-                        infoRow(label: "Version", value: "0.1.0")
-                        infoRow(label: "Bundle", value: "app.mind.ios")
+                        infoRow(label: "Version", value: Self.appVersion)
+                        infoRow(label: "Build", value: Self.appBuild)
+                        infoRow(label: "Bundle", value: Self.appBundleID)
+                        infoRow(label: "iOS target", value: "26.0")
                         infoRow(label: "Made for", value: "Mehdi 👋")
                     }
                 }
+
+                dangerZone
             }
             .padding(20)
             .padding(.top, 40)
@@ -189,6 +202,142 @@ public struct SettingsView: View {
                 openAIKeySaved = true
             }
         }
+        .alert("Wipe all data?",
+               isPresented: $confirmClearAllData) {
+            Button("Wipe everything", role: .destructive) {
+                wipeAllData()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Removes every note, capture, audit, client, focus session, and edge from this device. iCloud sync will pick up the deletion across your other devices. This cannot be undone.")
+        }
+        .alert("Reset Spotlight index?",
+               isPresented: $confirmResetSpotlight) {
+            Button("Reset", role: .destructive) {
+                SpotlightIndexer.removeAll()
+                dangerZoneToast = "Spotlight index cleared. It rebuilds the next time you open MIND."
+                LiquidHaptics.success()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Removes every MIND row from iOS Spotlight. Your data stays intact — only the search index is wiped. Useful when results look stale.")
+        }
+        .alert("Done",
+               isPresented: Binding(get: { dangerZoneToast != nil },
+                                    set: { if !$0 { dangerZoneToast = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(dangerZoneToast ?? "")
+        }
+    }
+
+    // MARK: - Danger zone
+
+    private var dangerZone: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Danger zone".uppercased())
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.red.opacity(0.85))
+                .padding(.leading, 4)
+
+            LiquidCard(cornerRadius: 20) {
+                VStack(alignment: .leading, spacing: 14) {
+                    dangerRow(
+                        icon: "magnifyingglass.circle.fill",
+                        title: "Reset Spotlight index",
+                        detail: "Wipe every MIND row from iOS Spotlight. Data stays intact.",
+                        action: {
+                            LiquidHaptics.warning()
+                            confirmResetSpotlight = true
+                        }
+                    )
+
+                    Divider().background(.white.opacity(0.2))
+
+                    dangerRow(
+                        icon: "trash.circle.fill",
+                        title: "Wipe all data",
+                        detail: "Delete every note, capture, audit, client, edge, and focus session. iCloud will sync the deletion.",
+                        action: {
+                            LiquidHaptics.warning()
+                            confirmClearAllData = true
+                        }
+                    )
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func dangerRow(
+        icon: String,
+        title: String,
+        detail: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(.red.opacity(0.18))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.red)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(detail)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer()
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Deletes every Node / Edge / FocusSessionRecord from the shared
+    /// container. SwiftData's batch-delete API doesn't span all model
+    /// types in a single call, so we iterate the three types.
+    @MainActor
+    private func wipeAllData() {
+        let context = ModelContext(GraphCore.sharedContainer)
+        do {
+            try context.delete(model: Node.self)
+            try context.delete(model: Edge.self)
+            try context.delete(model: FocusSessionRecord.self)
+            try context.save()
+            SpotlightIndexer.removeAll()
+            dangerZoneToast = "Tout est parti. iCloud va synchroniser la suppression sur tes autres appareils."
+            LiquidHaptics.success()
+        } catch {
+            dangerZoneToast = "Échec : \(error.localizedDescription)"
+            LiquidHaptics.error()
+        }
+    }
+
+    // MARK: - About metadata
+
+    /// Pulled from Info.plist at runtime so the About row never drifts
+    /// from what's actually shipping in the binary. Fallback strings
+    /// keep the row usable in tests / previews where the bundle isn't
+    /// the production bundle.
+    private static var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+
+    private static var appBuild: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+    }
+
+    private static var appBundleID: String {
+        Bundle.main.bundleIdentifier ?? "app.mind.ios"
     }
 
     private var header: some View {
