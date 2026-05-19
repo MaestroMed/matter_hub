@@ -51,6 +51,7 @@ let testTarget: Target = .target(
         .target(name: Module.graphCore.rawValue),
         .target(name: Module.visualKit.rawValue),
         .target(name: Module.intelligence.rawValue),
+        .target(name: Module.settings.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",
