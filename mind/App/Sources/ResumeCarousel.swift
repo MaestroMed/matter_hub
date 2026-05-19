@@ -54,8 +54,10 @@ struct ResumeCarousel: View {
     // MARK: - Graph helpers
 
     /// Latest audit attached to the client through Edge.derivedFrom.
+    /// Coalesces `incoming` (typed `[Edge]?` for CloudKit compat)
+    /// against nil so an empty-graph client still returns nil cleanly.
     static func latestAudit(for client: Node) -> Node? {
-        client.incoming
+        (client.incoming ?? [])
             .compactMap { $0.from }
             .filter { $0.kindRaw == "audit" }
             .max(by: { $0.createdAt < $1.createdAt })

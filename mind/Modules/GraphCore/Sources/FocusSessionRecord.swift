@@ -12,12 +12,13 @@ import SwiftData
 /// by future "Focus history" detail views.
 @Model
 public final class FocusSessionRecord {
-    // All non-optional properties carry a default value (init or model
-    // declaration). CloudKit-backed SwiftData refuses to sync records
-    // with non-optional + no-default attributes — failing with "Store
-    // failed to load. CloudKit integration requires that all attributes
-    // be optional, or have a default value set." Defaults are inert in
-    // practice because every record is created via the full init below.
+    // All non-optional properties carry a default value so the
+    // CloudKit-backed persistent store loads cleanly. Note: retired the
+    // attempt to also drop `@Attribute(.unique)` for CloudKit — removing
+    // the unique constraint caused the SwiftData test runner to crash
+    // at boot (Early unexpected exit). Tracking the underlying CloudKit
+    // sync issue separately; for now uniqueness via the SQLite index is
+    // safer than not booting at all.
     @Attribute(.unique) public var id: UUID = UUID()
     public var intention: String = ""
     public var startDate: Date = Date.now

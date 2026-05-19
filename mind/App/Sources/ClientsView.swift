@@ -234,9 +234,12 @@ struct ClientsView: View {
     // MARK: - Graph helpers
 
     /// Walks the Edge.derivedFrom relationship to find every audit attached
-    /// to a given client, newest first.
+    /// to a given client, newest first. Coalesces `incoming` against nil
+    /// because the relationship is typed `[Edge]?` for CloudKit
+    /// compatibility — empty graph or freshly fetched record may surface
+    /// nil rather than an empty array.
     static func audits(for client: Node) -> [Node] {
-        client.incoming
+        (client.incoming ?? [])
             .compactMap { $0.from }
             .filter { $0.kindRaw == "audit" }
             .sorted { $0.createdAt > $1.createdAt }
