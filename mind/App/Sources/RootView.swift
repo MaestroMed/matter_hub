@@ -381,6 +381,11 @@ private struct HomeView: View {
     @State private var prefs = MINDPreferences.shared
     @State private var isAuditing: Bool = false
     @State private var isChatting: Bool = false
+    /// v0.24 — Audit Battle Mode sheet. Triggered from the audit card's
+    /// secondary "Battle" CTA. One client + up to three competitors
+    /// audited in parallel, results rendered as a 4-way radar + per-
+    /// metric podium.
+    @State private var isBattling: Bool = false
     @State private var selectedClient: Node?
     @State private var selectedNote: Node?
     @State private var showFocusHistory: Bool = false
@@ -646,6 +651,12 @@ private struct HomeView: View {
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $isBattling) {
+            BattleSheet()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -1342,38 +1353,82 @@ private struct HomeView: View {
 
     private var auditCard: some View {
         LiquidCard(cornerRadius: 22) {
-            Button {
-                isAuditing = true
-            } label: {
-                HStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(LiquidPalette.iris.opacity(0.18))
-                            .frame(width: 44, height: 44)
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(.headline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(LiquidPalette.iris)
+            VStack(spacing: 0) {
+                Button {
+                    isAuditing = true
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.iris.opacity(0.18))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("home.auditCard.title")
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .minimumScaleFactor(0.85)
+                                .lineLimit(2)
+                            Text("home.auditCard.subtitle")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
                     }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("home.auditCard.title")
-                            .font(.system(.headline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .minimumScaleFactor(0.85)
-                            .lineLimit(2)
-                        Text("home.auditCard.subtitle")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(.footnote, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.tertiary)
+                    .padding(18)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(18)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.plain)
+
+                // v0.24 — Secondary CTA: Audit Battle Mode. Sits on the
+                // same card so the discoverability moment for "compare
+                // 4 sites at once" lives next to the single-target
+                // audit it's a power-user upgrade of. Divider with a
+                // hairline stroke keeps the two affordances visually
+                // distinct without burning a whole card slot.
+                Divider()
+                    .background(LiquidPalette.iris.opacity(0.18))
+
+                Button {
+                    isBattling = true
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.aqua.opacity(0.20))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "bolt.horizontal.fill")
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.aqua)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("home.battleCard.title", bundle: .main)
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .minimumScaleFactor(0.85)
+                                .lineLimit(2)
+                            Text("home.battleCard.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
     }
 

@@ -279,4 +279,31 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("portal.vision.caption.prefix",  lang: "en"), "Recommendation")
         XCTAssertEqual(localized("portal.vision.caption.prefix",  lang: "fr"), "Recommandation")
     }
+
+    /// v0.24 — Battle Mode strings. Locks every FR + EN key
+    /// surfaced by the BattleSheet form / running / completed
+    /// states + the HomeView secondary CTA so a careless
+    /// catalogue edit can't ship the cinematic 4-way comparison
+    /// with half its labels falling back to raw keys on FR.
+    func test_battleModeStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("battle.title",                    lang: "en"), "Battle Mode")
+        XCTAssertEqual(localized("battle.title",                    lang: "fr"), "Mode Battle")
+
+        XCTAssertEqual(localized("battle.cta.start",                lang: "en"), "Start the battle")
+        XCTAssertEqual(localized("battle.cta.start",                lang: "fr"), "Lancer la battle")
+
+        XCTAssertEqual(localized("battle.podium.title",             lang: "en"), "Who wins what")
+        XCTAssertEqual(localized("battle.podium.title",             lang: "fr"), "Qui gagne quoi")
+
+        XCTAssertEqual(localized("battle.winner.badge",             lang: "en"), "Wins")
+        XCTAssertEqual(localized("battle.winner.badge",             lang: "fr"), "Gagne")
+
+        XCTAssertEqual(localized("battle.metric.overall",           lang: "en"), "Overall")
+        XCTAssertEqual(localized("battle.metric.overall",           lang: "fr"), "Global")
+        XCTAssertEqual(localized("battle.metric.security",          lang: "en"), "Security")
+        XCTAssertEqual(localized("battle.metric.security",          lang: "fr"), "Sécurité")
+
+        XCTAssertEqual(localized("home.battleCard.title",           lang: "en"), "Battle Mode")
+        XCTAssertEqual(localized("home.battleCard.title",           lang: "fr"), "Mode Battle")
+    }
 }

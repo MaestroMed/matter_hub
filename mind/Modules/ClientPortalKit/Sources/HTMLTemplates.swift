@@ -1,6 +1,17 @@
 import Foundation
 import AuditKit
 
+/// v0.24 — Local helper used by the battle SVG renderer to keep
+/// the coordinate output compact (3 decimals max instead of the
+/// full Double precision a `Double.description` would dump). Kept
+/// fileprivate so it doesn't pollute callers of ClientPortalKit.
+fileprivate extension Double {
+    func rounded(toPlaces places: Int) -> Double {
+        let multiplier = pow(10.0, Double(places))
+        return (self * multiplier).rounded() / multiplier
+    }
+}
+
 /// Pure HTML/CSS/JS string builders. Every helper is `static`, takes
 /// value-type inputs, and returns a String — no IO, no UIKit, no
 /// global state. The output is glued together by
@@ -34,13 +45,25 @@ public enum HTMLTemplates {
     /// `<html>` envelope so the writer can drop it on disk as-is.
     public static func indexHTML(
         for report: AuditReport,
-        brand: BrandSettings
+        brand: BrandSettings,
+        battle: BattleReport? = nil
     ) -> String {
         let title = escape(report.client.displayName)
         let lang = "fr"
+        // v0.24 — Battle section sits ABOVE the synthesis (between
+        // the hero/scoring band and the prose) so the versus screen
+        // is the first comparative beat the client sees. Renders an
+        // empty string when no battle was attached or fewer than 2
+        // participants resolved, so legacy single-target portals
+        // stay byte-identical to the v0.23 baseline.
+        let battleHTML: String = {
+            guard let battle else { return "" }
+            return battleSection(report: battle)
+        }()
         let bodyHTML = [
             heroSection(report: report, brand: brand),
             scoringSection(report: report, brand: brand),
+            battleHTML,
             synthesisSection(report: report),
             visionSection(report: report),
             quickWinsSection(report: report),
@@ -332,6 +355,180 @@ public enum HTMLTemplates {
           </div>
         </section>
         """
+    }
+
+    // MARK: - v0.24 — Battle Mode section
+
+    /// v0.24 — Renders the 4-way Battle Mode section: a CSS-only SVG
+    /// radar chart (no JS chart lib) with one coloured polygon per
+    /// participant, plus a per-metric podium row showing who wins
+    /// each axis. Designed to sit ABOVE the synthesis section so the
+    /// versus screen is the first thing a client sees after the hero
+    /// + scoring grid.
+    ///
+    /// Self-contained: every coordinate is computed in Swift at
+    /// render time and written into the SVG so the browser never
+    /// runs a single line of JavaScript to draw the chart. That
+    /// keeps the export viewer-agnostic (a print-to-PDF works, a
+    /// plain HTML email client renders it, no extra fetch happens).
+    public static func battleSection(report: BattleReport) -> String {
+        let resolved = report.participants.filter { $0.report != nil }
+        guard resolved.count >= 2 else { return "" }
+        let palette = ["#6B5DD3", "#A8E6E0", "#7BB7E6", "#F4A6B9"]
+        let radarSVG = battleRadarSVG(participants: resolved, palette: palette)
+        let podiumHTML = battlePodiumHTML(report: report)
+        let legendHTML = battleLegendHTML(participants: resolved, palette: palette)
+
+        return """
+        <section class="battle reveal" data-reveal="up">
+          <div class="section__header">
+            <div class="section__eyebrow">00 — BATTLE MODE</div>
+            <h2 class="section__title">Le versus</h2>
+            <p class="section__lead">Audit comparé sur six axes — qui gagne quoi.</p>
+          </div>
+          <div class="battle__grid">
+            <div class="battle__radar-wrap">
+              \(radarSVG)
+            </div>
+            <div class="battle__podium-wrap">
+              \(podiumHTML)
+            </div>
+          </div>
+          \(legendHTML)
+        </section>
+        """
+    }
+
+    /// Builds the actual `<svg>` element for the radar. 6 axes
+    /// spaced evenly around a 200 px circle starting at 12 o'clock
+    /// (matches the iOS `RadarChartView` convention). Each
+    /// participant gets one polygon filled at 22% alpha and stroked
+    /// at full alpha so 4 overlapping shapes stay legible.
+    private static func battleRadarSVG(
+        participants: [BattleController.Participant],
+        palette: [String]
+    ) -> String {
+        let size: Double = 360
+        let center: Double = size / 2
+        let radius: Double = (size / 2) - 50
+        let axes = BattleReport.Metric.allCases.map { ($0, $0.label) }
+
+        // Concentric rings (25/50/75/100)
+        let rings = [0.25, 0.5, 0.75, 1.0].map { fraction -> String in
+            let pts = axes.indices.map { i -> String in
+                let p = radarPoint(center: center, radius: radius * fraction, index: i, total: axes.count)
+                return "\(p.x.rounded(toPlaces: 2)),\(p.y.rounded(toPlaces: 2))"
+            }.joined(separator: " ")
+            return """
+            <polygon points="\(pts)" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1" />
+            """
+        }.joined(separator: "\n")
+
+        // Axis rays + labels
+        let axesSVG = axes.enumerated().map { (i, axis) -> String in
+            let edge = radarPoint(center: center, radius: radius, index: i, total: axes.count)
+            let labelPt = radarPoint(center: center, radius: radius + 22, index: i, total: axes.count)
+            return """
+            <line x1="\(center)" y1="\(center)" x2="\(edge.x.rounded(toPlaces: 2))" y2="\(edge.y.rounded(toPlaces: 2))" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+            <text x="\(labelPt.x.rounded(toPlaces: 2))" y="\(labelPt.y.rounded(toPlaces: 2))" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">\(escape(axis.1))</text>
+            """
+        }.joined(separator: "\n")
+
+        // Each participant polygon
+        let polygons = participants.enumerated().map { (idx, participant) -> String in
+            let color = palette[idx % palette.count]
+            guard let report = participant.report else { return "" }
+            let pts = axes.enumerated().map { (i, axis) -> (x: Double, y: Double) in
+                let raw = BattleReport.scoreValue(axis.0, in: report.scoring)
+                let clamped = max(0, min(100, raw))
+                let r = radius * Double(clamped) / 100.0
+                return radarPoint(center: center, radius: r, index: i, total: axes.count)
+            }
+            let polyPts = pts.map { "\($0.x.rounded(toPlaces: 2)),\($0.y.rounded(toPlaces: 2))" }
+                .joined(separator: " ")
+            let dots = pts.map { p in
+                """
+                <circle cx="\(p.x.rounded(toPlaces: 2))" cy="\(p.y.rounded(toPlaces: 2))" r="3" fill="\(color)" />
+                """
+            }.joined()
+            return """
+            <polygon points="\(polyPts)" fill="\(color)" fill-opacity="0.22" stroke="\(color)" stroke-width="2" />
+            \(dots)
+            """
+        }.joined(separator: "\n")
+
+        return """
+        <svg class="battle__radar" viewBox="0 0 \(Int(size)) \(Int(size))" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Radar comparatif">
+          \(rings)
+          \(axesSVG)
+          \(polygons)
+        </svg>
+        """
+    }
+
+    private static func battlePodiumHTML(report: BattleReport) -> String {
+        let rows = BattleReport.Metric.allCases.map { metric -> String in
+            let winner = report.winners[metric]
+            let winnerHTML: String = {
+                if let winner {
+                    return """
+                    <span class="battle__winner">
+                      <span class="battle__trophy" aria-hidden="true">★</span>
+                      \(escape(winner.displayName))
+                      <span class="battle__badge">Gagne</span>
+                    </span>
+                    """
+                } else {
+                    return "<span class=\"battle__none\">—</span>"
+                }
+            }()
+            return """
+            <div class="battle__row">
+              <span class="battle__metric">\(escape(metric.label))</span>
+              \(winnerHTML)
+            </div>
+            """
+        }.joined(separator: "\n")
+        return """
+        <div class="battle__podium">
+          \(rows)
+        </div>
+        """
+    }
+
+    private static func battleLegendHTML(
+        participants: [BattleController.Participant],
+        palette: [String]
+    ) -> String {
+        let chips = participants.enumerated().map { (idx, participant) -> String in
+            let color = palette[idx % palette.count]
+            let score = participant.report.map { "\($0.scoring.overall)/100" } ?? "—"
+            return """
+            <div class="battle__chip">
+              <span class="battle__dot" style="background:\(color)"></span>
+              <span class="battle__chip-name">\(escape(participant.client.displayName))</span>
+              <span class="battle__chip-score">\(escape(score))</span>
+            </div>
+            """
+        }.joined(separator: "\n")
+        return """
+        <div class="battle__legend">
+          \(chips)
+        </div>
+        """
+    }
+
+    /// Helper mirroring `RadarChartView.point(...)` so the HTML
+    /// radar and the SwiftUI radar share the same geometry.
+    private static func radarPoint(
+        center: Double,
+        radius: Double,
+        index: Int,
+        total: Int
+    ) -> (x: Double, y: Double) {
+        guard total > 0 else { return (center, center) }
+        let angle = -Double.pi / 2 + (Double(index) / Double(total)) * 2 * .pi
+        return (center + radius * cos(angle), center + radius * sin(angle))
     }
 
     public static func footerSection(
@@ -690,11 +887,30 @@ public enum HTMLTemplates {
         .footer__inner{max-width:var(--max-w);margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
         .footer__wordmark{font-size:18px;font-weight:900;letter-spacing:0.32em;color:var(--ink);opacity:0.7;}
         .footer__meta{font-size:12px;color:var(--ink-quiet);}
+        /* v0.24 — Battle Mode: 4-way audit comparison */
+        .battle__grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);gap:24px;align-items:stretch;}
+        .battle__radar-wrap{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:22px;display:flex;align-items:center;justify-content:center;}
+        .battle__radar{width:100%;height:auto;max-width:380px;display:block;}
+        .battle__podium-wrap{display:flex;align-items:stretch;}
+        .battle__podium{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:22px;width:100%;display:flex;flex-direction:column;gap:10px;}
+        .battle__row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--card-stroke);}
+        .battle__row:last-child{border-bottom:none;}
+        .battle__metric{font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-dim);min-width:90px;}
+        .battle__winner{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);}
+        .battle__trophy{color:var(--accent-2);font-size:16px;line-height:1;}
+        .battle__badge{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--accent);color:#fff;}
+        .battle__none{color:var(--ink-quiet);font-size:14px;}
+        .battle__legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+        .battle__chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);font-size:13px;}
+        .battle__dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+        .battle__chip-name{font-weight:600;color:var(--ink);}
+        .battle__chip-score{color:var(--ink-dim);font-variant-numeric:tabular-nums;}
         /* Responsive */
         @media (max-width:640px){
           .hero{padding:60px 20px;}
           section{padding:64px 20px;}
           .pitch__inner{padding:36px 24px;}
+          .battle__grid{grid-template-columns:1fr;}
         }
         """
     }

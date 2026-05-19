@@ -390,11 +390,88 @@ layout/palette. For now the generator works from prompt only,
 which is the right MVP cut since brand consistency is captured by
 the iris/aqua tokens already embedded in the prompt.
 
-### v0.24 — iPad Stage Manager polish ⏳
-**What**: Optimise for Stage Manager: stable window aspect ratios,
-keyboard shortcuts for capture/focus, drag-drop URL from Safari to
-QuickCapture. **Acceptance**: 6 windows in Stage Manager don't break
-layout, ⌘N opens Quick Capture.
+### v0.24 — Audit Battle Mode ✅
+**What** (PIVOT 2026-05-19 from iPad Stage Manager polish — that
+work is deferred to v0.24.1): one URL in, three competitors auto-
+suggested from a hardcoded SaaS table, four audits run in parallel,
+results render as a 4-way radar chart + per-metric podium showing
+who wins which axis. The client-portal HTML gains a new "Battle
+Mode" section (CSS-only SVG radar + podium row, no JS chart lib)
+that sits above the synthesis when a battle is attached.
+**Acceptance**: HomeView audit card surfaces a secondary "Mode
+Battle" CTA, BattleSheet shows form → 4 parallel probe cards →
+radar + podium, sample 4-way portal renders cleanly.
+
+Shipped 2026-05-19: new `CompetitorLookup` pure enum with a 30-entry
+SaaS host → competitors table covering payments / project mgmt /
+docs / hosting / design / DB / CRM / analytics / email / support
+verticals with `www.`-strip + case-insensitive lookup; new
+`BattleController` (`@MainActor @Observable`, fresh AuditController
+per participant inside a TaskGroup, soft-fail per participant,
+200 ms polling mirror into `participants: [Participant]` so the
+SwiftUI cards render running spinners without subscribing to N
+inner controllers) + a pure `BattleReport.derive(from:)` that
+projects per-metric winners with deterministic first-wins tie
+breaking + zero-axis omission + unresolved/failed exclusion; new
+`RadarChartView` in DesignSystem (pure SwiftUI Canvas, 6-axis
+radar starting at 12 o'clock, one filled+stroked polygon per
+series, vertex dots, axis label drawing, value clamping 0-100,
+empty-axes guard, .smooth value animations); new `BattleSheet` in
+the App layer with three phases (form with primary URL + auto-
+suggested chip row + manual add field, running grid of 4
+LiquidCards horizontal-scrolled showing the 13 probe dots per
+participant in real time, completed view stacking radar card +
+per-metric podium with trophy badge + colour-coded legend); the
+HomeView `auditCard` now hosts a secondary "Mode Battle" CTA
+under the existing single-audit row separated by an iris
+divider; `HTMLTemplates` extended with `battleSection(report:)`
+(CSS-only SVG radar — 4 polygons, axis rings, axis rays, axis
+labels — plus a podium row with trophy + "Gagne" capsule + a
+legend chip row) wired through `indexHTML(for:brand:battle:)` so
+a battle-aware portal renders the section between the scoring
+band and the synthesis prose, with new battle.* CSS in the
+inline stylesheet (grid that collapses to single-column at 640px,
+Liquid Glass card surfaces, accent-tinted winners). 18 new FR/EN
+xcstrings keys (`battle.title|subtitle`,
+`battle.form.primary.label|placeholder`,
+`battle.form.competitors.label|empty`,
+`battle.form.add.competitor`, `battle.form.validation.invalidURL`,
+`battle.cta.start`, `battle.running.label`, `battle.radar.title`,
+`battle.podium.title`, `battle.winner.badge`,
+`battle.legend.failed`, `battle.metric.{overall|performance|seo|
+security|brand|mobile}`, `home.battleCard.title|subtitle`). 4
+telemetry breadcrumbs (`battle.started` with primary host +
+count, `battle.completed` with count + failed count,
+`battle.participant.failed` with host + reason,
+`battle.exported.portal` exposed via
+`BattleController.recordExportToPortal(participantCount:)` for
+the future portal-export call site). Tests: 16 new — 5 in
+`CompetitorLookupTests` (exact match, www-strip, unknown→empty,
+case-fold, table dedupe sanity), 6 in `BattleReportTests`
+(2-contender winners derivation per metric, first-wins tie
+break, all-zero axis omission, single-participant wins-
+everything-non-zero, 4-participants×6-metrics legality bounds,
+unresolved+failed excluded), 4 in `RadarChartViewTests` (clamp
+range, polygon padding for short series, empty-axes returns
+empty, full-score-axis-0 projects to 12-o'clock edge), 1 in
+`BattlePortalSampleEmitter` (writes the 30 KB sample HTML +
+asserts every critical substring lands). `LocalizationTests`
+extended with `test_battleModeStrings_resolveBothLanguages`
+locking 10 critical FR + EN strings. 373 tests total, 12
+skipped, 0 failures (was 357 in v0.23). Build SUCCEEDED on
+iPhone 17 Pro simulator. Screenshot at `mind/screenshots/v0.24.png`
+shows the host app launching cleanly. Sample battle portal HTML
+at `mind/screenshots/v0.24-battle-portal.html` (29.7 KB) renders
+the full versus screen with Stripe vs Adyen vs Mollie vs Checkout
+across all six axes — open in any browser to verify the radar
+geometry + podium layout end-to-end.
+
+### v0.24.1 — iPad Stage Manager polish ⏳
+**What** (original v0.24 scope, deferred when Battle Mode took the
+slot 2026-05-19): Optimise for Stage Manager — stable window aspect
+ratios, keyboard shortcuts for capture/focus, drag-drop URL from
+Safari to QuickCapture. **Acceptance**: 6 windows in Stage Manager
+don't break layout, ⌘N opens Quick Capture.
 
 ### v0.25 — Vision Pro spatial layout ⏳
 **What**: Enable visionOS target. Cards float in 3D space, focus

@@ -4207,6 +4207,182 @@
           }
         }
       }
+    },
+    "battle.title": {
+      "comment": "v0.24 · BattleSheet title — the headline shown at the top of the Audit Battle Mode sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Battle Mode" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mode Battle" } }
+      }
+    },
+    "battle.subtitle": {
+      "comment": "v0.24 · BattleSheet subtitle — the one-liner that introduces the 4-way audit comparison.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit a client against three competitors in parallel." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Audite un client face à trois concurrents en parallèle." } }
+      }
+    },
+    "battle.form.primary.label": {
+      "comment": "v0.24 · BattleSheet form — label above the primary URL field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Primary client" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Client principal" } }
+      }
+    },
+    "battle.form.primary.placeholder": {
+      "comment": "v0.24 · BattleSheet form — placeholder inside the primary URL field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "https://stripe.com" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "https://stripe.com" } }
+      }
+    },
+    "battle.form.competitors.label": {
+      "comment": "v0.24 · BattleSheet form — label above the competitor chips row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Competitors" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Concurrents" } }
+      }
+    },
+    "battle.form.competitors.empty": {
+      "comment": "v0.24 · BattleSheet form — empty-state hint shown under the competitors label when the chips list is empty.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Type a primary URL — suggestions will appear here." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Saisis une URL principale — les suggestions apparaissent ici." } }
+      }
+    },
+    "battle.form.add.competitor": {
+      "comment": "v0.24 · BattleSheet form — placeholder inside the field used to add a competitor by hand.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add a competitor (host)…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ajouter un concurrent (host)…" } }
+      }
+    },
+    "battle.form.validation.invalidURL": {
+      "comment": "v0.24 · BattleSheet form — validation error shown under the primary field when the URL can't be parsed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enter a valid URL (e.g. stripe.com)." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Saisis une URL valide (ex. stripe.com)." } }
+      }
+    },
+    "battle.cta.start": {
+      "comment": "v0.24 · BattleSheet form — primary CTA that kicks off the parallel audits.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Start the battle" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lancer la battle" } }
+      }
+    },
+    "battle.running.label": {
+      "comment": "v0.24 · BattleSheet running state — header above the horizontal probe-card row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Probes running in parallel…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Sondes en parallèle…" } }
+      }
+    },
+    "battle.radar.title": {
+      "comment": "v0.24 · BattleSheet completed state — header above the radar chart card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Six axes, four contenders" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Six axes, quatre prétendants" } }
+      }
+    },
+    "battle.podium.title": {
+      "comment": "v0.24 · BattleSheet completed state — header above the per-metric podium row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Who wins what" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Qui gagne quoi" } }
+      }
+    },
+    "battle.winner.badge": {
+      "comment": "v0.24 · BattleSheet podium — short capsule label next to the winning client on each metric row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Wins" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Gagne" } }
+      }
+    },
+    "battle.legend.failed": {
+      "comment": "v0.24 · BattleSheet legend — fallback text shown next to a participant whose audit failed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Failed" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Échec" } }
+      }
+    },
+    "battle.metric.overall": {
+      "comment": "v0.24 · BattleSheet podium — metric label, overall weighted score.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Overall" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Global" } }
+      }
+    },
+    "battle.metric.performance": {
+      "comment": "v0.24 · BattleSheet podium — metric label, Lighthouse performance.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Performance" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Performance" } }
+      }
+    },
+    "battle.metric.seo": {
+      "comment": "v0.24 · BattleSheet podium — metric label, SEO axis.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "SEO" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SEO" } }
+      }
+    },
+    "battle.metric.security": {
+      "comment": "v0.24 · BattleSheet podium — metric label, security headers + TLS.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Security" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Sécurité" } }
+      }
+    },
+    "battle.metric.brand": {
+      "comment": "v0.24 · BattleSheet podium — metric label, brand / OpenGraph axis.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Brand" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Brand" } }
+      }
+    },
+    "battle.metric.mobile": {
+      "comment": "v0.24 · BattleSheet podium — metric label, mobile / responsive axis.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mobile" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mobile" } }
+      }
+    },
+    "home.battleCard.title": {
+      "comment": "v0.24 · HomeView audit card — secondary CTA title that opens BattleSheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Battle Mode" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mode Battle" } }
+      }
+    },
+    "home.battleCard.subtitle": {
+      "comment": "v0.24 · HomeView audit card — secondary CTA subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit 4 sites side-by-side. Radar + podium." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Audit 4 sites côte à côte. Radar + podium." } }
+      }
     }
   }
 }

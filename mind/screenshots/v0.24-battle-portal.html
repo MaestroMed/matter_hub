@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0B0820" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F7F6FA" media="(prefers-color-scheme: light)">
+<title>Audit MIND — stripe.com</title>
+<meta name="description" content="Audit digital de stripe.com — réalisé par Mehdi Nafaa.">
+<meta property="og:title" content="Audit MIND — stripe.com">
+<meta property="og:description" content="Audit digital — score 88/100">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<style>:root{
+  --accent:#6B5DD3;
+  --accent-2:#A8E6E0;
+  --bg-dark-1:#0B0820;
+  --bg-dark-2:#13102E;
+  --bg-dark-3:#1E184A;
+  --bg-light:#F7F6FA;
+  --ink:#FFFFFF;
+  --ink-dim:rgba(255,255,255,0.66);
+  --ink-quiet:rgba(255,255,255,0.42);
+  --card:rgba(255,255,255,0.06);
+  --card-stroke:rgba(255,255,255,0.10);
+  --radius-lg:24px;
+  --radius-md:16px;
+  --font:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Inter, system-ui, sans-serif;
+  --max-w:1080px;
+  --max-w-prose:720px;
+  --easing:cubic-bezier(0.22,0.61,0.36,1);
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg-dark-1:#F7F6FA;
+    --bg-dark-2:#EDE9FB;
+    --bg-dark-3:#E1DAF7;
+    --ink:#0E0B22;
+    --ink-dim:rgba(14,11,34,0.7);
+    --ink-quiet:rgba(14,11,34,0.45);
+    --card:rgba(255,255,255,0.75);
+    --card-stroke:rgba(14,11,34,0.08);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg-dark-1);color:var(--ink);font-family:var(--font);line-height:1.55;-webkit-font-smoothing:antialiased;}
+body{overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+::selection{background:var(--accent);color:#fff;}
+/* Hero */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:80px 24px;}
+.hero__gradient{position:absolute;inset:-10% -10% -10% -10%;background:radial-gradient(80% 60% at 30% 30%,rgba(168,230,224,0.18) 0%,transparent 60%),radial-gradient(60% 80% at 80% 70%,rgba(107,93,211,0.32) 0%,transparent 70%),linear-gradient(160deg,var(--bg-dark-1) 0%,var(--bg-dark-2) 40%,var(--bg-dark-3) 100%);transform:translate3d(0,0,0);will-change:transform;}
+.hero__grain{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px);background-size:3px 3px;mix-blend-mode:overlay;opacity:0.5;pointer-events:none;}
+.hero__inner{position:relative;max-width:var(--max-w);width:100%;text-align:center;}
+.hero__eyebrow{font-size:11px;letter-spacing:0.32em;color:var(--accent-2);font-weight:600;margin-bottom:28px;}
+.hero__title{font-size:clamp(64px,12vw,200px);line-height:0.92;font-weight:900;letter-spacing:-0.04em;margin-bottom:24px;background:linear-gradient(180deg,#fff 0%,var(--accent-2) 120%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero__tagline{font-size:clamp(16px,2vw,22px);color:var(--ink-dim);margin-bottom:24px;}
+.hero__tagline strong{color:var(--ink);font-weight:600;}
+.hero__host{display:inline-block;padding:10px 20px;border-radius:999px;background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-stroke);color:var(--ink-dim);font-size:13px;letter-spacing:0.02em;transition:background 0.3s var(--easing),transform 0.3s var(--easing);}
+.hero__host:hover{background:rgba(255,255,255,0.12);transform:translateY(-2px);}
+.hero__scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);width:20px;height:32px;border:1.5px solid var(--ink-quiet);border-radius:12px;display:flex;justify-content:center;padding-top:6px;}
+.hero__scroll span{display:block;width:2px;height:6px;background:var(--ink-dim);border-radius:2px;animation:scroll 1.8s ease-in-out infinite;}
+@keyframes scroll{0%{opacity:1;transform:translateY(0);}80%{opacity:0;transform:translateY(12px);}100%{opacity:0;}}
+/* Sections shared */
+section{padding:100px 24px;max-width:var(--max-w);margin:0 auto;}
+.section__header{margin-bottom:48px;text-align:center;}
+.section__eyebrow{font-size:11px;letter-spacing:0.32em;color:var(--accent);font-weight:700;margin-bottom:14px;}
+.section__title{font-size:clamp(32px,5vw,56px);font-weight:700;letter-spacing:-0.025em;line-height:1.05;margin-bottom:16px;}
+.section__lead{color:var(--ink-dim);font-size:clamp(15px,1.8vw,18px);max-width:560px;margin:0 auto;}
+/* Reveal animation */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity 0.9s var(--easing),transform 0.9s var(--easing);}
+.reveal--in{opacity:1;transform:none;}
+@media (prefers-reduced-motion: reduce){
+  .reveal{opacity:1;transform:none;transition:none;}
+  .hero__scroll span{animation:none;}
+}
+/* Scoring grid */
+.scoring__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;}
+.gauge{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:28px 20px;text-align:center;transition:transform 0.4s var(--easing),background 0.4s var(--easing);}
+.gauge:hover{transform:translateY(-4px);background:rgba(255,255,255,0.10);}
+.gauge__svg{width:120px;height:120px;display:block;margin:0 auto 14px;transform:rotate(-90deg);}
+.gauge__track{fill:none;stroke:var(--card-stroke);stroke-width:8;}
+.gauge__fill{fill:none;stroke:url(#gaugeGrad);stroke:var(--accent);stroke-width:8;stroke-linecap:round;stroke-dasharray:339.3;stroke-dashoffset:339.3;transition:stroke-dashoffset 1.4s var(--easing);}
+.reveal--in .gauge__fill{stroke-dashoffset:calc(339.3 - (339.3 * var(--gauge-pct)) / 100);}
+@media (prefers-reduced-motion: reduce){
+  .gauge__fill{transition:none;stroke-dashoffset:calc(339.3 - (339.3 * var(--gauge-pct)) / 100);}
+}
+.gauge__value{font-size:32px;font-weight:800;letter-spacing:-0.02em;line-height:1;}
+.gauge__label{font-size:13px;font-weight:600;color:var(--ink-dim);margin-top:8px;text-transform:uppercase;letter-spacing:0.08em;}
+.gauge__sub{font-size:11px;color:var(--ink-quiet);margin-top:4px;}
+/* Synthesis */
+.synthesis{max-width:var(--max-w-prose);}
+.synthesis .section__header{text-align:left;}
+.synthesis__body{font-size:clamp(16px,1.6vw,19px);color:var(--ink-dim);}
+.synthesis__p{margin-bottom:18px;}
+.synthesis__p strong{color:var(--ink);font-weight:600;}
+.synthesis__h2{font-size:28px;font-weight:700;color:var(--ink);margin:32px 0 14px;letter-spacing:-0.02em;}
+.synthesis__h3{font-size:21px;font-weight:600;color:var(--ink);margin:24px 0 10px;letter-spacing:-0.01em;}
+.synthesis__list{padding-left:18px;margin-bottom:18px;}
+.synthesis__list li{margin-bottom:8px;}
+/* v0.23 — Vision: before/after redesign mockups gallery */
+.vision__gallery{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 4px 24px;-webkit-overflow-scrolling:touch;}
+.vision__gallery::-webkit-scrollbar{height:6px;}
+.vision__gallery::-webkit-scrollbar-thumb{background:var(--card-stroke);border-radius:3px;}
+.vision__card{min-width:320px;max-width:480px;flex:0 0 auto;scroll-snap-align:start;background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;}
+.vision__media{aspect-ratio:16/9;background:linear-gradient(135deg,rgba(94,91,216,0.20) 0%,rgba(94,233,216,0.18) 100%);overflow:hidden;}
+.vision__img{display:block;width:100%;height:100%;object-fit:cover;}
+.vision__caption{padding:18px 22px 22px;display:flex;flex-direction:column;gap:6px;}
+.vision__index{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.08em;}
+.vision__title{font-size:18px;font-weight:600;line-height:1.3;color:var(--ink);letter-spacing:-0.01em;}
+.vision__sub{font-size:13px;color:var(--ink-quiet);}
+/* Quick wins */
+.wins__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
+.win{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:26px;transition:transform 0.4s var(--easing),box-shadow 0.4s var(--easing);}
+.win:hover{transform:perspective(900px) rotateX(2deg) translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,0.4);}
+.win__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.win__index{font-size:13px;color:var(--ink-quiet);font-weight:600;letter-spacing:0.05em;}
+.win__pill{font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 11px;border-radius:999px;text-transform:uppercase;}
+.win__pill--high{background:rgba(168,230,224,0.20);color:#A8E6E0;}
+.win__pill--medium{background:rgba(107,93,211,0.22);color:#C7BBFF;}
+.win__pill--low{background:rgba(255,255,255,0.10);color:var(--ink-dim);}
+.win__title{font-size:18px;font-weight:600;line-height:1.3;margin-bottom:10px;letter-spacing:-0.01em;}
+.win__detail{font-size:14px;color:var(--ink-dim);margin-bottom:18px;}
+.win__meta{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--ink-quiet);}
+/* Strategic bets timeline */
+.bets__timeline{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 4px 24px;-webkit-overflow-scrolling:touch;}
+.bets__timeline::-webkit-scrollbar{height:6px;}
+.bets__timeline::-webkit-scrollbar-thumb{background:var(--card-stroke);border-radius:3px;}
+.bet{min-width:280px;max-width:320px;flex:0 0 auto;scroll-snap-align:start;background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:26px;display:flex;flex-direction:column;gap:10px;}
+.bet__index{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.08em;}
+.bet__duration{font-size:13px;color:var(--ink-quiet);margin-bottom:4px;}
+.bet__title{font-size:19px;font-weight:600;line-height:1.25;letter-spacing:-0.01em;}
+.bet__detail{font-size:14px;color:var(--ink-dim);flex:1;}
+.bet__budget{font-size:13px;color:var(--accent-2);font-weight:600;padding-top:10px;border-top:1px solid var(--card-stroke);}
+/* Hidden risks */
+.risks__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
+.risk{background:linear-gradient(160deg,rgba(255,100,100,0.10) 0%,rgba(255,60,60,0.04) 100%);border:1px solid rgba(255,100,100,0.22);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:26px;}
+.risk--critical{background:linear-gradient(160deg,rgba(255,40,40,0.20) 0%,rgba(255,40,40,0.06) 100%);border-color:rgba(255,40,40,0.35);}
+.risk__head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.risk__icon{font-size:18px;color:#FFB4B4;}
+.risk__sev{font-size:11px;font-weight:700;color:#FFB4B4;letter-spacing:0.08em;text-transform:uppercase;}
+.risk__title{font-size:18px;font-weight:600;line-height:1.3;margin-bottom:10px;letter-spacing:-0.01em;}
+.risk__detail{font-size:14px;color:var(--ink-dim);}
+/* Pitch */
+.pitch{max-width:var(--max-w-prose);}
+.pitch__inner{position:relative;background:linear-gradient(160deg,rgba(107,93,211,0.18) 0%,rgba(168,230,224,0.10) 100%);border:1px solid var(--card-stroke);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:var(--radius-lg);padding:48px 36px;}
+.pitch__quote-mark{position:absolute;top:8px;left:24px;font-size:110px;line-height:1;color:var(--accent-2);opacity:0.30;font-family:Georgia,serif;}
+.pitch__quote{font-size:clamp(17px,1.8vw,21px);color:var(--ink);font-style:italic;line-height:1.55;margin-bottom:32px;position:relative;z-index:1;}
+.pitch__byline{display:flex;align-items:center;gap:14px;}
+.pitch__portrait{width:54px;height:54px;border-radius:50%;object-fit:cover;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;letter-spacing:0.04em;}
+.pitch__byline-name{font-size:15px;font-weight:600;color:var(--ink);}
+.pitch__byline-title{font-size:13px;color:var(--ink-quiet);}
+/* Contact */
+.contact{text-align:center;padding-bottom:140px;}
+.contact__title{font-size:clamp(40px,7vw,80px);font-weight:800;letter-spacing:-0.04em;margin-bottom:18px;background:linear-gradient(180deg,#fff 0%,var(--accent-2) 130%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.contact__lead{font-size:clamp(15px,1.6vw,18px);color:var(--ink-dim);max-width:540px;margin:0 auto 36px;}
+.contact__ctas{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;}
+.cta{display:inline-block;padding:14px 28px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:0.01em;transition:transform 0.3s var(--easing),background 0.3s var(--easing),box-shadow 0.3s var(--easing);}
+.cta--primary{background:var(--accent);color:#fff;box-shadow:0 12px 32px rgba(107,93,211,0.40);}
+.cta--primary:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(107,93,211,0.55);}
+.cta--ghost{background:var(--card);border:1px solid var(--card-stroke);color:var(--ink);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+.cta--ghost:hover{transform:translateY(-3px);background:rgba(255,255,255,0.12);}
+/* Footer */
+.footer{padding:32px 24px 48px;border-top:1px solid var(--card-stroke);max-width:none;}
+.footer__inner{max-width:var(--max-w);margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+.footer__wordmark{font-size:18px;font-weight:900;letter-spacing:0.32em;color:var(--ink);opacity:0.7;}
+.footer__meta{font-size:12px;color:var(--ink-quiet);}
+/* v0.24 — Battle Mode: 4-way audit comparison */
+.battle__grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);gap:24px;align-items:stretch;}
+.battle__radar-wrap{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:22px;display:flex;align-items:center;justify-content:center;}
+.battle__radar{width:100%;height:auto;max-width:380px;display:block;}
+.battle__podium-wrap{display:flex;align-items:stretch;}
+.battle__podium{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:22px;width:100%;display:flex;flex-direction:column;gap:10px;}
+.battle__row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--card-stroke);}
+.battle__row:last-child{border-bottom:none;}
+.battle__metric{font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-dim);min-width:90px;}
+.battle__winner{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);}
+.battle__trophy{color:var(--accent-2);font-size:16px;line-height:1;}
+.battle__badge{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--accent);color:#fff;}
+.battle__none{color:var(--ink-quiet);font-size:14px;}
+.battle__legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.battle__chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);font-size:13px;}
+.battle__dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.battle__chip-name{font-weight:600;color:var(--ink);}
+.battle__chip-score{color:var(--ink-dim);font-variant-numeric:tabular-nums;}
+/* Responsive */
+@media (max-width:640px){
+  .hero{padding:60px 20px;}
+  section{padding:64px 20px;}
+  .pitch__inner{padding:36px 24px;}
+  .battle__grid{grid-template-columns:1fr;}
+}</style>
+</head>
+<body>
+<header class="hero" data-parallax="true">
+  <div class="hero__gradient" aria-hidden="true"></div>
+  <div class="hero__grain" aria-hidden="true"></div>
+  <div class="hero__inner">
+    <div class="hero__eyebrow">AUDIT DIGITAL · SAAS B2B</div>
+    <h1 class="hero__title">stripe.com</h1>
+    <p class="hero__tagline">Réalisé par <strong>Mehdi Nafaa</strong> · 19 mai 2026</p>
+    <a class="hero__host" href="https://stripe.com" target="_blank" rel="noopener">stripe.com ↗</a>
+    <div class="hero__scroll" aria-hidden="true">
+      <span></span>
+    </div>
+  </div>
+</header>
+<section class="scoring reveal" data-reveal="up">
+  <div class="section__header">
+    <div class="section__eyebrow">01 — SCORING</div>
+    <h2 class="section__title">Vue d'ensemble</h2>
+    <p class="section__lead">Six axes mesurés, un score global pondéré sur 100.</p>
+  </div>
+  <div class="scoring__grid">
+    <div class="gauge" data-score="88" role="figure" aria-label="Global : 88 sur 100">
+  <svg viewBox="0 0 120 120" class="gauge__svg" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="gauge__track"/>
+    <circle cx="60" cy="60" r="54" class="gauge__fill" style="--gauge-pct: 88;"/>
+  </svg>
+  <div class="gauge__value">88</div>
+  <div class="gauge__label">Global</div>
+  <div class="gauge__sub">Score pondéré</div>
+</div>
+<div class="gauge" data-score="92" role="figure" aria-label="Performance : 92 sur 100">
+  <svg viewBox="0 0 120 120" class="gauge__svg" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="gauge__track"/>
+    <circle cx="60" cy="60" r="54" class="gauge__fill" style="--gauge-pct: 92;"/>
+  </svg>
+  <div class="gauge__value">92</div>
+  <div class="gauge__label">Performance</div>
+  <div class="gauge__sub">Core Web Vitals</div>
+</div>
+<div class="gauge" data-score="80" role="figure" aria-label="SEO : 80 sur 100">
+  <svg viewBox="0 0 120 120" class="gauge__svg" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="gauge__track"/>
+    <circle cx="60" cy="60" r="54" class="gauge__fill" style="--gauge-pct: 80;"/>
+  </svg>
+  <div class="gauge__value">80</div>
+  <div class="gauge__label">SEO</div>
+  <div class="gauge__sub">Découvrabilité</div>
+</div>
+<div class="gauge" data-score="95" role="figure" aria-label="Sécurité : 95 sur 100">
+  <svg viewBox="0 0 120 120" class="gauge__svg" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="gauge__track"/>
+    <circle cx="60" cy="60" r="54" class="gauge__fill" style="--gauge-pct: 95;"/>
+  </svg>
+  <div class="gauge__value">95</div>
+  <div class="gauge__label">Sécurité</div>
+  <div class="gauge__sub">Headers + TLS</div>
+</div>
+<div class="gauge" data-score="87" role="figure" aria-label="Brand : 87 sur 100">
+  <svg viewBox="0 0 120 120" class="gauge__svg" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="gauge__track"/>
+    <circle cx="60" cy="60" r="54" class="gauge__fill" style="--gauge-pct: 87;"/>
+  </svg>
+  <div class="gauge__value">87</div>
+  <div class="gauge__label">Brand</div>
+  <div class="gauge__sub">OpenGraph + cohérence</div>
+</div>
+<div class="gauge" data-score="90" role="figure" aria-label="Mobile : 90 sur 100">
+  <svg viewBox="0 0 120 120" class="gauge__svg" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="gauge__track"/>
+    <circle cx="60" cy="60" r="54" class="gauge__fill" style="--gauge-pct: 90;"/>
+  </svg>
+  <div class="gauge__value">90</div>
+  <div class="gauge__label">Mobile</div>
+  <div class="gauge__sub">App store + responsive</div>
+</div>
+  </div>
+</section>
+<section class="battle reveal" data-reveal="up">
+  <div class="section__header">
+    <div class="section__eyebrow">00 — BATTLE MODE</div>
+    <h2 class="section__title">Le versus</h2>
+    <p class="section__lead">Audit comparé sur six axes — qui gagne quoi.</p>
+  </div>
+  <div class="battle__grid">
+    <div class="battle__radar-wrap">
+      <svg class="battle__radar" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Radar comparatif">
+  <polygon points="180.0,147.5 208.15,163.75 208.15,196.25 180.0,212.5 151.85,196.25 151.85,163.75" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1" />
+<polygon points="180.0,115.0 236.29,147.5 236.29,212.5 180.0,245.0 123.71,212.5 123.71,147.5" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1" />
+<polygon points="180.0,82.5 264.44,131.25 264.44,228.75 180.0,277.5 95.56,228.75 95.56,131.25" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1" />
+<polygon points="180.0,50.0 292.58,115.0 292.58,245.0 180.0,310.0 67.42,245.0 67.42,115.0" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1" />
+  <line x1="180.0" y1="180.0" x2="180.0" y2="50.0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+<text x="180.0" y="28.0" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">Global</text>
+<line x1="180.0" y1="180.0" x2="292.58" y2="115.0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+<text x="311.64" y="104.0" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">Performance</text>
+<line x1="180.0" y1="180.0" x2="292.58" y2="245.0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+<text x="311.64" y="256.0" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">SEO</text>
+<line x1="180.0" y1="180.0" x2="180.0" y2="310.0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+<text x="180.0" y="332.0" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">Sécurité</text>
+<line x1="180.0" y1="180.0" x2="67.42" y2="245.0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+<text x="48.36" y="256.0" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">Brand</text>
+<line x1="180.0" y1="180.0" x2="67.42" y2="115.0" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+<text x="48.36" y="104.0" text-anchor="middle" alignment-baseline="middle" font-family="inherit" font-size="11" fill="rgba(255,255,255,0.66)" font-weight="600">Mobile</text>
+  <polygon points="180.0,65.6 283.58,120.2 270.07,232.0 180.0,303.5 82.05,236.55 78.68,121.5" fill="#6B5DD3" fill-opacity="0.22" stroke="#6B5DD3" stroke-width="2" />
+<circle cx="180.0" cy="65.6" r="3" fill="#6B5DD3" /><circle cx="283.58" cy="120.2" r="3" fill="#6B5DD3" /><circle cx="270.07" cy="232.0" r="3" fill="#6B5DD3" /><circle cx="180.0" cy="303.5" r="3" fill="#6B5DD3" /><circle cx="82.05" cy="236.55" r="3" fill="#6B5DD3" /><circle cx="78.68" cy="121.5" r="3" fill="#6B5DD3" />
+<polygon points="180.0,68.2 281.32,121.5 267.81,230.7 180.0,299.6 85.43,234.6 80.93,122.8" fill="#A8E6E0" fill-opacity="0.22" stroke="#A8E6E0" stroke-width="2" />
+<circle cx="180.0" cy="68.2" r="3" fill="#A8E6E0" /><circle cx="281.32" cy="121.5" r="3" fill="#A8E6E0" /><circle cx="267.81" cy="230.7" r="3" fill="#A8E6E0" /><circle cx="180.0" cy="299.6" r="3" fill="#A8E6E0" /><circle cx="85.43" cy="234.6" r="3" fill="#A8E6E0" /><circle cx="80.93" cy="122.8" r="3" fill="#A8E6E0" />
+<polygon points="180.0,89.0 264.44,131.25 279.07,237.2 180.0,258.0 98.94,226.8 92.19,129.3" fill="#7BB7E6" fill-opacity="0.22" stroke="#7BB7E6" stroke-width="2" />
+<circle cx="180.0" cy="89.0" r="3" fill="#7BB7E6" /><circle cx="264.44" cy="131.25" r="3" fill="#7BB7E6" /><circle cx="279.07" cy="237.2" r="3" fill="#7BB7E6" /><circle cx="180.0" cy="258.0" r="3" fill="#7BB7E6" /><circle cx="98.94" cy="226.8" r="3" fill="#7BB7E6" /><circle cx="92.19" cy="129.3" r="3" fill="#7BB7E6" />
+<polygon points="180.0,76.0 272.32,126.7 258.81,225.5 180.0,291.8 91.06,231.35 88.81,127.35" fill="#F4A6B9" fill-opacity="0.22" stroke="#F4A6B9" stroke-width="2" />
+<circle cx="180.0" cy="76.0" r="3" fill="#F4A6B9" /><circle cx="272.32" cy="126.7" r="3" fill="#F4A6B9" /><circle cx="258.81" cy="225.5" r="3" fill="#F4A6B9" /><circle cx="180.0" cy="291.8" r="3" fill="#F4A6B9" /><circle cx="91.06" cy="231.35" r="3" fill="#F4A6B9" /><circle cx="88.81" cy="127.35" r="3" fill="#F4A6B9" />
+</svg>
+    </div>
+    <div class="battle__podium-wrap">
+      <div class="battle__podium">
+  <div class="battle__row">
+  <span class="battle__metric">Global</span>
+  <span class="battle__winner">
+  <span class="battle__trophy" aria-hidden="true">★</span>
+  stripe.com
+  <span class="battle__badge">Gagne</span>
+</span>
+</div>
+<div class="battle__row">
+  <span class="battle__metric">Performance</span>
+  <span class="battle__winner">
+  <span class="battle__trophy" aria-hidden="true">★</span>
+  stripe.com
+  <span class="battle__badge">Gagne</span>
+</span>
+</div>
+<div class="battle__row">
+  <span class="battle__metric">SEO</span>
+  <span class="battle__winner">
+  <span class="battle__trophy" aria-hidden="true">★</span>
+  mollie.com
+  <span class="battle__badge">Gagne</span>
+</span>
+</div>
+<div class="battle__row">
+  <span class="battle__metric">Sécurité</span>
+  <span class="battle__winner">
+  <span class="battle__trophy" aria-hidden="true">★</span>
+  stripe.com
+  <span class="battle__badge">Gagne</span>
+</span>
+</div>
+<div class="battle__row">
+  <span class="battle__metric">Brand</span>
+  <span class="battle__winner">
+  <span class="battle__trophy" aria-hidden="true">★</span>
+  stripe.com
+  <span class="battle__badge">Gagne</span>
+</span>
+</div>
+<div class="battle__row">
+  <span class="battle__metric">Mobile</span>
+  <span class="battle__winner">
+  <span class="battle__trophy" aria-hidden="true">★</span>
+  stripe.com
+  <span class="battle__badge">Gagne</span>
+</span>
+</div>
+</div>
+    </div>
+  </div>
+  <div class="battle__legend">
+  <div class="battle__chip">
+  <span class="battle__dot" style="background:#6B5DD3"></span>
+  <span class="battle__chip-name">stripe.com</span>
+  <span class="battle__chip-score">88/100</span>
+</div>
+<div class="battle__chip">
+  <span class="battle__dot" style="background:#A8E6E0"></span>
+  <span class="battle__chip-name">adyen.com</span>
+  <span class="battle__chip-score">86/100</span>
+</div>
+<div class="battle__chip">
+  <span class="battle__dot" style="background:#7BB7E6"></span>
+  <span class="battle__chip-name">mollie.com</span>
+  <span class="battle__chip-score">70/100</span>
+</div>
+<div class="battle__chip">
+  <span class="battle__dot" style="background:#F4A6B9"></span>
+  <span class="battle__chip-name">checkout.com</span>
+  <span class="battle__chip-score">80/100</span>
+</div>
+</div>
+</section>
+<section class="synthesis reveal" data-reveal="up">
+  <div class="section__header">
+    <div class="section__eyebrow">02 — SYNTHÈSE</div>
+    <h2 class="section__title">Lecture stratégique</h2>
+  </div>
+  <article class="synthesis__body">
+    <h2 class="synthesis__h2">Battle Mode — Sample</h2>
+<p class="synthesis__p">This is a static placeholder synthesis rendered for the
+v0.24 vision verification artefact. The hero, scoring, and
+battle sections above demonstrate the full versus screen
+with one polygon per contender.</p>
+  </article>
+</section>
+
+
+
+
+<section class="pitch reveal" data-reveal="up">
+  <div class="pitch__inner">
+    <div class="pitch__quote-mark" aria-hidden="true">"</div>
+    <blockquote class="pitch__quote">Sample pitch for vision verification — not for client-facing use.</blockquote>
+    <div class="pitch__byline">
+      <div class="pitch__portrait pitch__portrait--initials" aria-hidden="true">MN</div>
+      <div class="pitch__byline-text">
+        <div class="pitch__byline-name">Mehdi Nafaa</div>
+        <div class="pitch__byline-title">Senior Digital Consultant</div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="contact reveal" data-reveal="up">
+  <div class="contact__inner">
+    <h2 class="contact__title">Discutons.</h2>
+    <p class="contact__lead">Vous voulez transformer ces recommandations en plan d'action ? Un appel de 30 minutes suffit pour cadrer.</p>
+    <div class="contact__ctas">
+      <a class="cta cta--primary" href="https://calendly.com/" target="_blank" rel="noopener">Réserver un appel</a>
+    </div>
+  </div>
+</section>
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__wordmark">MIND</div>
+    <div class="footer__meta">
+      Audit produit par Mehdi Nafaa · généré le 2026-05-19 22:33
+    </div>
+  </div>
+</footer>
+<script>(function(){
+  'use strict';
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var revealEls = document.querySelectorAll('.reveal');
+  if (reduced) {
+    revealEls.forEach(function(el){ el.classList.add('reveal--in'); });
+  } else if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal--in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16, rootMargin: '0px 0px -10% 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('reveal--in'); });
+  }
+  // Hero parallax — translate the gradient layer at 0.35x
+  // scroll velocity. requestAnimationFrame coalesces scroll
+  // events so we never overspend the main thread.
+  if (!reduced) {
+    var hero = document.querySelector('.hero__gradient');
+    if (hero) {
+      var ticking = false;
+      window.addEventListener('scroll', function(){
+        if (!ticking) {
+          window.requestAnimationFrame(function(){
+            var y = window.scrollY * 0.35;
+            hero.style.transform = 'translate3d(0,' + y + 'px,0)';
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+    }
+  }
+})();</script>
+</body>
+</html>

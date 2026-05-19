@@ -36,9 +36,10 @@ public enum ClientPortalBuilder {
     /// shape absorbs new keys.
     public static func generateSite(
         for report: AuditReport,
-        brand: BrandSettings = .default
+        brand: BrandSettings = .default,
+        battle: BattleReport? = nil
     ) -> ClientPortalArchive {
-        let html = HTMLTemplates.indexHTML(for: report, brand: brand)
+        let html = HTMLTemplates.indexHTML(for: report, brand: brand, battle: battle)
         let bytes = Data(html.utf8)
         let slug = makeSlug(clientName: report.client.displayName, date: report.generatedAt)
         return ClientPortalArchive(
