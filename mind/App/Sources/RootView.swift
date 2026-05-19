@@ -7,6 +7,7 @@ import DesignSystem
 import FocusKit
 import GraphCore
 import HealthInsights
+import Intelligence
 import Notes
 import Chat
 import Settings
@@ -369,6 +370,13 @@ private struct HomeView: View {
     @State private var showJournal: Bool = false
     @State private var showGoals: Bool = false
     @State private var showSearch: Bool = false
+    /// v0.16 — On-device weekly digest surfaced as a non-disruptive
+    /// Home card on Sunday evenings and Monday mornings. Computed
+    /// synchronously from `allNodes` + `focusSessions` on `.task`, then
+    /// hydrated with the optional Foundation Models narrative a beat
+    /// later. nil hides the card entirely.
+    @State private var weeklyDigest: WeeklyDigest?
+    @State private var showWeeklyDigest: Bool = false
     /// v0.8 — events fetched from the user's primary calendar(s) for the
     /// "Aujourd'hui" card. Stays empty when permission is denied or there
     /// are no events today; the card hides itself in either case so the
@@ -405,6 +413,35 @@ private struct HomeView: View {
 
     private var thisWeekTotalSeconds: Double {
         thisWeekSessions.reduce(0) { $0 + $1.actualDurationSeconds }
+    }
+
+    /// v0.16 — Sunday-evening through Monday-morning window. The
+    /// weekly digest card surfaces here so the user opens MIND on
+    /// Sunday night and sees their week summarized, then has a second
+    /// chance Monday morning if they skipped the night before. Other
+    /// days hide the card entirely so it doesn't pollute the home
+    /// screen mid-week.
+    ///
+    /// `#if DEBUG` flips the gate to "always visible" so the agent's
+    /// vision-verification screenshot captures the card on any day
+    /// of the week. Release builds keep the Sun/Mon window intact.
+    private var isWeeklyDigestVisibleDay: Bool {
+        #if DEBUG
+        return true
+        #else
+        let weekday = Calendar.current.component(.weekday, from: .now)
+        // Calendar.weekday: Sunday=1, Monday=2.
+        return weekday == 1 || weekday == 2
+        #endif
+    }
+
+    /// Gate combining the day-of-week window AND a non-empty digest.
+    /// A user who hasn't captured / audited / focused all week sees no
+    /// card on Sunday — same render gate as the v0.9 health card,
+    /// because rendering three zeros is depressing UX.
+    private var shouldShowWeeklyDigest: Bool {
+        guard let digest = weeklyDigest else { return false }
+        return isWeeklyDigestVisibleDay && digest.isMeaningful
     }
 
     private var noteCount: Int {
@@ -462,6 +499,10 @@ private struct HomeView: View {
 
                 if weeklyHealth.isMeaningful {
                     healthWeekCard
+                }
+
+                if shouldShowWeeklyDigest, let digest = weeklyDigest {
+                    weeklyDigestCard(digest)
                 }
 
                 tasksCard
@@ -557,6 +598,21 @@ private struct HomeView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(isPresented: $showWeeklyDigest) {
+            if let digest = weeklyDigest {
+                WeeklyDigestSheet(
+                    digest: digest,
+                    nodes: allNodes,
+                    focusSessions: focusSessions
+                ) { node in
+                    selectedNote = node
+                    showWeeklyDigest = false
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+            }
+        }
         .task {
             // v0.8 — load today's calendar events on appear. Soft-fails
             // to [] when permission is denied / undetermined so the card
@@ -575,7 +631,184 @@ private struct HomeView: View {
             if prefs.healthInsightsEnabled {
                 weeklyHealth = await HealthReader.shared.weeklySummary()
             }
+
+            // v0.16 — Build the weekly digest synchronously from the
+            // SwiftData snapshots already in memory, then hand the
+            // structured digest off to the on-device model for an
+            // optional narrative paragraph. The card renders the
+            // structured counts immediately; the narrative arrives a
+            // beat later and the card re-renders without flicker.
+            var baseDigest = WeeklyDigestBuilder.compute(
+                nodes: allNodes,
+                focusSessions: focusSessions,
+                asOf: .now
+            )
+            #if DEBUG
+            // When the graph is empty on a freshly installed Simulator,
+            // synthesize a sample digest so the agent's vision check
+            // captures the actual card geometry instead of the empty
+            // state. Release builds never touch this branch.
+            if !baseDigest.isMeaningful {
+                baseDigest = WeeklyDigest(
+                    weekOf: Date.now.addingTimeInterval(-7 * 24 * 3600),
+                    captureCount: 7,
+                    auditCount: 1,
+                    focusHours: 4.5,
+                    highlightedCaptures: [
+                        "Brief Verdenomia",
+                        "Idée MIND v0.17",
+                        "Réunion AZ Construction",
+                    ],
+                    narrative: nil
+                )
+            }
+            #endif
+            weeklyDigest = baseDigest
+            if shouldShowWeeklyDigest {
+                MINDTelemetry.info(
+                    "digest.rendered",
+                    data: [
+                        "captures": "\(baseDigest.captureCount)",
+                        "audits": "\(baseDigest.auditCount)",
+                        "focusHours": String(format: "%.1f", baseDigest.focusHours),
+                    ]
+                )
+            }
+            let intel = OnDeviceIntelligence()
+            if let narrative = await intel.weeklyNarrative(baseDigest),
+               !narrative.isEmpty {
+                weeklyDigest = baseDigest.withNarrative(narrative)
+                MINDTelemetry.info(
+                    "digest.narrative.generated",
+                    data: ["chars": "\(narrative.count)"]
+                )
+            }
         }
+    }
+
+    // MARK: - "Bilan de la semaine" card (v0.16 — WeeklyDigest)
+
+    /// Liquid Glass card surfaced Sunday evening through Monday morning
+    /// when the user has at least one capture / audit / focus session
+    /// in the rolling 7-day window. Three big-number columns on top,
+    /// the narrative (FoundationModels or fallback) as an italic
+    /// paragraph below. Tapping the card opens `WeeklyDigestSheet`
+    /// with the per-section breakdown.
+    @ViewBuilder
+    private func weeklyDigestCard(_ digest: WeeklyDigest) -> some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                LiquidHaptics.tap()
+                MINDTelemetry.info("digest.detail.opened")
+                showWeeklyDigest = true
+            } label: {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.lavender.opacity(0.45))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "sparkles")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        Text("home.weekly.title")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    HStack(spacing: 0) {
+                        weeklyDigestColumn(
+                            value: "\(digest.captureCount)",
+                            labelKey: "home.weekly.captures",
+                            tint: LiquidPalette.iris
+                        )
+                        weeklyDigestDivider
+                        weeklyDigestColumn(
+                            value: "\(digest.auditCount)",
+                            labelKey: "home.weekly.audits",
+                            tint: .purple
+                        )
+                        weeklyDigestDivider
+                        weeklyDigestColumn(
+                            value: Self.formatFocusHours(digest.focusHours),
+                            labelKey: "home.weekly.focusHours",
+                            tint: .green
+                        )
+                    }
+
+                    if let narrative = digest.narrative, !narrative.isEmpty {
+                        Text(narrative)
+                            .font(.system(.subheadline, design: .rounded))
+                            .italic()
+                            .foregroundStyle(.secondary)
+                            .lineLimit(3)
+                            .minimumScaleFactor(0.9)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        Text("home.weekly.narrative.fallback")
+                            .font(.system(.subheadline, design: .rounded))
+                            .italic()
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private func weeklyDigestColumn(
+        value: String,
+        labelKey: String.LocalizationValue,
+        tint: Color
+    ) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+                .contentTransition(.numericText())
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            Text(String(localized: labelKey).uppercased())
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var weeklyDigestDivider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.25))
+            .frame(width: 1, height: 32)
+    }
+
+    /// `2h32` for hours >= 1, `45 min` otherwise, `—` for zero. Matches
+    /// the formatter used inside `WeeklyDigestSheet` so the card and
+    /// the sheet stay visually in lockstep.
+    private static func formatFocusHours(_ hours: Double) -> String {
+        guard hours > 0 else { return "—" }
+        let totalMinutes = Int((hours * 60).rounded())
+        let h = totalMinutes / 60
+        let m = totalMinutes % 60
+        if h > 0 {
+            return "\(h)h\(String(format: "%02d", m))"
+        }
+        return "\(m) min"
     }
 
     // MARK: - "Cette semaine" health card (v0.9 — HealthInsights)

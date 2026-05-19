@@ -146,4 +146,18 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("graph.empty.title",  lang: "en"), "Your graph is empty")
         XCTAssertEqual(localized("graph.empty.title",  lang: "fr"), "Ton graphe est vide")
     }
+
+    /// v0.16 — Weekly digest card on HomeView. Lock the title + the
+    /// narrative fallback in both languages so a missing model
+    /// response on Sunday night never falls back to the EN copy on
+    /// a FR device. The detail-sheet title is locked too — it's the
+    /// only string visible after the user taps the card.
+    func test_weeklyDigestStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("home.weekly.title",                lang: "en"), "Weekly digest")
+        XCTAssertEqual(localized("home.weekly.title",                lang: "fr"), "Bilan de la semaine")
+        XCTAssertEqual(localized("home.weekly.narrative.fallback",   lang: "en"), "A solid week.")
+        XCTAssertEqual(localized("home.weekly.narrative.fallback",   lang: "fr"), "Une semaine bien remplie.")
+        XCTAssertEqual(localized("home.weekly.detail.title",         lang: "en"), "Your week, in detail")
+        XCTAssertEqual(localized("home.weekly.detail.title",         lang: "fr"), "Ta semaine, en détail")
+    }
 }

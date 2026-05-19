@@ -239,12 +239,13 @@ Colour by kind. **Acceptance**: 50-node graph renders smoothly at
 60fps, tap navigation works.
 Shipped 2026-05-19: SwiftUI Canvas + pure-function `GraphPhysics.physicsStep` (spring + Coulomb + damping + bounds clamp), pinch zoom 0.5…3.0, drag pan, tap-routing to NodeDetailView via 20pt threshold, 200-node cap with "Afficher plus" CTA, FR/EN strings + 9 physics tests locking the simulation contract.
 
-### v0.16 — Auto-summarization weekly digest ⏳
+### v0.16 — Auto-summarization weekly digest ✅
 **What**: Every Sunday evening, on-device Foundation Models generates
 a weekly digest: "5 things you captured this week", "1 audit completed",
 "X hours of focus". Surfaces as a non-disruptive Home card.
 **Acceptance**: digest generated, accurate counts, opens an
 expandable detail view.
+Shipped 2026-05-19: pure `WeeklyDigestBuilder.compute(nodes:focusSessions:asOf:)` + `WeeklyDigest` value type in App, async `OnDeviceIntelligence.weeklyNarrative(_:)` extension hitting LanguageModelSession with FR instructions (soft-fails to nil), HomeView LiquidCard with three monospaced columns + italic narrative (Sun/Mon-only gate, DEBUG override for vision verify), `WeeklyDigestSheet` with summary card + per-day captures + focus session list (tap → NodeDetailView), 11 new xcstrings keys FR/EN, 3 telemetry breadcrumbs (`digest.rendered`, `digest.narrative.generated`, `digest.detail.opened`), 8 pure tests locking the builder contract (empty / window filter / focus sum / highlight sort+cap / audit separation / reference cutoff slide / blank-title skip / withNarrative).
 
 ### v0.17 — Daily morning brief ⏳
 **What**: Every morning at 7am (user-configurable), generate a brief

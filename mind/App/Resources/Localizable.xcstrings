@@ -2954,6 +2954,186 @@
           }
         }
       }
+    },
+    "home.weekly.title": {
+      "comment": "Header of the v0.16 weekly digest card on HomeView, shown on Sunday evenings and Monday mornings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly digest"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilan de la semaine"
+          }
+        }
+      }
+    },
+    "home.weekly.captures": {
+      "comment": "Column label under the captures figure on the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures"
+          }
+        }
+      }
+    },
+    "home.weekly.audits": {
+      "comment": "Column label under the audits figure on the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audits"
+          }
+        }
+      }
+    },
+    "home.weekly.focusHours": {
+      "comment": "Column label under the focus-hours figure on the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus h"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus h"
+          }
+        }
+      }
+    },
+    "home.weekly.narrative.fallback": {
+      "comment": "Italic paragraph rendered under the v0.16 weekly digest counts when the on-device narrative model is unavailable or returned nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A solid week."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une semaine bien remplie."
+          }
+        }
+      }
+    },
+    "home.weekly.detail.title": {
+      "comment": "Title of the expandable detail sheet opened by tapping the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your week, in detail"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta semaine, en détail"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.captures.header": {
+      "comment": "Section header above the highlighted captures list on the v0.16 weekly digest sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures of the week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures de la semaine"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.focus.header": {
+      "comment": "Section header above the focus sessions list on the v0.16 weekly digest sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus sessions"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions Focus"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.summary.header": {
+      "comment": "Section header above the per-counter summary on the v0.16 weekly digest sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synthèse"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.empty": {
+      "comment": "Fallback row when there are no highlighted captures to show on the v0.16 weekly digest detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No captures this week yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune capture cette semaine."
+          }
+        }
+      }
     }
   }
 }
