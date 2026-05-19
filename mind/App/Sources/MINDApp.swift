@@ -5,6 +5,7 @@ import CalendarKit
 import DesignSystem
 import GraphCore
 import MINDIntents
+import OutreachKit
 import RemindersKit
 import Sentry
 import Settings
@@ -30,6 +31,15 @@ struct MINDApp: App {
         // hour change made in Settings while the app was backgrounded
         // takes effect immediately on the next foreground.
         DailyBriefScheduler.scheduleIfEnabled()
+        // v0.29 — Drain the persisted FollowUpStore and re-queue
+        // every active sequence's pending touches. Covers the case
+        // where the user granted notification permission after a
+        // sequence was created, OR rebooted the device, OR upgraded
+        // the OS — every reschedule pass is idempotent because the
+        // scheduler uses stable identifiers per touch.
+        Task { @MainActor in
+            await FollowUpScheduler.rescheduleAll()
+        }
     }
 
     var body: some Scene {
@@ -56,6 +66,14 @@ struct MINDApp: App {
                 // re-establishes the trigger after iOS permission was
                 // granted from the Settings.app between sessions.
                 DailyBriefScheduler.scheduleIfEnabled()
+                // v0.29 — Same idempotent reschedule pass for
+                // follow-up sequences: idempotent identifiers mean
+                // every active sequence's pending touches are
+                // re-registered, covering permission grants made
+                // while the app was backgrounded.
+                Task { @MainActor in
+                    await FollowUpScheduler.rescheduleAll()
+                }
                 // v0.28 — Refresh meeting briefs + reschedule the
                 // morning-of notifications. Cheap soft-fail when no
                 // calendar permission. HomeView's own `.task` also

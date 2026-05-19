@@ -4960,6 +4960,142 @@
         "fr": { "stringUnit": { "state": "translated", "value": "Générer outreach" } }
       }
     },
+    "followUp.toggle.title": {
+      "comment": "v0.29 · OutreachSheet — title of the inline toggle that arms a 4-touch follow-up sequence.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Schedule 4-touch follow-up" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Programmer la suite (4 touches)" } }
+      }
+    },
+    "followUp.toggle.subtitle": {
+      "comment": "v0.29 · OutreachSheet — subtitle under the toggle explaining the cadence.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "J+3 LinkedIn · J+7 value-add · J+14 break-up" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "J+3 LinkedIn · J+7 value-add · J+14 break-up" } }
+      }
+    },
+    "followUp.home.title": {
+      "comment": "v0.29 · HomeView card title — today's follow-up touches to send.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Follow-ups today" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Relances du jour" } }
+      }
+    },
+    "followUp.home.empty": {
+      "comment": "v0.29 · HomeView card empty state — nothing to send today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Nothing to send today. Stay sharp." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rien à envoyer aujourd'hui. Reste affûté." } }
+      }
+    },
+    "followUp.action.markDone": {
+      "comment": "v0.29 · HomeView card row action — mark the touch as sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mark done" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Marquer fait" } }
+      }
+    },
+    "followUp.action.snooze": {
+      "comment": "v0.29 · HomeView card row action — push the touch to tomorrow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Snooze" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Reporter" } }
+      }
+    },
+    "followUp.action.stop": {
+      "comment": "v0.29 · HomeView card row action — stop the whole sequence for this prospect.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stop" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Stop" } }
+      }
+    },
+    "followUp.channel.email": {
+      "comment": "v0.29 · Channel pill — email touch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Email" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Email" } }
+      }
+    },
+    "followUp.channel.linkedIn": {
+      "comment": "v0.29 · Channel pill — LinkedIn touch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "LinkedIn" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "LinkedIn" } }
+      }
+    },
+    "followUp.angle.initial": {
+      "comment": "v0.29 · Angle pill — Day 0 initial email touch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Initial" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Initial" } }
+      }
+    },
+    "followUp.angle.reminder": {
+      "comment": "v0.29 · Angle pill — Day 3 reminder touch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reminder" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Relance" } }
+      }
+    },
+    "followUp.angle.valueAdd": {
+      "comment": "v0.29 · Angle pill — Day 7 value-add touch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Value add" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Apport" } }
+      }
+    },
+    "followUp.angle.breakUp": {
+      "comment": "v0.29 · Angle pill — Day 14 break-up touch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Break-up" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Break-up" } }
+      }
+    },
+    "followUp.markReplied": {
+      "comment": "v0.29 · NodeDetailView client body — CTA that pauses the active sequence as 'replied'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mark as replied" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Marquer comme répondu" } }
+      }
+    },
+    "followUp.notification.title": {
+      "comment": "v0.29 · Local notification title fired by FollowUpScheduler.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "MIND · follow-up" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "MIND · relance" } }
+      }
+    },
+    "followUp.notification.body.format": {
+      "comment": "v0.29 · Local notification body — '%1$d / %2$d'. Touch index out of total.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Today: touch %1$d of %2$d ready to send." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aujourd'hui : touche %1$d/%2$d à envoyer." } }
+      }
+    },
+    "followUp.step.label.format": {
+      "comment": "v0.29 · NodeDetailView step indicator — '%1$d / %2$d'. Current touch out of total.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Touch %1$d of %2$d" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Touche %1$d / %2$d" } }
+      }
+    },
     "lead.score.label": {
       "comment": "v0.27 · Accessibility label for the LeadScoreBadge on ClientCard / Top leads row.",
       "extractionState": "manual",

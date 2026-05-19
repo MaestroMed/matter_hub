@@ -632,11 +632,25 @@ Dossier took the v0.28 slot): when iPhone is docked in landscape
 and the focus timer if running. **Acceptance**: standby triggers
 MIND dashboard, brightness adapts to ambient light.
 
-### v0.29 — Live Activities for audits ⏳
-**What**: When an audit runs in background, show a Live Activity with
-the phase indicator + cancel button. Dynamic Island compact view shows
-phase icon. **Acceptance**: audit running shows in DI, tap expands,
-cancel works.
+### v0.29 — Smart Follow-Up Sequences ✅
+**What**: After Mehdi sends an outreach email (v0.26), MIND can
+auto-schedule a 4-touch follow-up sequence (Day 0 initial email
+already sent, Day 3 LinkedIn DM, Day 7 value-add email, Day 14
+break-up). Each touch fires a calibrated 9am local notification
+with a deep link back into the prospect's NodeDetailView. Marking
+a prospect "replied" auto-pauses the sequence and cancels all
+pending notifications. HomeView surfaces a "Relances du jour"
+card listing what's due today; NodeDetailView (client kind) shows
+a 4-dot horizontal step indicator + "Marquer comme répondu"
+button. Shipped 2026-05-20: 4-touch builder + JSON-persisted
+`FollowUpStore` actor + `FollowUpScheduler` (UN local notifs) +
+OutreachSheet toggle + HomeView card + NodeDetailView indicator
++ `mind://followUp/<seq>/<touch>` deep link + 15 FR/EN strings +
+13 pure builder tests. **Acceptance**: toggle on at "Ouvrir dans
+Mail" → 4 notifications queued, replied tap → all pending touches
+cancelled, Home shows today's touches with three actions per row.
+
+### v0.29.1 — Live Activities for audits ⏳ (deferred from v0.29)
 
 ### v0.30 — Continuity handoff between devices ⏳
 **What**: Start an audit on iPhone, switch to Mac → audit picks up on

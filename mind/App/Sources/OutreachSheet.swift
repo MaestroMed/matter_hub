@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UserNotifications
 import DesignSystem
 import GraphCore
 import AuditKit
@@ -25,10 +26,16 @@ struct OutreachSheet: View {
     /// Pre-fill the form when the sheet is presented from a Node
     /// that already has a known prospect identity. The defaults here
     /// match the empty-form path triggered from HomeView's audit
-    /// card tertiary row.
+    /// card tertiary row. `prospectNodeID` is optional because the
+    /// HomeView entry point opens the sheet without a Node yet (the
+    /// user is still picking a prospect); when nil, the v0.29
+    /// follow-up toggle is hidden — a sequence without a
+    /// prospect Node to link back to would be unreachable from
+    /// NodeDetailView later.
     init(
         prospect: ProspectContext = ProspectContext(clientName: "", host: ""),
-        primaryContactEmail: String? = nil
+        primaryContactEmail: String? = nil,
+        prospectNodeID: UUID? = nil
     ) {
         _clientName = State(initialValue: prospect.clientName)
         _hostInput = State(initialValue: prospect.host)
@@ -37,6 +44,7 @@ struct OutreachSheet: View {
         _recentTrigger = State(initialValue: prospect.recentTrigger ?? "")
         _industry = State(initialValue: prospect.industry ?? "")
         self.attachedAudit = prospect.auditReport
+        self.prospectNodeID = prospectNodeID
     }
 
     // MARK: - Form state
@@ -54,6 +62,24 @@ struct OutreachSheet: View {
     /// switching prospects requires dismissing + re-opening the
     /// sheet, which is the desired path.
     private let attachedAudit: AuditReport?
+
+    /// v0.29 — Optional prospect Node id. When present, the
+    /// "Programmer la suite (4 touches)" toggle is rendered above the
+    /// action row of each variant. Flipping the toggle ON and tapping
+    /// "Ouvrir dans Mail" mints a `FollowUpSequence` for this
+    /// prospect, persists it, and queues the 4 local notifications
+    /// via `FollowUpScheduler`. Nil hides the toggle entirely (HomeView
+    /// entry point — no Node yet).
+    private let prospectNodeID: UUID?
+
+    /// v0.29 — Tracks the inline "Programmer la suite" toggle state.
+    /// Defaults to ON so the suggested behaviour is the v0.29 contract
+    /// — the user has to opt OUT for a one-shot email. Once a sequence
+    /// has been scheduled for the current prospect (within the
+    /// lifetime of this sheet presentation) the toggle becomes
+    /// informational only to prevent double-queueing.
+    @State private var scheduleFollowUp: Bool = true
+    @State private var followUpScheduledForCurrentProspect: Bool = false
 
     // MARK: - Generation state
 
@@ -221,11 +247,51 @@ struct OutreachSheet: View {
 
     private var resultsBody: some View {
         VStack(spacing: 14) {
+            if prospectNodeID != nil {
+                followUpToggleCard
+            }
             ForEach(variants) { variant in
                 variantCard(variant)
             }
             footerActions
         }
+    }
+
+    /// v0.29 — Glass toggle card surfaced above the variant cards.
+    /// Single tap arms (or disarms) the 4-touch follow-up sequence
+    /// the next "Ouvrir dans Mail" tap will mint. The toggle is
+    /// hidden when `prospectNodeID == nil` — see the init doc for
+    /// why HomeView's empty-Node entry never sees it.
+    private var followUpToggleCard: some View {
+        LiquidCard(cornerRadius: 18) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                    .padding(.top, 2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("followUp.toggle.title")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                    Text("followUp.toggle.subtitle")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                Toggle("", isOn: $scheduleFollowUp)
+                    .labelsHidden()
+                    .tint(LiquidPalette.iris)
+                    .disabled(followUpScheduledForCurrentProspect)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("followUp.toggle.title"))
+        .accessibilityValue(Text(scheduleFollowUp ? "On" : "Off"))
     }
 
     private func variantCard(_ variant: OutreachEmail) -> some View {
@@ -297,6 +363,21 @@ struct OutreachSheet: View {
                         "outreach.variant.opened.mail",
                         data: ["angle": variant.angle.rawValue]
                     )
+                    // v0.29 — When the inline toggle is on AND the
+                    // sheet was opened from a real prospect Node (so
+                    // we have a UUID to link the sequence back to),
+                    // mint the 4-touch FollowUpSequence and queue
+                    // the 3 remaining local notifications. The Day 0
+                    // initial touch is auto-marked sent inside the
+                    // builder — this IS that send.
+                    if scheduleFollowUp,
+                       !followUpScheduledForCurrentProspect,
+                       let prospectID = prospectNodeID {
+                        Task { @MainActor in
+                            await armFollowUpSequence(for: prospectID)
+                            followUpScheduledForCurrentProspect = true
+                        }
+                    }
                 }
             }
             Spacer(minLength: 4)
@@ -466,6 +547,41 @@ struct OutreachSheet: View {
         case .direct:   return "bolt.fill"
         case .formal:   return "graduationcap.fill"
         }
+    }
+
+    // MARK: - v0.29 follow-up arming
+
+    /// v0.29 — Mints a fresh `FollowUpSequence` for the prospect
+    /// Node id passed in via the sheet's init, requests notification
+    /// permission opportunistically (idempotent), persists the
+    /// sequence via `FollowUpStore`, then schedules the 3 pending
+    /// touches via `FollowUpScheduler`. Soft-fails on every step —
+    /// the worst case is a sequence that lives in memory but never
+    /// fires a notification, which the user can recover from by
+    /// granting permission in Settings and re-opening MIND.
+    @MainActor
+    private func armFollowUpSequence(for prospectID: UUID) async {
+        // Ask once for permission so the v0.17 daily-brief path
+        // doesn't have to be the only authorization trigger.
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+        if settings.authorizationStatus == .notDetermined {
+            _ = try? await center.requestAuthorization(options: [.alert, .sound])
+        }
+
+        let sequence = FollowUpSequenceBuilder.build(
+            prospectNodeID: prospectID
+        )
+        await FollowUpStore.shared.save(sequence)
+        await FollowUpScheduler.scheduleNotifications(for: sequence)
+        MINDTelemetry.info(
+            "followUp.sequence.armed",
+            data: [
+                "sequenceID": sequence.id.uuidString,
+                "prospectID": prospectID.uuidString,
+                "touches": "\(sequence.touches.count)",
+            ]
+        )
     }
 }
 

@@ -113,6 +113,39 @@ struct RootView: View {
         // screen so the sheet actually presents.
         .onOpenURL { url in
             guard let scheme = url.scheme, scheme.lowercased() == "mind" else { return }
+            // v0.29 — Follow-up deep link: `mind://followUp/<seqID>/<touchID>`.
+            // Posts a notification with both ids so HomeView can
+            // resolve the prospect Node and route into the matching
+            // NodeDetailView via `selectedClient`.
+            if url.host?.lowercased() == "followup" {
+                let parts = url.pathComponents.filter { $0 != "/" }
+                guard parts.count >= 2,
+                      let sequenceID = UUID(uuidString: parts[0]),
+                      let touchID = UUID(uuidString: parts[1]) else {
+                    MINDTelemetry.warning(
+                        "followUp.deepLink.malformed",
+                        data: ["url": url.absoluteString]
+                    )
+                    return
+                }
+                selection = .home
+                MINDTelemetry.info(
+                    "followUp.deepLink.opened",
+                    data: [
+                        "sequenceID": sequenceID.uuidString,
+                        "touchID": touchID.uuidString,
+                    ]
+                )
+                NotificationCenter.default.post(
+                    name: .mindOpenFollowUp,
+                    object: nil,
+                    userInfo: [
+                        "sequenceID": sequenceID.uuidString,
+                        "touchID": touchID.uuidString,
+                    ]
+                )
+                return
+            }
             guard url.host?.lowercased() == "brief" else { return }
             selection = .home
             // v0.28 — Path-segment routing: `mind://brief/<eventID>`
@@ -465,6 +498,16 @@ private struct HomeView: View {
     /// samples were logged. `isMeaningful` is the render gate.
     @State private var weeklyHealth: WeeklySummary = .empty
 
+    /// v0.29 — Today's pending follow-up touches drawn from
+    /// `FollowUpStore.shared.allActive()`. Each entry pairs the parent
+    /// sequence id with the prospect Node (when resolvable from the
+    /// in-memory @Query results) and the actionable touch row. The
+    /// HomeView card hides itself when the list is empty AND there's
+    /// no active sequence at all — the latter check keeps the
+    /// "nothing today" empty-state visible for an active user.
+    @State private var todaysFollowUps: [FollowUpTodayRow] = []
+    @State private var hasAnyActiveSequence: Bool = false
+
     private var habitsTodayCount: Int {
         HabitsView.checkedTodayCount(in: allNodes)
     }
@@ -631,6 +674,15 @@ private struct HomeView: View {
                 // background thanks to MeetingBriefScheduler.
                 if !upcomingMeetingBriefs.isEmpty {
                     upcomingBriefsCard
+                }
+
+                // v0.29 — Smart Follow-Up Sequences: today's
+                // actionable touches. Card renders whenever at
+                // least one active sequence exists for the user;
+                // empty-state copy covers "no touches today" while
+                // keeping the discoverable surface visible.
+                if hasAnyActiveSequence {
+                    todaysFollowUpsCard
                 }
 
                 if !resumableClients.isEmpty {
@@ -854,6 +906,16 @@ private struct HomeView: View {
             // simplicity; soft-fails when permission is missing.
             await hydrateMeetingBriefs()
 
+            // v0.29 — Drain the FollowUpStore and refresh today's
+            // pending touches. Cheap actor read; the soft-fail path
+            // returns an empty list when no sequences exist.
+            await hydrateTodaysFollowUps()
+            // Re-queue every pending touch's notification — covers
+            // the cold-launch case where the user granted permission
+            // after a sequence was created (the original schedule
+            // would have skipped).
+            await FollowUpScheduler.rescheduleAll()
+
             // v0.9 — load the weekly health summary only when the user
             // has explicitly opted in via Settings. We never call
             // requestAccess() here: that would defeat the explicit-opt-in
@@ -996,6 +1058,28 @@ private struct HomeView: View {
                 if let brief = upcomingMeetingBriefs.first(where: { $0.event.id == eventID }) {
                     selectedMeetingBrief = brief
                 }
+            }
+        }
+        // v0.29 — Follow-up deep link bridge. userInfo carries
+        // `sequenceID` + `touchID`; we resolve the sequence's
+        // `prospectNodeID` through `FollowUpStore.load(_:)` then
+        // open the matching prospect Node via `selectedClient`
+        // (which routes through NodeDetailView). When the sequence
+        // doesn't resolve (deleted, never persisted) we fall back to
+        // refreshing the today list so the user sees the latest
+        // state even when the tap originated from a stale row.
+        .onReceive(NotificationCenter.default.publisher(for: .mindOpenFollowUp)) { notif in
+            guard let sequenceIDString = notif.userInfo?["sequenceID"] as? String,
+                  let sequenceID = UUID(uuidString: sequenceIDString) else {
+                return
+            }
+            Task { @MainActor in
+                let sequence = await FollowUpStore.shared.load(sequenceID)
+                if let prospectID = sequence?.prospectNodeID,
+                   let node = allNodes.first(where: { $0.id == prospectID }) {
+                    selectedClient = node
+                }
+                await hydrateTodaysFollowUps()
             }
         }
     }
@@ -1163,6 +1247,251 @@ private struct HomeView: View {
         formatter.locale = .current
         formatter.setLocalizedDateFormatFromTemplate("EEE")
         return formatter.string(from: date).uppercased()
+    }
+
+    // MARK: - v0.29 Smart Follow-Up Sequences card
+
+    /// "Relances du jour" — every pending touch due today across every
+    /// active sequence. Card renders only when at least one active
+    /// sequence exists; the empty-state copy covers the "nothing
+    /// today" path so the user still sees that the engine is armed.
+    @ViewBuilder
+    private var todaysFollowUpsCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    Text("followUp.home.title")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                    Spacer()
+                    if !todaysFollowUps.isEmpty {
+                        Text("\(todaysFollowUps.count)")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if todaysFollowUps.isEmpty {
+                    Text("followUp.home.empty")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(todaysFollowUps) { row in
+                            followUpTouchRow(row)
+                        }
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func followUpTouchRow(_ row: FollowUpTodayRow) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 4) {
+                Image(systemName: row.channel == .email
+                      ? "envelope.fill"
+                      : "person.crop.rectangle.fill")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                Text(channelLabel(row.channel))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .frame(width: 56, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(row.prospectName)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                HStack(spacing: 6) {
+                    Text(angleLabel(row.angle))
+                        .font(.system(.caption2, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background {
+                            Capsule().fill(LiquidPalette.iris.opacity(0.18))
+                        }
+                    Spacer(minLength: 0)
+                }
+                HStack(spacing: 10) {
+                    rowAction(
+                        labelKey: "followUp.action.markDone",
+                        systemImage: "checkmark.circle.fill",
+                        tint: LiquidPalette.aqua
+                    ) {
+                        Task { @MainActor in
+                            if let seqID = await FollowUpStore.shared.markSent(touchID: row.touchID) {
+                                await FollowUpScheduler.cancelNotifications(for: seqID)
+                            }
+                            await hydrateTodaysFollowUps()
+                        }
+                    }
+                    rowAction(
+                        labelKey: "followUp.action.snooze",
+                        systemImage: "clock.arrow.circlepath",
+                        tint: LiquidPalette.sky
+                    ) {
+                        Task { @MainActor in
+                            if let seqID = await FollowUpStore.shared.markSkipped(touchID: row.touchID) {
+                                await FollowUpScheduler.cancelNotifications(for: seqID)
+                            }
+                            await hydrateTodaysFollowUps()
+                        }
+                    }
+                    rowAction(
+                        labelKey: "followUp.action.stop",
+                        systemImage: "xmark.circle.fill",
+                        tint: .secondary
+                    ) {
+                        Task { @MainActor in
+                            await FollowUpStore.shared.markReplied(prospectID: row.prospectID)
+                            await FollowUpScheduler.cancelNotifications(for: row.sequenceID)
+                            await hydrateTodaysFollowUps()
+                        }
+                    }
+                }
+                .padding(.top, 2)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func rowAction(
+        labelKey: LocalizedStringKey,
+        systemImage: String,
+        tint: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                Text(labelKey)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(tint)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule(style: .continuous)
+                            .stroke(tint.opacity(0.4), lineWidth: 1)
+                    }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func channelLabel(_ channel: TouchChannel) -> String {
+        switch channel {
+        case .email:    return String(localized: "followUp.channel.email")
+        case .linkedIn: return String(localized: "followUp.channel.linkedIn")
+        }
+    }
+
+    private func angleLabel(_ angle: TouchAngle) -> String {
+        switch angle {
+        case .initial:  return String(localized: "followUp.angle.initial")
+        case .reminder: return String(localized: "followUp.angle.reminder")
+        case .valueAdd: return String(localized: "followUp.angle.valueAdd")
+        case .breakUp:  return String(localized: "followUp.angle.breakUp")
+        }
+    }
+
+    /// Drains the active sequences and recomputes the today rows so
+    /// HomeView can re-render. Cheap actor read + in-memory filter;
+    /// runs on the HomeView `.task` and after every mutation from the
+    /// card row actions.
+    @MainActor
+    private func hydrateTodaysFollowUps() async {
+        let active = await FollowUpStore.shared.allActive()
+        hasAnyActiveSequence = !active.isEmpty
+        var rows: [FollowUpTodayRow] = []
+        for sequence in active {
+            // Resolve the prospect Node name from the in-memory
+            // @Query results when available; fall back to "Prospect"
+            // (localized) when the Node has been deleted but the
+            // sequence wasn't reaped yet.
+            let prospectName = allNodes
+                .first(where: { $0.id == sequence.prospectNodeID })?
+                .title ?? String(localized: "home.today.untitled")
+            for touch in sequence.touchesDue(on: .now) {
+                rows.append(FollowUpTodayRow(
+                    id: touch.id,
+                    sequenceID: sequence.id,
+                    touchID: touch.id,
+                    prospectID: sequence.prospectNodeID,
+                    prospectName: prospectName,
+                    channel: touch.channel,
+                    angle: touch.angle
+                ))
+            }
+        }
+        todaysFollowUps = rows
+        #if DEBUG
+        // When the user has no sequences at all on a fresh Simulator
+        // install, synthesize a demo card so the vision-verify
+        // screenshot lands on the actual UI instead of a hidden
+        // section. Release builds skip this branch entirely.
+        if !hasAnyActiveSequence {
+            hasAnyActiveSequence = true
+            todaysFollowUps = [
+                FollowUpTodayRow(
+                    id: UUID(),
+                    sequenceID: UUID(),
+                    touchID: UUID(),
+                    prospectID: UUID(),
+                    prospectName: "Verdenomia",
+                    channel: .linkedIn,
+                    angle: .reminder
+                ),
+                FollowUpTodayRow(
+                    id: UUID(),
+                    sequenceID: UUID(),
+                    touchID: UUID(),
+                    prospectID: UUID(),
+                    prospectName: "AZ Construction",
+                    channel: .email,
+                    angle: .valueAdd
+                ),
+                FollowUpTodayRow(
+                    id: UUID(),
+                    sequenceID: UUID(),
+                    touchID: UUID(),
+                    prospectID: UUID(),
+                    prospectName: "MonJoel",
+                    channel: .email,
+                    angle: .breakUp
+                ),
+            ]
+        }
+        #endif
     }
 
     // MARK: - "Bilan de la semaine" card (v0.16 — WeeklyDigest)
@@ -2454,4 +2783,29 @@ extension Notification.Name {
     /// carries the EKEvent id so HomeView can resolve the matching
     /// brief and present `MeetingBriefSheet`.
     static let mindOpenMeetingBrief = Notification.Name("app.mind.ios.openMeetingBrief")
+
+    /// v0.29 — Posted by `RootView.onOpenURL` when iOS hands us a
+    /// `mind://followUp/<seqID>/<touchID>` deep link (typically from
+    /// the daily follow-up touch notification). `userInfo["sequenceID"]`
+    /// + `userInfo["touchID"]` carry the two ids so HomeView can
+    /// look up the prospect Node and route into NodeDetailView for
+    /// the matching client. Falls back to a no-op when the sequence
+    /// has since been deleted or marked replied.
+    static let mindOpenFollowUp = Notification.Name("app.mind.ios.openFollowUp")
+}
+
+/// v0.29 — Pure row value type backing the HomeView "Relances du
+/// jour" card. Identifiable on the touch id so SwiftUI's `ForEach`
+/// keeps the row identity stable across hydrate cycles. Defined at
+/// file scope (not inside HomeView) so the row can be `Identifiable`
+/// + `Equatable` + `Sendable` without an enclosing generic actor
+/// dragging concurrency annotations onto a pure value.
+struct FollowUpTodayRow: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let sequenceID: UUID
+    let touchID: UUID
+    let prospectID: UUID
+    let prospectName: String
+    let channel: TouchChannel
+    let angle: TouchAngle
 }

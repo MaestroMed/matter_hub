@@ -4,6 +4,7 @@ import DesignSystem
 import GraphCore
 import Notes
 import OutreachKit
+import UserNotifications
 
 /// Polymorphic full-screen rendering of any Node in the graph. Triggered
 /// from NotesView (and later from search). The body adapts to the kind:
@@ -85,6 +86,10 @@ struct NodeDetailView: View {
             // attached audit. The user can then tweak the recent
             // trigger / industry / voice tone before hitting
             // "Générer 5 variantes".
+            //
+            // v0.29 — Also pass `prospectNodeID: node.id` so the
+            // sheet's follow-up toggle has a Node id to bind a new
+            // sequence to. Without this, the toggle hides itself.
             OutreachSheet(
                 prospect: ProspectContext(
                     clientName: node.title,
@@ -94,12 +99,51 @@ struct NodeDetailView: View {
                     industry: nil,
                     primaryContactName: nil,
                     primaryContactRole: nil
-                )
+                ),
+                prospectNodeID: node.id
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
             .presentationBackground(.ultraThinMaterial)
         }
+        // v0.29 — Hydrate the active FollowUpSequence (if any) for
+        // this prospect every time the sheet appears AND whenever
+        // the user marks the prospect replied / triggers a new
+        // sequence from inside the OutreachSheet. The actor read is
+        // cheap; running it on appear keeps the step indicator
+        // synced with the latest persisted state.
+        .task {
+            await refreshFollowUpSequence()
+        }
+        .onChange(of: showOutreach) { _, isShowing in
+            if !isShowing {
+                Task { await refreshFollowUpSequence() }
+            }
+        }
+    }
+
+    // MARK: - v0.29 follow-up state
+
+    @State private var followUpSequence: FollowUpSequence?
+
+    @MainActor
+    private func refreshFollowUpSequence() async {
+        guard node.kind == .client else { return }
+        let sequences = await FollowUpStore.shared.allSequences()
+        followUpSequence = sequences
+            .filter { $0.prospectNodeID == node.id }
+            .sorted { $0.startedAt > $1.startedAt }
+            .first
+    }
+
+    @MainActor
+    private func markAsReplied() async {
+        let cancelled = await FollowUpStore.shared.markReplied(prospectID: node.id)
+        for id in cancelled {
+            await FollowUpScheduler.cancelNotifications(for: id)
+        }
+        await refreshFollowUpSequence()
+        LiquidHaptics.success()
     }
 
     // MARK: - Voice helpers
@@ -285,6 +329,15 @@ struct NodeDetailView: View {
                 }
             }
             .buttonStyle(.plain)
+            // v0.29 — Follow-up step indicator. Renders only when an
+            // active sequence exists for this prospect; shows 4
+            // calibrated dots that visualise the 4-touch cadence
+            // with the next pending touch highlighted in iris.
+            if let sequence = followUpSequence,
+               sequence.status == .active || sequence.status == .paused || sequence.status == .replied {
+                followUpStepIndicator(sequence: sequence)
+            }
+
             // v0.26 — Outreach engine entry point. Sits below the
             // audit history CTA so the user moves from "I want to
             // see what we know about this prospect" → "I want to
@@ -315,6 +368,121 @@ struct NodeDetailView: View {
                 .shadow(color: LiquidPalette.iris.opacity(0.35), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
+
+            // v0.29 — "Marquer comme répondu" CTA. Visible whenever
+            // an active sequence exists; tap pauses every active
+            // sequence for this prospect and cancels their pending
+            // notifications via FollowUpScheduler. Hidden once the
+            // sequence is already in a terminal state to keep the
+            // surface uncluttered.
+            if let sequence = followUpSequence, sequence.status == .active {
+                Button {
+                    Task { await markAsReplied() }
+                } label: {
+                    HStack {
+                        Image(systemName: "checkmark.bubble.fill")
+                        Text("followUp.markReplied")
+                        Spacer()
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.aqua)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 14)
+                    .background {
+                        Capsule(style: .continuous)
+                            .fill(.ultraThinMaterial)
+                            .overlay {
+                                Capsule(style: .continuous)
+                                    .stroke(LiquidPalette.aqua.opacity(0.4), lineWidth: 1)
+                            }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    // MARK: - v0.29 step indicator (4 dots)
+
+    /// Horizontal step indicator: one dot per touch, the next
+    /// pending touch highlighted in iris, completed touches filled,
+    /// future touches outlined. Tap accessibility is read-only —
+    /// the actions live on the HomeView "Relances du jour" rows.
+    @ViewBuilder
+    private func followUpStepIndicator(sequence: FollowUpSequence) -> some View {
+        LiquidCard(cornerRadius: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: indicatorSymbol(for: sequence.status))
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(indicatorTint(for: sequence.status))
+                    Text(String(
+                        format: String(localized: "followUp.step.label.format"),
+                        sequence.touches.filter { $0.status == .sent }.count,
+                        sequence.touches.count
+                    ))
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                HStack(spacing: 10) {
+                    ForEach(sequence.touches) { touch in
+                        Circle()
+                            .fill(touchFill(touch: touch, sequence: sequence))
+                            .overlay(
+                                Circle()
+                                    .stroke(touchStroke(touch: touch, sequence: sequence), lineWidth: 1.5)
+                            )
+                            .frame(width: 14, height: 14)
+                            .accessibilityHidden(true)
+                        if touch.id != sequence.touches.last?.id {
+                            Rectangle()
+                                .fill(LiquidPalette.iris.opacity(0.18))
+                                .frame(height: 2)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func touchFill(touch: FollowUpTouch, sequence: FollowUpSequence) -> Color {
+        if touch.status == .sent {
+            return LiquidPalette.iris
+        }
+        if touch.id == sequence.nextPendingTouch?.id && sequence.status == .active {
+            return LiquidPalette.iris.opacity(0.55)
+        }
+        return Color.clear
+    }
+
+    private func touchStroke(touch: FollowUpTouch, sequence: FollowUpSequence) -> Color {
+        if touch.status == .sent { return LiquidPalette.iris }
+        if touch.id == sequence.nextPendingTouch?.id && sequence.status == .active {
+            return LiquidPalette.iris
+        }
+        return LiquidPalette.iris.opacity(0.35)
+    }
+
+    private func indicatorSymbol(for status: SequenceStatus) -> String {
+        switch status {
+        case .active:    return "paperplane.fill"
+        case .paused:    return "pause.circle.fill"
+        case .replied:   return "checkmark.bubble.fill"
+        case .completed: return "checkmark.seal.fill"
+        }
+    }
+
+    private func indicatorTint(for status: SequenceStatus) -> Color {
+        switch status {
+        case .active:    return LiquidPalette.iris
+        case .paused:    return .secondary
+        case .replied:   return LiquidPalette.aqua
+        case .completed: return LiquidPalette.aqua
         }
     }
 
