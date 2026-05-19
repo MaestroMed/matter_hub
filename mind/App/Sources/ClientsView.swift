@@ -7,6 +7,11 @@ struct ClientsView: View {
     @Query(sort: \Node.createdAt, order: .reverse) private var allNodes: [Node]
     @State private var searchText: String = ""
     @State private var selected: Node?
+    /// Set when the user taps one of the demo audit suggestions in the
+    /// empty state. Drives a .sheet that presents AuditSheet pre-seeded
+    /// with the chosen URL so they go from blank → audit running in
+    /// one tap.
+    @State private var demoAuditURL: DemoAuditTarget?
 
     private var clients: [Node] {
         allNodes.filter { $0.kindRaw == "client" }
@@ -58,6 +63,12 @@ struct ClientsView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(item: $demoAuditURL) { target in
+            AuditSheet(initialURL: target.url)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
     }
 
     // MARK: - Subviews
@@ -98,16 +109,58 @@ struct ClientsView: View {
 
     @ViewBuilder
     private var emptyState: some View {
+        if clients.isEmpty {
+            firstRunEmptyState
+        } else {
+            noResultsEmptyState
+        }
+    }
+
+    /// First-run empty state: surfaces three well-known SaaS targets as
+    /// one-tap audit starters so the user goes from "I just installed
+    /// MIND" to "I'm watching Claude synthesise a Stripe audit" in a
+    /// single tap, without having to switch tabs or type a URL.
+    private var firstRunEmptyState: some View {
+        VStack(spacing: 16) {
+            LiquidCard {
+                VStack(spacing: 14) {
+                    Image(systemName: "person.text.rectangle.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(LiquidGradient.primary)
+                    Text("Pas encore de client")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                    Text("Tape un domaine pour lancer un audit, ou essaie un des exemples ci-dessous.")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(28)
+                .frame(maxWidth: .infinity)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Essaie avec".uppercased())
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .tracking(0.5)
+                    .padding(.leading, 4)
+
+                ForEach(Self.demoTargets) { target in
+                    demoAuditRow(target)
+                }
+            }
+        }
+    }
+
+    private var noResultsEmptyState: some View {
         LiquidCard {
             VStack(spacing: 14) {
-                Image(systemName: "person.text.rectangle.fill")
+                Image(systemName: "magnifyingglass")
                     .font(.system(size: 40))
                     .foregroundStyle(LiquidGradient.primary)
-                Text(clients.isEmpty ? "Pas encore de client" : "Aucun résultat")
+                Text("Aucun résultat")
                     .font(.system(.headline, design: .rounded, weight: .semibold))
-                Text(clients.isEmpty
-                     ? "Lance ton premier audit depuis l'écran d'accueil pour commencer."
-                     : "Essaie un autre terme de recherche.")
+                Text("Essaie un autre terme de recherche.")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -116,6 +169,67 @@ struct ClientsView: View {
             .frame(maxWidth: .infinity)
         }
     }
+
+    private func demoAuditRow(_ target: DemoAuditTarget) -> some View {
+        LiquidCard(cornerRadius: 18) {
+            Button {
+                LiquidHaptics.select()
+                demoAuditURL = target
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(target.tint.opacity(0.20))
+                            .frame(width: 42, height: 42)
+                        Image(systemName: target.icon)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(target.tint)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(target.name)
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text(target.url)
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Audit \(target.name)")
+        }
+    }
+
+    /// Three SaaS targets that consistently produce rich audit reports
+    /// (good PageSpeed score, complete security headers, a registered
+    /// iOS companion app) — chosen so the first-run user sees the full
+    /// surface area of what MIND can synthesize.
+    static let demoTargets: [DemoAuditTarget] = [
+        DemoAuditTarget(
+            name: "Stripe",
+            url: "https://stripe.com",
+            icon: "creditcard.fill",
+            tint: .purple
+        ),
+        DemoAuditTarget(
+            name: "Linear",
+            url: "https://linear.app",
+            icon: "checklist",
+            tint: .blue
+        ),
+        DemoAuditTarget(
+            name: "Notion",
+            url: "https://notion.so",
+            icon: "doc.richtext.fill",
+            tint: .orange
+        ),
+    ]
 
     // MARK: - Graph helpers
 
@@ -127,6 +241,20 @@ struct ClientsView: View {
             .filter { $0.kindRaw == "audit" }
             .sorted { $0.createdAt > $1.createdAt }
     }
+}
+
+// MARK: - Demo audit target
+
+/// One of the "Try with" cards in the first-run empty state. Stored
+/// as a plain struct so it can be Identifiable (drives the .sheet
+/// item-based presentation in ClientsView) without leaking into the
+/// SwiftData @Model graph.
+struct DemoAuditTarget: Identifiable, Hashable {
+    var id: String { url }   // URL is unique enough across the three demos
+    let name: String
+    let url: String
+    let icon: String
+    let tint: Color
 }
 
 // MARK: - Client card

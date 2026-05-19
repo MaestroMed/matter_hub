@@ -10,6 +10,12 @@ struct AuditSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
 
+    /// Optional URL the sheet should pre-fill on appear. Lets callers
+    /// (e.g. ClientsView's "Try Stripe / Linear / Notion" empty-state
+    /// suggestions, or a deep link from a notification) skip the
+    /// keyboard-tap-typing step entirely. nil = blank field.
+    let initialURL: String?
+
     @State private var controller = AuditController.shared
     @State private var urlString: String = ""
     @State private var name: String = ""
@@ -19,6 +25,10 @@ struct AuditSheet: View {
     @State private var exportSheetReport: ExportSheetReport?
     @State private var visualBoardReport: VisualBoardReportItem?
     @FocusState private var urlFocused: Bool
+
+    init(initialURL: String? = nil) {
+        self.initialURL = initialURL
+    }
 
     var body: some View {
         ScrollView {
@@ -35,7 +45,14 @@ struct AuditSheet: View {
             LiquidBackground().ignoresSafeArea()
         }
         .onAppear {
-            if controller.report == nil && controller.phase == .idle {
+            // If the caller passed a starter URL (e.g. ClientsView's
+            // demo suggestions), seed it once and skip the keyboard.
+            // Only do this when the field is still empty so re-presenting
+            // the sheet doesn't clobber the user's typing.
+            if let seed = initialURL, urlString.isEmpty {
+                urlString = seed
+            }
+            if controller.report == nil && controller.phase == .idle && urlString.isEmpty {
                 urlFocused = true
             }
         }
