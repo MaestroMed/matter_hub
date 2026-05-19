@@ -1150,6 +1150,22 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Linear sync" } },
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Linear" } }
       }
+    },
+    "share.contact.added.toast" : {
+      "comment" : "v0.13 — toast surfaced on next foreground after a contact share lands in the graph.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Contact added to MIND" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contact ajouté à MIND" } }
+      }
+    },
+    "share.contact.empty.fallback" : {
+      "comment" : "v0.13 — fallback Node title when a shared contact has no name, no email, and no company.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled contact" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contact sans nom" } }
+      }
     }
   }
 }

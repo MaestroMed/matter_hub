@@ -113,4 +113,15 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("greeting.morning", lang: "en"), "Good morning")
         XCTAssertEqual(localized("greeting.morning", lang: "fr"), "Bonjour")
     }
+
+    /// v0.13 — Contacts integration surfaces a toast on the next
+    /// foreground after a vCard share lands in the graph. Make sure
+    /// both translations exist so the FR build doesn't fall back to
+    /// the EN string.
+    func test_shareContactStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("share.contact.added.toast", lang: "en"), "Contact added to MIND")
+        XCTAssertEqual(localized("share.contact.added.toast", lang: "fr"), "Contact ajouté à MIND")
+        XCTAssertEqual(localized("share.contact.empty.fallback", lang: "en"), "Untitled contact")
+        XCTAssertEqual(localized("share.contact.empty.fallback", lang: "fr"), "Contact sans nom")
+    }
 }

@@ -22,33 +22,118 @@ import Foundation
 /// silently missing (the user can re-share).
 public enum ShareInbox {
 
+    /// Discriminator for the shape of share the user captured. Default
+    /// is `.link` (matches every payload shipped before v0.13) so older
+    /// serialized queues decode cleanly without a migration.
+    ///
+    /// - `link`: URL + optional comment (Safari, Mail, Notes, …).
+    /// - `contact`: vCard imported from Contacts.app — the resulting
+    ///   Node is a `person` rather than a `capture`.
+    public enum Kind: String, Codable, Sendable {
+        case link
+        case contact
+    }
+
     /// One captured share — URL and/or text, plus a timestamp. We keep
     /// both fields optional so the same payload type can carry a pure
-    /// text share (no URL) or a pure URL share (a Safari "share this
-    /// page" with no extra commentary).
+    /// text share (no URL), a pure URL share (a Safari "share this
+    /// page" with no extra commentary), or a contact import (v0.13)
+    /// where `title` carries the person's full name, `content` the
+    /// serialized info (email/phone/company), and `attendees` the
+    /// email addresses for tag extraction on the host side.
     public struct Payload: Codable, Equatable, Sendable {
         public let id: UUID
         public let url: URL?
         public let text: String?
         public let capturedAt: Date
+        /// Discriminator added in v0.13. JSON-decoded with a `.link`
+        /// fallback so payloads written by older extensions still
+        /// surface as link captures (the host's drain handler ignores
+        /// the new field and behaves as before).
+        public let kind: Kind
+        /// Human-readable title for the resulting Node. v0.13 — the
+        /// vCard parser feeds the formatted full name here; the link
+        /// branch leaves it `nil` and `titleCandidate` falls back to
+        /// the URL host as before.
+        public let title: String?
+        /// Pre-rendered body for the resulting Node. v0.13 — vCard
+        /// imports serialise email + phone + company line-by-line so
+        /// the host doesn't need to know about CNContact. Link
+        /// imports leave it `nil` and `contentBody` rebuilds it from
+        /// `url` + `text` like before.
+        public let content: String?
+        /// Email addresses extracted from a vCard, in source order
+        /// (first email is the primary). The host uses the first
+        /// address's domain as a searchable tag on the `person` Node.
+        /// Always `nil` for link payloads.
+        public let attendees: [String]?
 
         public init(
             id: UUID = UUID(),
             url: URL? = nil,
             text: String? = nil,
-            capturedAt: Date = .now
+            capturedAt: Date = .now,
+            kind: Kind = .link,
+            title: String? = nil,
+            content: String? = nil,
+            attendees: [String]? = nil
         ) {
             self.id = id
             self.url = url
             self.text = text
             self.capturedAt = capturedAt
+            self.kind = kind
+            self.title = title
+            self.content = content
+            self.attendees = attendees
         }
 
-        /// Convenience accessor: prefer the URL string for the Node
-        /// title (truncated), fall back to the first non-empty line of
-        /// text, fall back to a generic "Shared item" so a Node is
-        /// always nameable.
+        // MARK: - Backward-compatible JSON
+
+        /// JSON decoding tolerates payloads serialised by the v0.3 →
+        /// v0.12 extension (no `kind`, no `title`/`content`/`attendees`
+        /// keys). Missing fields default to a `.link` payload — the
+        /// host's drain handler treats those exactly as before so an
+        /// extension update / app update mismatch never drops shares.
+        enum CodingKeys: String, CodingKey {
+            case id, url, text, capturedAt, kind, title, content, attendees
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.id = try container.decode(UUID.self, forKey: .id)
+            self.url = try container.decodeIfPresent(URL.self, forKey: .url)
+            self.text = try container.decodeIfPresent(String.self, forKey: .text)
+            self.capturedAt = try container.decode(Date.self, forKey: .capturedAt)
+            self.kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .link
+            self.title = try container.decodeIfPresent(String.self, forKey: .title)
+            self.content = try container.decodeIfPresent(String.self, forKey: .content)
+            self.attendees = try container.decodeIfPresent([String].self, forKey: .attendees)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(id, forKey: .id)
+            try container.encodeIfPresent(url, forKey: .url)
+            try container.encodeIfPresent(text, forKey: .text)
+            try container.encode(capturedAt, forKey: .capturedAt)
+            try container.encode(kind, forKey: .kind)
+            try container.encodeIfPresent(title, forKey: .title)
+            try container.encodeIfPresent(content, forKey: .content)
+            try container.encodeIfPresent(attendees, forKey: .attendees)
+        }
+
+        /// Convenience accessor: contact payloads use their explicit
+        /// `title` (the formatted full name); link payloads prefer the
+        /// URL host, fall back to the first non-empty line of text,
+        /// fall back to a generic "Shared item" so a Node is always
+        /// nameable. v0.13 — when a contact has no name (just an
+        /// email), we fall through to `text`/email so the user still
+        /// sees something useful.
         public var titleCandidate: String {
+            if let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return title
+            }
             if let url = url, let host = url.host {
                 return host
             }
@@ -58,17 +143,108 @@ public enum ShareInbox {
                     return String(firstLine.prefix(80))
                 }
             }
+            if let attendees, let firstEmail = attendees.first {
+                return firstEmail
+            }
             return "Shared item"
         }
 
-        /// Body content for the resulting Node. URL on its own line
-        /// before the comment text so the host renders it as a link in
-        /// the markdown viewer.
+        /// Body content for the resulting Node. Contact payloads use
+        /// their pre-rendered `content`. Link payloads stitch URL +
+        /// text together, URL on its own line first so the host
+        /// renders it as a link in the markdown viewer.
         public var contentBody: String {
+            if let content, !content.isEmpty {
+                return content
+            }
             var parts: [String] = []
             if let url = url { parts.append(url.absoluteString) }
             if let text = text, !text.isEmpty { parts.append(text) }
             return parts.joined(separator: "\n\n")
+        }
+
+        /// Extracts the host portion of the first attendee email so
+        /// the host app can tag the resulting `person` Node with the
+        /// company domain (`acme.com` from `john@acme.com`). Returns
+        /// `nil` for link payloads, empty attendees, or malformed
+        /// addresses without a `@`.
+        public var primaryEmailDomain: String? {
+            guard let attendees, let first = attendees.first else { return nil }
+            return Self.emailDomain(from: first)
+        }
+
+        /// Pure helper used by `primaryEmailDomain` and by tests.
+        /// `john@acme.com` → `acme.com`, `weird-no-at` → `nil`,
+        /// `multi@chunk@a.com` → `a.com` (last `@` wins, since the
+        /// local-part is allowed to contain literal `@` in quotes).
+        public static func emailDomain(from email: String) -> String? {
+            let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let atIndex = trimmed.lastIndex(of: "@") else { return nil }
+            let domain = String(trimmed[trimmed.index(after: atIndex)...])
+                .lowercased()
+                .trimmingCharacters(in: .whitespaces)
+            return domain.isEmpty ? nil : domain
+        }
+
+        /// Pure factory used by the Share Extension's vCard branch
+        /// (v0.13). Kept here, framework-free, so the host's unit
+        /// tests can exercise the title/content/attendees assembly
+        /// without depending on CNContact. The extension extracts the
+        /// raw strings from `CNContactVCardSerialization` and feeds
+        /// them in.
+        ///
+        /// Title fallback chain: formatted full name → first email →
+        /// company name → nothing (returns nil — a vCard with no
+        /// identifying info isn't worth surfacing as a Node).
+        ///
+        /// Content is serialised line-by-line so the host's
+        /// Markdown renderer prints it cleanly: primary email, extra
+        /// emails, phones, company, user comment.
+        public static func contactPayload(
+            fullName: String?,
+            emails: [String],
+            phones: [String],
+            organization: String,
+            userComment: String = "",
+            capturedAt: Date = .now
+        ) -> Payload? {
+            let trimmedName = fullName?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanEmails = emails
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            let cleanPhones = phones
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            let trimmedOrg = organization
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedComment = userComment
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let resolvedTitle: String? = {
+                if let n = trimmedName, !n.isEmpty { return n }
+                if let e = cleanEmails.first { return e }
+                if !trimmedOrg.isEmpty { return trimmedOrg }
+                return nil
+            }()
+            guard let title = resolvedTitle else { return nil }
+
+            var lines: [String] = []
+            for email in cleanEmails { lines.append(email) }
+            for phone in cleanPhones { lines.append(phone) }
+            if !trimmedOrg.isEmpty { lines.append(trimmedOrg) }
+            if !trimmedComment.isEmpty { lines.append(trimmedComment) }
+            let content = lines.joined(separator: "\n")
+
+            return Payload(
+                url: nil,
+                text: nil,
+                capturedAt: capturedAt,
+                kind: .contact,
+                title: title,
+                content: content.isEmpty ? nil : content,
+                attendees: cleanEmails.isEmpty ? nil : cleanEmails
+            )
         }
     }
 

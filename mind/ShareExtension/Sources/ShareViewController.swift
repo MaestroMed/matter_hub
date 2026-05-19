@@ -1,6 +1,7 @@
 import UIKit
 import Social
 import UniformTypeIdentifiers
+import Contacts
 import GraphCore
 
 /// Hosts the system Share UI when the user picks "MIND" from any
@@ -50,6 +51,29 @@ final class ShareViewController: SLComposeServiceViewController {
             .compactMap { $0 as? NSExtensionItem }
 
         Task {
+            // v0.13 — Contacts.app shares post a vCard via
+            // `public.vcard`. Detect that branch first; if any contact
+            // payload was produced we skip the URL/text fall-through
+            // (a vCard share never carries a URL anyway). Multi-contact
+            // selection is bounded by the activation rule (max 1) but
+            // we iterate defensively in case iOS hands us more.
+            let contactPayloads = await collectContactPayloads(
+                from: items,
+                userComment: comment
+            )
+            if !contactPayloads.isEmpty {
+                for payload in contactPayloads {
+                    _ = ShareInbox.enqueue(payload)
+                }
+                await MainActor.run {
+                    self.extensionContext?.completeRequest(
+                        returningItems: [],
+                        completionHandler: nil
+                    )
+                }
+                return
+            }
+
             let urls = await collectURLs(from: items)
             let texts = await collectText(from: items)
 
@@ -179,5 +203,98 @@ final class ShareViewController: SLComposeServiceViewController {
             }
         }
         return parts.joined(separator: "\n\n")
+    }
+
+    // MARK: - Contact (vCard) extraction — v0.13
+
+    /// Scans every NSItemProvider for `public.vcard` payloads, parses
+    /// them through `CNContactVCardSerialization`, and emits one
+    /// `ShareInbox.Payload(kind: .contact)` per contact. The user's
+    /// free-text comment (if any) is appended to the serialised info
+    /// so a "spoke to Jane about pricing" note lands on the resulting
+    /// `person` Node alongside the contact fields.
+    ///
+    /// We do all parsing inside the extension process so the host
+    /// app's drain handler never has to import `Contacts` — keeps the
+    /// concern localised and the host module dependency graph clean.
+    private func collectContactPayloads(
+        from items: [NSExtensionItem],
+        userComment: String
+    ) async -> [ShareInbox.Payload] {
+        var result: [ShareInbox.Payload] = []
+        let trimmedComment = userComment
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        for item in items {
+            for provider in item.attachments ?? [] {
+                guard
+                    provider.hasItemConformingToTypeIdentifier(UTType.vCard.identifier)
+                else { continue }
+                guard
+                    let data = await loadData(provider, identifier: UTType.vCard.identifier)
+                else { continue }
+                guard
+                    let contacts = try? CNContactVCardSerialization.contacts(with: data)
+                else { continue }
+
+                for contact in contacts {
+                    if let payload = Self.payload(
+                        from: contact,
+                        userComment: trimmedComment
+                    ) {
+                        result.append(payload)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    /// Bridges a `CNContact` (Apple's vCard model) into the cross-
+    /// process `ShareInbox.Payload`. The pure assembly lives in
+    /// `ShareInbox.Payload.contactPayload(...)` inside GraphCore so
+    /// the host tests can exercise it without importing Contacts;
+    /// this method only does the CNContact field extraction.
+    static func payload(
+        from contact: CNContact,
+        userComment: String = ""
+    ) -> ShareInbox.Payload? {
+        let formattedName = CNContactFormatter.string(
+            from: contact,
+            style: .fullName
+        )
+
+        let emails = contact.emailAddresses.map { String($0.value) }
+        let phones = contact.phoneNumbers.map { $0.value.stringValue }
+        let organization = contact.organizationName
+
+        return ShareInbox.Payload.contactPayload(
+            fullName: formattedName,
+            emails: emails,
+            phones: phones,
+            organization: organization,
+            userComment: userComment
+        )
+    }
+
+    /// Bridges NSItemProvider's completion-handler API into async/await
+    /// for `Data?` — used by the vCard branch above. Same Sendable
+    /// narrowing pattern as `loadURL` / `loadString`.
+    private func loadData(_ provider: NSItemProvider, identifier: String) async -> Data? {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
+            provider.loadItem(forTypeIdentifier: identifier, options: nil) { value, _ in
+                if let data = value as? Data {
+                    continuation.resume(returning: data)
+                } else if let url = value as? URL,
+                          let data = try? Data(contentsOf: url) {
+                    // Some share sources hand us a file URL pointing
+                    // at the vCard rather than the raw bytes — read
+                    // through so the parse path doesn't care.
+                    continuation.resume(returning: data)
+                } else {
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
     }
 }

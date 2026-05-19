@@ -159,12 +159,16 @@ let shareExtensionTarget: Target = .target(
             "NSExtensionPointIdentifier": "com.apple.share-services",
             "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
             "NSExtensionAttributes": [
-                // Accept any share that includes either a URL or plain
-                // text. Quantities are capped at 1 — multi-select is a
-                // future iteration.
+                // Accept any share that includes a URL, plain text, or
+                // a vCard (Contacts.app "Add to MIND"). Quantities are
+                // capped at 1 — multi-select is a future iteration.
+                // v0.13 — adding `NSExtensionActivationSupportsVCardWithMaxCount`
+                // is what surfaces MIND on the Contacts.app share sheet
+                // (long-press a contact → "Add to MIND").
                 "NSExtensionActivationRule": [
                     "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
                     "NSExtensionActivationSupportsText": true,
+                    "NSExtensionActivationSupportsVCardWithMaxCount": 1,
                 ],
             ],
         ],

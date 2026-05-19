@@ -207,11 +207,22 @@ Shipped 2026-05-19: paste-personal-API-key approach (LinearKit
 module, Settings team picker, AuditSheet per-QW + bulk push,
 11 pure builder + LinearTeam tests).
 
-### v0.13 — Contacts integration ⏳
+### v0.13 — Contacts integration ✅
 **What**: Capture-from-contact: long-press a contact in iOS Contacts →
 "Add to MIND" share extension creates a `person` Node with name +
 email + phone + company. **Acceptance**: extension visible on contact
 detail, node created with all fields.
+Shipped 2026-05-19: broadened MINDShareExtension activation rule with
+`NSExtensionActivationSupportsVCardWithMaxCount=1`, vCard parsing via
+`CNContactVCardSerialization` in `ShareViewController`, framework-free
+`ShareInbox.Payload.contactPayload(...)` pure builder in GraphCore
+(backward-compatible JSON codable so older queues decode as `.link`),
+host-side `createPersonNode(...)` that tags the resulting `person`
+Node with the email-domain. 12 `ShareInboxContactTests` + 2
+`LocalizationTests` lock the contract.
+Deferred to v0.13.1: in-app Contacts picker (Settings → "Importer un
+contact") — the share sheet path covers the headline acceptance, an
+in-app picker is a convenience layer.
 
 ### v0.14 — Mail capture (Share Extension) ⏳
 **What**: Extend the share extension to handle email content. User

@@ -124,33 +124,25 @@ struct MINDApp: App {
 
         let context = GraphCore.sharedContainer.mainContext
 
-        for payload in payloads {
-            let node = Node(
-                kind: .capture,
-                title: payload.titleCandidate,
-                content: payload.contentBody,
-                sourceURL: payload.url?.absoluteString
-            )
-            context.insert(node)
-            node.refreshEmbedding()
-
-            // Known SaaS host? Surface (and reuse) a `client` Node so
-            // the capture is filed alongside the existing audit / notes
-            // the user keeps on that brand.
-            if let url = payload.url,
-               let clientName = ShareInbox.knownClientName(for: url) {
-                _ = clientNode(named: clientName, in: context)
-            }
-
+        // v0.13 — emit a count breadcrumb so a parser regression in
+        // the Share Extension (vCard arriving as a `.contact` but
+        // failing to convert into a Node) shows up in the Sentry
+        // timeline alongside the per-payload outcomes below.
+        let contactCount = payloads.filter { $0.kind == .contact }.count
+        if contactCount > 0 {
             MINDTelemetry.info(
-                "share.inbox.captured",
-                data: [
-                    "hasURL": payload.url != nil ? "1" : "0",
-                    "knownClient": payload.url.flatMap {
-                        ShareInbox.knownClientName(for: $0)
-                    } ?? "none",
-                ]
+                "share.contact.parsed",
+                data: ["count": "\(contactCount)"]
             )
+        }
+
+        for payload in payloads {
+            switch payload.kind {
+            case .link:
+                createCaptureNode(from: payload, in: context)
+            case .contact:
+                createPersonNode(from: payload, in: context)
+            }
         }
 
         do {
@@ -160,7 +152,86 @@ struct MINDApp: App {
                 "share.inbox.save.failed",
                 data: ["error": String(describing: error)]
             )
+            if contactCount > 0 {
+                // Surface the failure on the contact-specific channel
+                // too — the v0.13 acceptance criterion is "node created
+                // with all fields", so a save-fail on a contact payload
+                // is a different signal than a save-fail on a link.
+                MINDTelemetry.warning(
+                    "share.contact.failed",
+                    data: ["reason": "save", "error": String(describing: error)]
+                )
+            }
         }
+    }
+
+    /// Builds a `capture` Node from a `.link` share. Auto-attaches a
+    /// `client` Node when the URL matches a known SaaS host so the
+    /// capture is filed alongside the existing audit / notes on that
+    /// brand from day one.
+    @MainActor
+    private func createCaptureNode(
+        from payload: ShareInbox.Payload,
+        in context: ModelContext
+    ) {
+        let node = Node(
+            kind: .capture,
+            title: payload.titleCandidate,
+            content: payload.contentBody,
+            sourceURL: payload.url?.absoluteString
+        )
+        context.insert(node)
+        node.refreshEmbedding()
+
+        if let url = payload.url,
+           let clientName = ShareInbox.knownClientName(for: url) {
+            _ = clientNode(named: clientName, in: context)
+        }
+
+        MINDTelemetry.info(
+            "share.inbox.captured",
+            data: [
+                "hasURL": payload.url != nil ? "1" : "0",
+                "knownClient": payload.url.flatMap {
+                    ShareInbox.knownClientName(for: $0)
+                } ?? "none",
+            ]
+        )
+    }
+
+    /// Builds a `person` Node from a `.contact` share (v0.13). Title
+    /// is the formatted full name (with an email fall-back inside the
+    /// payload); content is the pre-serialised email/phone/company
+    /// info; tags carry the primary email's domain (`acme.com` from
+    /// `john@acme.com`) so a search across NotesView surfaces the
+    /// person when the user is browsing prospects from that company.
+    @MainActor
+    private func createPersonNode(
+        from payload: ShareInbox.Payload,
+        in context: ModelContext
+    ) {
+        var tags: [String] = ["contact"]
+        if let domain = payload.primaryEmailDomain {
+            tags.append(domain)
+        }
+
+        let node = Node(
+            kind: .person,
+            title: payload.titleCandidate,
+            content: payload.contentBody,
+            tags: tags,
+            sourceURL: nil
+        )
+        context.insert(node)
+        node.refreshEmbedding()
+
+        MINDTelemetry.info(
+            "share.contact.imported",
+            data: [
+                "hasEmail": (payload.attendees?.isEmpty == false) ? "1" : "0",
+                "emailDomain": payload.primaryEmailDomain ?? "none",
+            ]
+        )
     }
 
     /// Drains the bidirectional Reminders ↔ Tasks sync (v0.10) if the
