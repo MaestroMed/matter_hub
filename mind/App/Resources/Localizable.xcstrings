@@ -1038,6 +1038,118 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Notion sync" } },
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Notion" } }
       }
+    },
+    "settings.linear.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Linear sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Linear" } }
+      }
+    },
+    "settings.linear.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create a personal API key at linear.app/settings/api, paste it here, then pick the team that audit Quick Wins should land in. Token is stored in the Keychain." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crée une clé API perso sur linear.app/settings/api, colle-la ici, puis choisis l'équipe où atterrissent les Quick Wins. Le token est stocké dans le trousseau." } }
+      }
+    },
+    "settings.linear.token.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "lin_api_…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "lin_api_…" } }
+      }
+    },
+    "settings.linear.team.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Default team" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Équipe par défaut" } }
+      }
+    },
+    "settings.linear.team.fetch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Load teams" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Charger les équipes" } }
+      }
+    },
+    "settings.linear.team.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No team yet — tap Load teams once your token validates." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'équipe — touche Charger une fois ton token validé." } }
+      }
+    },
+    "settings.linear.status.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Token validated" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Token validé" } }
+      }
+    },
+    "settings.linear.status.fail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Token refused" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Token refusé" } }
+      }
+    },
+    "audit.export.linear.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Push to Linear" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoyer vers Linear" } }
+      }
+    },
+    "audit.export.linear.all.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Push all Quick Wins to Linear" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoyer tous les Quick Wins vers Linear" } }
+      }
+    },
+    "audit.export.linear.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Push Quick Wins to Linear" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoyer les Quick Wins vers Linear" } }
+      }
+    },
+    "audit.export.linear.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "One Linear issue per Quick Win, priority mapped from impact." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Une issue Linear par Quick Win, priorité mappée sur l'impact." } }
+      }
+    },
+    "audit.export.linear.success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pushed to Linear: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoyé sur Linear : %@" } }
+      }
+    },
+    "audit.export.linear.partial" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Linear push partial: %1$d created, %2$d failed." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoi Linear partiel : %1$d créées, %2$d échouées." } }
+      }
+    },
+    "audit.export.linear.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Linear push failed: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Échec de l'envoi Linear : %@" } }
+      }
+    },
+    "audit.export.linear.toast.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Linear sync" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sync Linear" } }
+      }
     }
   }
 }

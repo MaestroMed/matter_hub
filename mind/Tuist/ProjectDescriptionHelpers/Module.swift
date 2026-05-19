@@ -16,6 +16,7 @@ public enum Module: String, CaseIterable {
     case healthInsights = "HealthInsights"
     case remindersKit = "RemindersKit"
     case notionKit = "NotionKit"
+    case linearKit = "LinearKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -66,6 +67,11 @@ public enum Module: String, CaseIterable {
                 // save + validate flow stays inside the same view that
                 // shows its green/red dot status.
                 .target(name: Module.notionKit.rawValue),
+                // v0.12 — Settings owns the Linear sync section (paste
+                // personal API key, save+validate button with green/red
+                // dot, team picker once the token validates). Same
+                // co-location rationale as NotionKit.
+                .target(name: Module.linearKit.rawValue),
             ]
         case .chat:
             return [
@@ -142,6 +148,18 @@ public enum Module: String, CaseIterable {
             // No DesignSystem dep — NotionKit is pure model + actor
             // client; the visible UI lives in Settings / App which
             // already link DesignSystem.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.auditKit.rawValue),
+            ]
+        case .linearKit:
+            // v0.12 — Audit Quick Wins → Linear issues. Same dep shape
+            // as NotionKit: GraphCore for MINDTelemetry breadcrumbs
+            // (linear.token.saved / linear.issue.created / …) and
+            // AuditKit for `AuditReport.QuickWin`, which the pure
+            // `LinearIssueBuilder` consumes. The actor `LinearClient`
+            // posts to https://api.linear.app/graphql; the UI lives in
+            // Settings + AuditSheet which already link DesignSystem.
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),

@@ -198,11 +198,14 @@ pitch). Shipped 2026-05-19: paste-integration-token approach
 (NotionKit module, Settings UI, AuditSheet sync button, 9 pure
 builder tests).
 
-### v0.12 — Linear sync (audit → Linear projects) ⏳
+### v0.12 — Linear sync (audit → Linear projects) ✅
 **What**: Audit's "Quick wins" can be one-tap-converted to Linear
 issues in a chosen project. Bulk action: "Export all QW to Linear"
 creates one issue per QW with priority based on `impact` field.
 **Acceptance**: 3 QW → 3 Linear issues with correct titles + labels.
+Shipped 2026-05-19: paste-personal-API-key approach (LinearKit
+module, Settings team picker, AuditSheet per-QW + bulk push,
+11 pure builder + LinearTeam tests).
 
 ### v0.13 — Contacts integration ⏳
 **What**: Capture-from-contact: long-press a contact in iOS Contacts →

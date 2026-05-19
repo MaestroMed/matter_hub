@@ -96,6 +96,13 @@ let testTarget: Target = .target(
         // exercised end-to-end via the Settings "Test sync" button
         // on a real device + the simulator screenshot.
         .target(name: Module.notionKit.rawValue),
+        // v0.12 — LinearIssueBuilderTests + LinearTeamTests exercise
+        // the pure issueInput(for:teamID:) builder used by the
+        // AuditSheet "Push to Linear" buttons, and the LinearTeam
+        // value type used by the Settings team picker. The
+        // `LinearClient` actor is exercised end-to-end through the
+        // simulator screenshot.
+        .target(name: Module.linearKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

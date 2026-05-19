@@ -6,6 +6,7 @@ import DesignSystem
 import GraphCore
 import HealthInsights
 import Intelligence
+import LinearKit
 import NotionKit
 import RemindersKit
 import VisualKit
@@ -32,6 +33,23 @@ public struct SettingsView: View {
     @State private var notionTokenValid: Bool? = nil
     @State private var notionTestToast: String?
     @State private var notionBusy: Bool = false
+
+    // v0.12 — Linear sync. Personal API key in Keychain (paste from
+    // linear.app/settings/api), team UUID in UserDefaults. Same shape
+    // as the Notion state above for symmetry.
+    @State private var linearToken: String = ""
+    @State private var linearTokenSaved: Bool = false
+    @State private var showLinearToken: Bool = false
+    /// nil = unchecked / never validated. true / false = result of the
+    /// last `LinearClient.validateToken()` call. Drives the green /
+    /// red status dot next to the token field.
+    @State private var linearTokenValid: Bool? = nil
+    @State private var linearBusy: Bool = false
+    /// Cached teams returned by the last `LinearClient.shared.teams()`
+    /// call. Empty until the user taps "Load teams" after their token
+    /// validates. Picker hides itself when empty.
+    @State private var linearTeams: [LinearTeam] = []
+    @State private var linearToast: String?
 
     // Danger-zone confirmation alerts. Two-step UX so the user can't
     // accidentally wipe their second brain by misclicking — the alert
@@ -139,6 +157,8 @@ public struct SettingsView: View {
                 }
 
                 notionSection
+
+                linearSection
 
                 section(localized: "settings.section.sentry") {
                     VStack(alignment: .leading, spacing: 10) {
@@ -300,6 +320,10 @@ public struct SettingsView: View {
                 notionToken = stored
                 notionTokenSaved = true
             }
+            if let stored = LinearTokenStore.read() {
+                linearToken = stored
+                linearTokenSaved = true
+            }
             refreshCloudKitStatus()
         }
         .alert(String(localized: "settings.notion.test.done", bundle: .main),
@@ -308,6 +332,13 @@ public struct SettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(notionTestToast ?? "")
+        }
+        .alert(String(localized: "audit.export.linear.toast.title", bundle: .main),
+               isPresented: Binding(get: { linearToast != nil },
+                                    set: { if !$0 { linearToast = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(linearToast ?? "")
         }
         .onReceive(
             NotificationCenter.default.publisher(for: .CKAccountChanged)
@@ -561,6 +592,236 @@ public struct SettingsView: View {
             hiddenRisks: [],
             pitch: ""
         )
+    }
+
+    // MARK: - Linear sync (v0.12)
+
+    /// Section that holds the paste-personal-API-key field, the team
+    /// picker, and the save/validate button. Token is stored in
+    /// `LinearTokenStore` (Keychain), default team UUID in
+    /// `MINDPreferences.linearDefaultTeamID` (App Group UserDefaults).
+    /// The green / red dot reflects the last `validateToken()` call —
+    /// blank until the user taps "Save token". Once the token
+    /// validates, "Load teams" fetches the workspace's teams via
+    /// `LinearClient.shared.teams()` and renders them as a horizontal
+    /// Liquid pill picker.
+    private var linearSection: some View {
+        section(localized: "settings.linear.section") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("settings.linear.subtitle", bundle: .main)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                linearTokenField
+
+                HStack(spacing: 8) {
+                    LiquidButton(
+                        title: linearTokenSaved
+                            ? String(localized: "settings.button.saved", bundle: .main)
+                            : String(localized: "settings.button.save", bundle: .main),
+                        systemImage: linearTokenSaved ? "checkmark" : "key.fill"
+                    ) {
+                        saveLinearToken()
+                    }
+                    .disabled(linearToken.isEmpty || linearBusy)
+
+                    Button(String(localized: "settings.button.clear", bundle: .main)) {
+                        LinearTokenStore.clear()
+                        linearToken = ""
+                        linearTokenSaved = false
+                        linearTokenValid = nil
+                        linearTeams = []
+                        prefs.linearDefaultTeamID = ""
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    linearStatusDot
+                }
+
+                Divider().background(.white.opacity(0.2))
+
+                Text("settings.linear.team.label", bundle: .main)
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+
+                if linearTeams.isEmpty {
+                    Text("settings.linear.team.empty", bundle: .main)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else {
+                    linearTeamPicker
+                }
+
+                LiquidButton(
+                    title: String(localized: "settings.linear.team.fetch", bundle: .main),
+                    systemImage: "arrow.down.circle.fill"
+                ) {
+                    fetchLinearTeams()
+                }
+                .disabled(linearToken.isEmpty || linearBusy)
+            }
+        }
+    }
+
+    private var linearTokenField: some View {
+        HStack {
+            Group {
+                if showLinearToken {
+                    TextField("lin_api_…", text: $linearToken)
+                } else {
+                    SecureField("lin_api_…", text: $linearToken)
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(.system(.body, design: .monospaced))
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: linearToken) { _, _ in
+                linearTokenSaved = false
+                linearTokenValid = nil
+            }
+
+            Button {
+                showLinearToken.toggle()
+            } label: {
+                Image(systemName: showLinearToken ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    /// Horizontal Liquid pill picker. The selected team's UUID lives
+    /// in `prefs.linearDefaultTeamID`; tapping a pill assigns its `id`
+    /// to that property. Liquid Glass tokens only — capsule
+    /// `.continuous`, `.ultraThinMaterial`, iris highlight for the
+    /// active pill.
+    private var linearTeamPicker: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(linearTeams) { team in
+                    Button {
+                        prefs.linearDefaultTeamID = team.id
+                        LiquidHaptics.select()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(team.key)
+                                .font(.system(.caption2, design: .monospaced, weight: .bold))
+                                .foregroundStyle(.secondary)
+                            Text(team.name)
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(
+                                    prefs.linearDefaultTeamID == team.id
+                                    ? LiquidPalette.iris.opacity(0.32)
+                                    : Color.clear
+                                )
+                                .overlay {
+                                    Capsule(style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .opacity(prefs.linearDefaultTeamID == team.id ? 0 : 1)
+                                }
+                                .overlay {
+                                    Capsule(style: .continuous)
+                                        .stroke(
+                                            prefs.linearDefaultTeamID == team.id
+                                            ? LiquidPalette.iris
+                                            : .white.opacity(0.15),
+                                            lineWidth: 1
+                                        )
+                                }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+    }
+
+    @ViewBuilder
+    private var linearStatusDot: some View {
+        if let valid = linearTokenValid {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(valid ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: (valid ? Color.green : Color.red).opacity(0.5), radius: 4)
+                Text(valid
+                     ? String(localized: "settings.linear.status.ok", bundle: .main)
+                     : String(localized: "settings.linear.status.fail", bundle: .main))
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        } else if linearBusy {
+            ProgressView().controlSize(.mini)
+        } else {
+            EmptyView()
+        }
+    }
+
+    private func saveLinearToken() {
+        linearBusy = true
+        let trimmed = linearToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        LinearTokenStore.save(trimmed)
+        linearTokenSaved = true
+        MINDTelemetry.info("linear.token.saved", data: ["length": "\(trimmed.count)"])
+        Task {
+            let valid = await LinearClient.shared.validateToken()
+            await MainActor.run {
+                linearTokenValid = valid
+                linearBusy = false
+                MINDTelemetry.info("linear.token.validated", data: ["valid": valid ? "true" : "false"])
+                if !valid {
+                    LiquidHaptics.warning()
+                } else {
+                    LiquidHaptics.success()
+                }
+            }
+        }
+    }
+
+    private func fetchLinearTeams() {
+        linearBusy = true
+        Task {
+            do {
+                let fetched = try await LinearClient.shared.teams()
+                await MainActor.run {
+                    linearTeams = fetched
+                    linearBusy = false
+                    LiquidHaptics.success()
+                    // If the user previously selected a team that no
+                    // longer exists in the workspace, clear it.
+                    if !fetched.contains(where: { $0.id == prefs.linearDefaultTeamID }) {
+                        prefs.linearDefaultTeamID = ""
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    linearBusy = false
+                    linearToast = String(
+                        format: String(localized: "audit.export.linear.error", bundle: .main),
+                        String(describing: error)
+                    )
+                    LiquidHaptics.error()
+                }
+            }
+        }
     }
 
     // MARK: - iCloud sync indicator

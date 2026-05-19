@@ -3,6 +3,7 @@ import SwiftData
 import AuditKit
 import DesignSystem
 import GraphCore
+import LinearKit
 import NotionKit
 import Settings
 import VisualKit
@@ -26,6 +27,15 @@ struct AuditSheet: View {
     @State private var briefMarkdown: String?
     @State private var exportSheetReport: ExportSheetReport?
     @State private var visualBoardReport: VisualBoardReportItem?
+
+    // v0.12 — Per-QuickWin Linear push state. Keyed by win.id so a
+    // single in-flight push doesn't disable every other row's button.
+    @State private var linearPushingIDs: Set<UUID> = []
+    /// QW IDs that have been successfully pushed in this session.
+    /// Drives the "Push to Linear" button → "Pushed" pill swap so
+    /// Mehdi doesn't accidentally double-push the same QW.
+    @State private var linearPushedIDs: Set<UUID> = []
+    @State private var linearToast: String?
     @FocusState private var urlFocused: Bool
 
     init(initialURL: String? = nil) {
@@ -78,6 +88,13 @@ struct AuditSheet: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
+        }
+        .alert(String(localized: "audit.export.linear.toast.title", bundle: .main),
+               isPresented: Binding(get: { linearToast != nil },
+                                    set: { if !$0 { linearToast = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(linearToast ?? "")
         }
     }
 
@@ -637,12 +654,98 @@ struct AuditSheet: View {
                 Text(win.detail)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
-                Text(formatEffort(win.effortDays))
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
-                    .foregroundStyle(LiquidPalette.iris)
+                HStack {
+                    Text(formatEffort(win.effortDays))
+                        .font(.system(.caption2, design: .rounded, weight: .medium))
+                        .foregroundStyle(LiquidPalette.iris)
+                    Spacer()
+                    linearPushButton(for: win)
+                }
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// v0.12 — Mini "Push to Linear" trailing button. Hidden unless
+    /// both the token and the default team are configured. While the
+    /// push is in flight a `ProgressView` replaces the button so the
+    /// other QW rows stay tappable. Once the row succeeds we swap to
+    /// a "Pushed" pill — Mehdi can still scroll back and read it but
+    /// can't fire a second issue for the same QW from this session.
+    @ViewBuilder
+    private func linearPushButton(for win: AuditReport.QuickWin) -> some View {
+        if LinearTokenStore.read() != nil,
+           let teamID = MINDPreferences.currentLinearDefaultTeamID() {
+            if linearPushedIDs.contains(win.id) {
+                Text("audit.export.linear.button", bundle: .main)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background {
+                        Capsule(style: .continuous).fill(.ultraThinMaterial)
+                    }
+            } else if linearPushingIDs.contains(win.id) {
+                ProgressView().controlSize(.mini)
+            } else {
+                Button {
+                    pushQuickWinToLinear(win, teamID: teamID)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.right.square.fill")
+                        Text("audit.export.linear.button", bundle: .main)
+                    }
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background {
+                        Capsule(style: .continuous)
+                            .fill(LiquidPalette.iris.opacity(0.14))
+                            .overlay {
+                                Capsule(style: .continuous)
+                                    .stroke(LiquidPalette.iris.opacity(0.55), lineWidth: 1)
+                            }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func pushQuickWinToLinear(_ win: AuditReport.QuickWin, teamID: String) {
+        linearPushingIDs.insert(win.id)
+        Task {
+            do {
+                let identifier = try await LinearClient.shared.createIssue(win, teamID: teamID)
+                await MainActor.run {
+                    linearPushingIDs.remove(win.id)
+                    linearPushedIDs.insert(win.id)
+                    linearToast = String(
+                        format: String(localized: "audit.export.linear.success", bundle: .main),
+                        identifier
+                    )
+                    LiquidHaptics.success()
+                    MINDTelemetry.info("linear.issue.created", data: [
+                        "surface": "audit.report.row",
+                        "identifier": identifier,
+                    ])
+                }
+            } catch {
+                await MainActor.run {
+                    linearPushingIDs.remove(win.id)
+                    linearToast = String(
+                        format: String(localized: "audit.export.linear.error", bundle: .main),
+                        String(describing: error)
+                    )
+                    LiquidHaptics.error()
+                    MINDTelemetry.warning("linear.issue.failed", data: [
+                        "surface": "audit.report.row",
+                        "error": String(describing: error),
+                    ])
+                }
+            }
         }
     }
 
@@ -1158,6 +1261,24 @@ struct AuditSheet: View {
             && MINDPreferences.currentNotionDatabaseID() != nil
         }
 
+        // v0.12 — Linear bulk sync state. Three tristate values share
+        // the same alert binding the same way Notion's URL/error pair
+        // does: linearSuccess (created identifiers joined) drives the
+        // success path, linearPartial (created, failed) drives the
+        // "x/y" toast, linearError drives the hard-failure path.
+        @State private var linearSuccess: String?
+        @State private var linearPartial: (created: Int, failed: Int)?
+        @State private var linearError: String?
+        @State private var linearBulkSyncing: Bool = false
+
+        /// Same gating contract as `notionConfigured` — both the
+        /// personal API key (Keychain) and the default team UUID
+        /// (UserDefaults) must be set for the bulk row to render.
+        private var linearConfigured: Bool {
+            LinearTokenStore.read() != nil
+            && MINDPreferences.currentLinearDefaultTeamID() != nil
+        }
+
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -1212,6 +1333,10 @@ struct AuditSheet: View {
                     if notionConfigured {
                         notionSyncRow
                     }
+
+                    if linearConfigured && !report.quickWins.isEmpty {
+                        linearBulkRow
+                    }
                 }
                 .padding(20)
                 .padding(.bottom, 32)
@@ -1226,6 +1351,22 @@ struct AuditSheet: View {
                     Text(String(format: String(localized: "audit.export.notion.success", bundle: .main), url))
                 } else if let err = notionError {
                     Text(String(format: String(localized: "audit.export.notion.error", bundle: .main), err))
+                }
+            }
+            .alert(String(localized: "audit.export.linear.toast.title", bundle: .main),
+                   isPresented: Binding(
+                    get: { linearSuccess != nil || linearPartial != nil || linearError != nil },
+                    set: { if !$0 { linearSuccess = nil; linearPartial = nil; linearError = nil } }
+                   )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                if let ids = linearSuccess {
+                    Text(String(format: String(localized: "audit.export.linear.success", bundle: .main), ids))
+                } else if let partial = linearPartial {
+                    Text(String(format: String(localized: "audit.export.linear.partial", bundle: .main),
+                                partial.created, partial.failed))
+                } else if let err = linearError {
+                    Text(String(format: String(localized: "audit.export.linear.error", bundle: .main), err))
                 }
             }
         }
@@ -1296,6 +1437,93 @@ struct AuditSheet: View {
                         notionError = String(describing: error)
                         LiquidHaptics.error()
                         MINDTelemetry.warning("notion.page.failed", data: [
+                            "surface": "audit.export",
+                            "error": String(describing: error),
+                        ])
+                    }
+                }
+            }
+        }
+
+        /// v0.12 — "Push all QW to Linear" bulk row. Shares the row
+        /// rhythm of `notionSyncRow` so the export sheet stays
+        /// visually consistent across the two integrations. Hidden
+        /// when there are zero Quick Wins (an empty bulk would just
+        /// no-op and confuse the user).
+        @ViewBuilder
+        private var linearBulkRow: some View {
+            LiquidCard(cornerRadius: 18) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "checklist")
+                            .font(.system(.callout, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("audit.export.linear.title", bundle: .main)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(2)
+                        Text("audit.export.linear.subtitle", bundle: .main)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    if linearBulkSyncing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button(action: pushAllQuickWinsToLinear) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(.title3, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+
+        private func pushAllQuickWinsToLinear() {
+            guard let teamID = MINDPreferences.currentLinearDefaultTeamID() else { return }
+            linearBulkSyncing = true
+            linearError = nil
+            linearSuccess = nil
+            linearPartial = nil
+            Task {
+                do {
+                    let result = try await LinearClient.shared.createIssuesBulk(
+                        report.quickWins,
+                        teamID: teamID
+                    )
+                    await MainActor.run {
+                        linearBulkSyncing = false
+                        if result.failures.isEmpty {
+                            linearSuccess = result.createdIdentifiers.joined(separator: ", ")
+                            LiquidHaptics.success()
+                        } else {
+                            linearPartial = (
+                                created: result.createdIdentifiers.count,
+                                failed: result.failures.count
+                            )
+                            LiquidHaptics.warning()
+                        }
+                        MINDTelemetry.info("linear.bulk.completed", data: [
+                            "surface": "audit.export",
+                            "created": "\(result.createdIdentifiers.count)",
+                            "failed": "\(result.failures.count)",
+                            "client": report.client.displayName,
+                        ])
+                    }
+                } catch {
+                    await MainActor.run {
+                        linearBulkSyncing = false
+                        linearError = String(describing: error)
+                        LiquidHaptics.error()
+                        MINDTelemetry.warning("linear.bulk.failed", data: [
                             "surface": "audit.export",
                             "error": String(describing: error),
                         ])

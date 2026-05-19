@@ -21,6 +21,7 @@ public final class MINDPreferences {
         static let healthInsightsEnabled     = "mind.pref.healthInsightsEnabled"
         static let remindersSyncEnabled      = "mind.pref.remindersSyncEnabled"
         static let notionDatabaseID          = "mind.pref.notionDatabaseID"
+        static let linearDefaultTeamID       = "mind.pref.linearDefaultTeamID"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -98,6 +99,19 @@ public final class MINDPreferences {
         }
     }
 
+    /// Linear team UUID where MIND creates QuickWin issues (v0.12).
+    /// Same UserDefaults rationale as `notionDatabaseID` — the team
+    /// id is not a secret. The personal API key *is* and lives in
+    /// `LinearTokenStore` (Keychain). Empty string = "not configured",
+    /// and the AuditSheet "Push to Linear" buttons stay hidden until
+    /// both this and the token are set.
+    public var linearDefaultTeamID: String {
+        didSet {
+            let trimmed = linearDefaultTeamID.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.linearDefaultTeamID)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -131,6 +145,11 @@ public final class MINDPreferences {
         // the AuditSheet "Sync to Notion" CTA checks for non-empty
         // before showing the button.
         self.notionDatabaseID = suite.string(forKey: Key.notionDatabaseID) ?? ""
+
+        // v0.12 — Linear default team UUID. Empty default = not
+        // configured; the AuditSheet "Push to Linear" CTA + the bulk
+        // export button both check for non-empty before rendering.
+        self.linearDefaultTeamID = suite.string(forKey: Key.linearDefaultTeamID) ?? ""
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -188,6 +207,18 @@ public final class MINDPreferences {
     ) -> String? {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         let value = suite.string(forKey: Key.notionDatabaseID)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v0.12 — Non-Observable accessor for the Linear default team ID.
+    /// Same nil-on-empty contract as `currentNotionDatabaseID` so
+    /// `AuditSheet` can branch on optional-binding when deciding
+    /// whether to render the "Push to Linear" buttons.
+    public static func currentLinearDefaultTeamID(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.linearDefaultTeamID)?.trimmingCharacters(in: .whitespacesAndNewlines)
         return (value?.isEmpty == false) ? value : nil
     }
 }
