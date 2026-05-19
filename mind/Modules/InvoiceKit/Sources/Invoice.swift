@@ -1,0 +1,275 @@
+import Foundation
+
+/// v0.31 — Lifecycle status for a MIND-generated invoice.
+///
+/// Drives the colored status badge on the Pipeline `.won` column
+/// card, the HomeView "Factures à relancer" filter, and the
+/// `InvoiceTelemetry.markPaid` breadcrumb. Encoded as the raw string
+/// in JSON so a hand-edited file remains readable, and so the
+/// counter file format stays human-debuggable when Mehdi inspects
+/// `Documents/invoices/_counter.json` from a Files.app shortcut.
+public enum InvoiceStatus: String, Codable, Sendable, Equatable, Hashable, CaseIterable {
+    /// Generated but not yet sent — sitting in the Pipeline Won
+    /// column waiting for Mehdi to open the share sheet.
+    case draft
+    /// Share sheet opened, PDF + Stripe Payment Link handed to the
+    /// client. Triggers the 30-day overdue clock.
+    case sent
+    /// Manually flipped from the InvoiceSheet "Marquer payé"
+    /// button. Stops the overdue clock and confettis the Pipeline
+    /// `.won` card.
+    case paid
+    /// Computed status: `sent` + `dueDate < .now` and `paidAt`
+    /// still nil. Stored explicitly so the HomeView "Relancer"
+    /// card can scan the cache without recomputing every render.
+    case overdue
+}
+
+/// v0.31 — Branding metadata baked into a generated invoice. Mirrors
+/// the shape of `ClientPortalKit.BrandSettings` but lives in
+/// InvoiceKit so the framework stays self-contained (no transitive
+/// dependency on ClientPortalKit). Filled at invoice-mint time from
+/// `MINDPreferences` — SIRET, IBAN, VAT number, address — so a
+/// reissued PDF later carries the consultant identity *at the moment
+/// the invoice was created*, not whatever the prefs say today.
+public struct ConsultantBranding: Sendable, Codable, Equatable, Hashable {
+
+    /// Display name shown in the PDF header + Stripe-link footer.
+    /// Defaults to "Mehdi Nafaa" so a freshly-installed build is
+    /// usable without touching Settings.
+    public let name: String
+
+    /// Multiline postal address rendered under the consultant
+    /// name in the invoice header. nil = address line is hidden.
+    public let address: String?
+
+    /// French SIRET number (14 digits). Optional because a
+    /// consultant in the very early days may not have one yet —
+    /// the PDF falls back to a "SIRET en cours" mention so the
+    /// legal block stays present.
+    public let siret: String?
+
+    /// French/EU VAT number (e.g. "FR12345678910"). Optional for
+    /// the same reason as `siret`. When nil + `vatPercent == 0`,
+    /// the PDF appends the auto-entrepreneur mention "TVA non
+    /// applicable, art. 293 B du CGI" so a freelance with VAT
+    /// exemption ships a legal invoice out of the box.
+    public let vatNumber: String?
+
+    /// IBAN for wire-transfer payments. Optional — most clients
+    /// pay via the Stripe Payment Link, so MIND doesn't force the
+    /// user to set this up. When present, it's rendered alongside
+    /// the Stripe link as a payment alternative.
+    public let iban: String?
+
+    /// Required: contact email used in the PDF + the `mailto:`
+    /// from-line. Defaults to "contact@mind.app" so a missing
+    /// prefs value doesn't break the build — Settings nags Mehdi
+    /// to set a real one.
+    public let email: String
+
+    /// Optional phone number for the consultant's footer line.
+    public let phone: String?
+
+    public init(
+        name: String = "Mehdi Nafaa",
+        address: String? = nil,
+        siret: String? = nil,
+        vatNumber: String? = nil,
+        iban: String? = nil,
+        email: String = "contact@mind.app",
+        phone: String? = nil
+    ) {
+        self.name = name
+        self.address = address
+        self.siret = siret
+        self.vatNumber = vatNumber
+        self.iban = iban
+        self.email = email
+        self.phone = phone
+    }
+
+    /// Default fallback used by the unit tests and the very first
+    /// invoice issued from a brand-new install. Real production
+    /// invoices reach for `ConsultantBranding(fromPreferences:)`
+    /// which pulls every field from `MINDPreferences`.
+    public static let `default` = ConsultantBranding()
+}
+
+/// v0.31 — One invoice issued from the Pipeline Won drop or from
+/// `ClientDetailView`'s "+Facture" CTA. Immutable except for the
+/// mutable lifecycle fields (`status`, `paidAt`,
+/// `stripePaymentLinkURL`) so a re-render of the PDF is always
+/// reproducible from the persisted struct alone.
+///
+/// All amount math is in EUR cents at the boundary (we keep `amountEUR`
+/// as a `Double` for ergonomics in the UI but every renderer rounds
+/// to 2 decimals via `Self.roundedAmount(_:)` so a 12.345 input ends
+/// up as 12.35 on the PDF + the Stripe link).
+public struct Invoice: Sendable, Codable, Equatable, Hashable, Identifiable {
+
+    public let id: UUID
+
+    /// Sequential MIND invoice number, format `MIND-YYYY-NNNN`.
+    /// Generated by `InvoiceStore.nextNumber()` so two simultaneous
+    /// invoices for two different clients can't collide. Lives on
+    /// the struct rather than being recomputed so a re-render of
+    /// a paid invoice keeps showing the exact number the client
+    /// originally received.
+    public let number: String
+
+    public let issueDate: Date
+    public let dueDate: Date
+
+    /// SwiftData node id for the client this invoice belongs to.
+    /// Lets the HomeView "Factures à relancer" card link straight
+    /// back to the client detail screen via a single graph lookup.
+    public let clientNodeID: UUID
+
+    public let clientName: String
+    public let clientEmail: String?
+
+    /// Pre-tax amount in EUR. Stored exactly as the user typed
+    /// (after clamping to >= 0) so the round-trip through Codable
+    /// is lossless. Display formatting uses `roundedAmount(_:)`.
+    public let amountEUR: Double
+
+    /// VAT percentage applied. `0` for auto-entrepreneur invoices
+    /// (which also surface the art. 293 B mention), `20` for the
+    /// default FR consultancy rate. Anything else is allowed at
+    /// the data layer but UI surfaces only the 0/20 toggle.
+    public let vatPercent: Double
+
+    public let description: String
+
+    public var status: InvoiceStatus
+    public var paidAt: Date?
+
+    /// Final Stripe Payment Link URL handed to the client (base
+    /// from `MINDPreferences.stripePaymentLinkBase` + the
+    /// `?prefilled_amount=<cents>` query parameter the InvoiceKit
+    /// `InvoiceStripeLinkBuilder` appends). Optional because the
+    /// preference may not be set yet — the PDF still renders but
+    /// the Stripe-link block is hidden.
+    public var stripePaymentLinkURL: String?
+
+    /// Snapshot of the consultant branding at the moment of
+    /// issuance. Frozen on the struct so a year-later re-render
+    /// can't accidentally show today's IBAN against last year's
+    /// number.
+    public var consultantBranding: ConsultantBranding
+
+    public init(
+        id: UUID = UUID(),
+        number: String,
+        issueDate: Date = .now,
+        dueDate: Date? = nil,
+        clientNodeID: UUID,
+        clientName: String,
+        clientEmail: String? = nil,
+        amountEUR: Double,
+        vatPercent: Double = 20,
+        description: String,
+        status: InvoiceStatus = .draft,
+        paidAt: Date? = nil,
+        stripePaymentLinkURL: String? = nil,
+        consultantBranding: ConsultantBranding = .default
+    ) {
+        self.id = id
+        self.number = number
+        self.issueDate = issueDate
+        self.dueDate = dueDate ?? Self.defaultDueDate(from: issueDate)
+        self.clientNodeID = clientNodeID
+        self.clientName = clientName
+        self.clientEmail = clientEmail
+        // Negative amounts are rejected (clamped to 0) at the
+        // value-type boundary so no downstream renderer ever has
+        // to second-guess a malformed input.
+        self.amountEUR = max(0, amountEUR)
+        // Negative VAT makes no sense; over-100 would invert the
+        // signage on the TTC line. Clamp to a sane window.
+        self.vatPercent = max(0, min(100, vatPercent))
+        self.description = description
+        self.status = status
+        self.paidAt = paidAt
+        self.stripePaymentLinkURL = stripePaymentLinkURL
+        self.consultantBranding = consultantBranding
+    }
+
+    // MARK: - Derived amounts
+
+    /// Pre-tax amount rounded to 2 decimals. Display + PDF + Stripe
+    /// link all funnel through this so the user never sees three
+    /// different rounding conventions.
+    public var amountHT: Double {
+        Self.roundedAmount(amountEUR)
+    }
+
+    /// VAT amount in EUR (HT × percent / 100), rounded to 2 decimals.
+    public var amountVAT: Double {
+        Self.roundedAmount(amountEUR * vatPercent / 100.0)
+    }
+
+    /// All-inclusive total = HT + VAT, rounded to 2 decimals so the
+    /// last cent matches the sum the client will see in their bank
+    /// statement.
+    public var amountTTC: Double {
+        Self.roundedAmount(amountEUR + amountEUR * vatPercent / 100.0)
+    }
+
+    /// True when the invoice has been sent and the due date has
+    /// passed and it's still unpaid. Persisted invoices keep their
+    /// stored `status` so this method is the canonical "live"
+    /// derivation used by the rescheduler + HomeView card.
+    public func isOverdue(now: Date = .now) -> Bool {
+        guard status == .sent else { return false }
+        return dueDate < now
+    }
+
+    /// Returns a copy with `status = .sent` and `stripePaymentLinkURL`
+    /// updated if a fresh link was minted. Idempotent — calling it
+    /// twice doesn't break the in-flight invoice.
+    public func markedSent(stripePaymentLinkURL: String? = nil) -> Invoice {
+        var copy = self
+        copy.status = .sent
+        if let link = stripePaymentLinkURL {
+            copy.stripePaymentLinkURL = link
+        }
+        return copy
+    }
+
+    /// Returns a copy with `status = .paid` and `paidAt = when`.
+    public func markedPaid(at when: Date = .now) -> Invoice {
+        var copy = self
+        copy.status = .paid
+        copy.paidAt = when
+        return copy
+    }
+
+    // MARK: - Helpers
+
+    /// Bankers-rounding to 2 decimals (a.k.a. "round half to even").
+    /// Used everywhere we surface a EUR figure so the UI, the PDF,
+    /// and the Stripe link agree to the cent.
+    public static func roundedAmount(_ value: Double) -> Double {
+        let scaled = value * 100.0
+        let rounded = (scaled).rounded()
+        return rounded / 100.0
+    }
+
+    /// Standard FR payment terms: 30 days from issue. Override via
+    /// the init parameter if the consultant negotiated a custom
+    /// window (e.g. 45 days for a large account).
+    public static func defaultDueDate(from issueDate: Date) -> Date {
+        Calendar(identifier: .gregorian)
+            .date(byAdding: .day, value: 30, to: issueDate) ?? issueDate
+    }
+
+    /// Renders the invoice number for a given year + ordinal. Static
+    /// so `InvoiceStore.nextNumber()` and the unit tests share a
+    /// single formatter — no two-spot drift if we ever bump the
+    /// padding width.
+    public static func formatNumber(year: Int, ordinal: Int) -> String {
+        String(format: "MIND-%04d-%04d", year, max(1, ordinal))
+    }
+}

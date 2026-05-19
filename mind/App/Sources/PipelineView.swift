@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 import AuditKit
 import DesignSystem
 import GraphCore
+import InvoiceKit
 import OutreachKit
 
 /// v0.30 — Pipeline Kanban CRM view.
@@ -152,12 +153,19 @@ struct PipelineView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(.ultraThinMaterial)
         }
-        // Won — Stripe invoice template placeholder.
+        // Won — v0.31 real InvoiceSheet (replaces the v0.30
+        // StripeInvoicePlaceholderSheet). Mints a fresh draft via
+        // `InvoiceFactory`, renders the PDF on demand, shares via
+        // the system share sheet.
         .sheet(item: $wonInvoiceTarget) { target in
-            StripeInvoicePlaceholderSheet(clientName: target.clientName)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(.ultraThinMaterial)
+            InvoiceSheet(
+                clientNodeID: target.nodeID,
+                initialClientName: target.clientName,
+                initialClientEmail: nil
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
         }
         // Won — non-blocking "Bravo" toast.
         .alert(String(localized: "pipeline.won.toast.title"),
@@ -562,72 +570,6 @@ private struct PipelineCard: View {
         case .hot:  return .red
         case .warm: return .orange
         case .cold: return .gray
-        }
-    }
-}
-
-// MARK: - Stripe invoice placeholder
-
-/// Won-stage helper. v0.30 ships a placeholder — manual amount entry
-/// plus a one-tap "Copy Stripe Payment Link" CTA that copies a
-/// templated URL into the clipboard. The real Stripe API integration
-/// lands in a later iteration; the goal here is to capture the
-/// celebratory moment without breaking the flow.
-private struct StripeInvoicePlaceholderSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let clientName: String
-    @State private var amount: String = ""
-
-    var body: some View {
-        ZStack {
-            LiquidBackground().ignoresSafeArea()
-            VStack(alignment: .leading, spacing: 20) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("pipeline.won.invoice.title")
-                            .font(.system(.title2, design: .rounded, weight: .semibold))
-                        Text(clientName)
-                            .font(.system(.subheadline, design: .rounded))
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                LiquidCard(cornerRadius: 18) {
-                    TextField(String(localized: "pipeline.won.invoice.amount.placeholder"),
-                              text: $amount)
-                        .font(.system(.title3, design: .rounded, weight: .medium))
-                        .keyboardType(.decimalPad)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 14)
-                }
-
-                Button {
-                    let trimmed = amount.trimmingCharacters(in: .whitespaces)
-                    let amountSegment = trimmed.isEmpty ? "0" : trimmed
-                    let link = "https://buy.stripe.com/test_placeholder?amount=\(amountSegment)&client=\(clientName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
-                    UIPasteboard.general.string = link
-                    LiquidHaptics.success()
-                    dismiss()
-                } label: {
-                    Text("pipeline.won.invoice.copy")
-                        .font(.system(.headline, design: .rounded, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            Capsule(style: .continuous).fill(LiquidGradient.primary)
-                        )
-                        .foregroundStyle(.white)
-                }
-
-                Spacer()
-            }
-            .padding(20)
         }
     }
 }

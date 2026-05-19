@@ -5351,6 +5351,150 @@
         "en": { "stringUnit": { "state": "translated", "value": "No prospect to call right now." } },
         "fr": { "stringUnit": { "state": "translated", "value": "Aucun prospect à appeler pour l'instant." } }
       }
+    },
+    "invoice.sheet.title": {
+      "comment": "v0.31 · InvoiceSheet header — shown on .won drop and from ClientDetailView +Facture button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New invoice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouvelle facture" } }
+      }
+    },
+    "invoice.field.amount": {
+      "comment": "v0.31 · InvoiceSheet large amount input label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Amount" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Montant" } }
+      }
+    },
+    "invoice.field.amount.placeholder": {
+      "comment": "v0.31 · InvoiceSheet amount placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "0.00 €" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "0,00 €" } }
+      }
+    },
+    "invoice.field.vat": {
+      "comment": "v0.31 · InvoiceSheet VAT toggle label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "VAT 20% (FR)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "TVA 20% (FR)" } }
+      }
+    },
+    "invoice.field.description": {
+      "comment": "v0.31 · InvoiceSheet description text field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Description" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Description" } }
+      }
+    },
+    "invoice.field.clientEmail": {
+      "comment": "v0.31 · InvoiceSheet client email field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Client email" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Email du client" } }
+      }
+    },
+    "invoice.action.preview": {
+      "comment": "v0.31 · InvoiceSheet primary CTA — opens QuickLook with the rendered PDF.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Preview PDF" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aperçu PDF" } }
+      }
+    },
+    "invoice.action.share": {
+      "comment": "v0.31 · InvoiceSheet CTA — opens the share sheet (Mail / Messages) with the PDF attached.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Send by email" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Envoyer par mail" } }
+      }
+    },
+    "invoice.action.markPaid": {
+      "comment": "v0.31 · InvoiceSheet CTA — flips the invoice status to .paid.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mark as paid" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Marquer payé" } }
+      }
+    },
+    "invoice.status.draft": {
+      "comment": "v0.31 · Invoice status badge — freshly generated, not sent yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Draft" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Brouillon" } }
+      }
+    },
+    "invoice.status.sent": {
+      "comment": "v0.31 · Invoice status badge — handed to the client, waiting for payment.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sent" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Envoyée" } }
+      }
+    },
+    "invoice.status.paid": {
+      "comment": "v0.31 · Invoice status badge — payment received.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Paid" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Payée" } }
+      }
+    },
+    "invoice.status.overdue": {
+      "comment": "v0.31 · Invoice status badge — past due date.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Overdue" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "En retard" } }
+      }
+    },
+    "invoice.stripe.missing": {
+      "comment": "v0.31 · InvoiceSheet inline hint — no Stripe Payment Link configured in Settings yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Paste a Stripe Payment Link in Settings → Billing to attach a one-tap pay link." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Colle un lien Stripe Payment Link dans Réglages → Facturation pour attacher un paiement en un tap." } }
+      }
+    },
+    "settings.invoice.section": {
+      "comment": "v0.31 · Settings — Billing section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Billing" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Facturation" } }
+      }
+    },
+    "settings.invoice.stripeLink": {
+      "comment": "v0.31 · Settings — Stripe Payment Link prefix field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stripe Payment Link base URL" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "URL de base Stripe Payment Link" } }
+      }
+    },
+    "settings.invoice.test": {
+      "comment": "v0.31 · Settings — Test invoice CTA, opens a share sheet with a sample PDF.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generate test invoice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Générer une facture test" } }
+      }
+    },
+    "home.invoices.title": {
+      "comment": "v0.31 · HomeView card header for overdue / outstanding invoices to chase.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Invoices to chase" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Factures à relancer" } }
+      }
     }
   }
 }

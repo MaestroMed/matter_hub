@@ -1,11 +1,13 @@
 import SwiftUI
 import SwiftData
 import CloudKit
+import UIKit
 import AuditKit
 import DesignSystem
 import GraphCore
 import HealthInsights
 import Intelligence
+import InvoiceKit
 import LinearKit
 import NotionKit
 import RemindersKit
@@ -55,6 +57,13 @@ public struct SettingsView: View {
     /// validates. Picker hides itself when empty.
     @State private var linearTeams: [LinearTeam] = []
     @State private var linearToast: String?
+
+    // v0.31 — Stripe Invoice section. Test-invoice CTA writes a
+    // sample PDF to a temp file and presents the system share sheet
+    // so Mehdi can validate his SIRET/IBAN/address branding without
+    // having to first close + reopen the Pipeline / Won flow.
+    @State private var invoiceTestURL: URL?
+    @State private var showInvoiceShare: Bool = false
 
     // Danger-zone confirmation alerts. Two-step UX so the user can't
     // accidentally wipe their second brain by misclicking — the alert
@@ -164,6 +173,8 @@ public struct SettingsView: View {
                 notionSection
 
                 linearSection
+
+                invoiceSection
 
                 section(localized: "settings.section.sentry") {
                     VStack(alignment: .leading, spacing: 10) {
@@ -446,6 +457,15 @@ public struct SettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(dangerZoneToast ?? "")
+        }
+        // v0.31 — System share sheet hosting the freshly-rendered
+        // sample invoice PDF so Mehdi can validate the branding
+        // (SIRET, IBAN, address) without leaving Settings.
+        .sheet(isPresented: $showInvoiceShare) {
+            if let url = invoiceTestURL {
+                InvoiceTestActivityView(items: [url])
+                    .ignoresSafeArea()
+            }
         }
     }
 
@@ -893,6 +913,169 @@ public struct SettingsView: View {
                     LiquidHaptics.error()
                 }
             }
+        }
+    }
+
+    // MARK: - Invoice billing (v0.31)
+
+    /// "Facturation" section — Stripe Payment Link prefix + the four
+    /// consultant identity fields (SIRET, IBAN, VAT number, address)
+    /// the InvoiceKit PDF renderer folds into every generated invoice.
+    /// "Générer une facture test" CTA emits a sample PDF and presents
+    /// the system share sheet so Mehdi can validate his branding
+    /// without having to first drop a client onto the Pipeline Won
+    /// column.
+    private var invoiceSection: some View {
+        section(localized: "settings.invoice.section") {
+            VStack(alignment: .leading, spacing: 14) {
+                // Stripe Payment Link prefix.
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("settings.invoice.stripeLink", bundle: .main)
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.8)
+                    TextField("https://buy.stripe.com/...", text: $prefs.stripePaymentLinkBase)
+                        .textFieldStyle(.plain)
+                        .font(.system(.caption, design: .monospaced))
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(.ultraThinMaterial)
+                                .overlay {
+                                    Capsule(style: .continuous)
+                                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                                }
+                        }
+                }
+
+                Divider().background(.white.opacity(0.18))
+
+                identityFieldRow(
+                    label: "SIRET",
+                    placeholder: "12345678901234",
+                    binding: $prefs.consultantSIRET,
+                    monospace: true
+                )
+                identityFieldRow(
+                    label: "TVA",
+                    placeholder: "FR12345678910",
+                    binding: $prefs.consultantVATNumber,
+                    monospace: true
+                )
+                identityFieldRow(
+                    label: "IBAN",
+                    placeholder: "FR76 3000 6000 0112 3456 7890 189",
+                    binding: $prefs.consultantIBAN,
+                    monospace: true
+                )
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Adresse")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.8)
+                    TextField(
+                        "12 rue du Code\n75011 Paris",
+                        text: $prefs.consultantAddress,
+                        axis: .vertical
+                    )
+                    .lineLimit(2...4)
+                    .textFieldStyle(.plain)
+                    .font(.system(.caption, design: .rounded))
+                    .autocorrectionDisabled()
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    }
+                }
+
+                Divider().background(.white.opacity(0.18))
+
+                LiquidButton(
+                    title: String(localized: "settings.invoice.test", bundle: .main),
+                    systemImage: "doc.text.fill"
+                ) {
+                    generateTestInvoice()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func identityFieldRow(
+        label: String,
+        placeholder: String,
+        binding: Binding<String>,
+        monospace: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.8)
+            TextField(placeholder, text: binding)
+                .textFieldStyle(.plain)
+                .font(.system(.caption, design: monospace ? .monospaced : .rounded))
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            Capsule(style: .continuous)
+                                .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                        }
+                }
+        }
+    }
+
+    private func generateTestInvoice() {
+        let branding = ConsultantBranding(
+            name: "Mehdi Nafaa",
+            address: MINDPreferences.currentConsultantAddress(),
+            siret: MINDPreferences.currentConsultantSIRET(),
+            vatNumber: MINDPreferences.currentConsultantVATNumber(),
+            iban: MINDPreferences.currentConsultantIBAN(),
+            email: "meehdi.n@gmail.com",
+            phone: nil
+        )
+        let sample = Invoice(
+            number: "MIND-TEST-0001",
+            clientNodeID: UUID(),
+            clientName: "Acme SAS (exemple)",
+            clientEmail: "ops@acme.com",
+            amountEUR: 4_500,
+            vatPercent: 20,
+            description: "Mission audit + recommandations pour Acme SAS",
+            stripePaymentLinkURL: MINDPreferences.currentStripePaymentLinkBase().flatMap {
+                InvoiceStripeLinkBuilder.appendAmount(base: $0, amountEUR: 4500 * 1.20)
+            },
+            consultantBranding: branding
+        )
+        let pdfData = InvoicePDFRenderer.render(sample)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MIND-test-invoice.pdf")
+        do {
+            try pdfData.write(to: url, options: [.atomic])
+            invoiceTestURL = url
+            showInvoiceShare = true
+            MINDTelemetry.info(
+                "invoice.pdf.exported",
+                data: ["origin": "settings.test"]
+            )
+        } catch {
+            MINDTelemetry.warning(
+                "invoice.test.write.failed",
+                data: ["error": String(describing: error)]
+            )
         }
     }
 
@@ -1484,4 +1667,17 @@ public struct SettingsView: View {
         let resolved = String(localized: key, bundle: .main)
         section(title: resolved, content: content)
     }
+}
+
+/// v0.31 — UIKit bridge for the system share sheet so the
+/// "Generate test invoice" CTA can hand the sample PDF to
+/// Mail / Messages / AirDrop. Same pattern as `PortalActivityView`.
+private struct InvoiceTestActivityView: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

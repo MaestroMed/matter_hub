@@ -681,7 +681,34 @@ resumes the same view.
 Advanced intelligence + audit features that justify a "Pro" tier
 later.
 
-### v0.31 — Audit v2: predictive (forecast trends) ⏳
+### v0.31 — Stripe Invoice Generator + Payment Link ✅
+Shipped 2026-05-20: pivoted from "Audit v2 predictive" (deferred to
+v0.31.1). New `InvoiceKit` module ships the `Invoice` value type
+with FR/EU VAT math (HT/TVA/TTC, 20% default, 0% with art. 293 B
+mention), `ConsultantBranding` (SIRET / IBAN / VAT / address),
+`InvoiceStore` actor (sequential `MIND-YYYY-NNNN` numbering with
+year-rollover reset, per-invoice JSON under `Documents/invoices/`),
+`InvoicePDFRenderer` (A4 single-page PDF via UIGraphicsPDFRenderer
+with header / parties / metadata / line items / TTC totals / Stripe
+Payment Link + QR / IBAN / legal footer), and
+`InvoiceStripeLinkBuilder` (appends `prefilled_amount=<cents>` to
+the user's Stripe Payment Link prefix). MINDPreferences gains 5
+fields (`stripePaymentLinkBase`, `consultantSIRET`, `consultantIBAN`,
+`consultantVATNumber`, `consultantAddress`) stored in App Group
+UserDefaults. New `InvoiceSheet` (App layer) replaces the v0.30
+`StripeInvoicePlaceholderSheet` on Pipeline Won drop — amount /
+VAT toggle / templated description / client email form, "Aperçu
+PDF" with QuickLook, "Envoyer par mail" with system share sheet,
+"Marquer payé" status flip. Settings adds a "Facturation" section
+(Stripe link + 4 identity fields + "Générer une facture test"
+CTA). 18 Localizable.xcstrings keys FR/EN. 22 InvoiceTests + 1
+InvoiceSampleEmitter (writes sample PDF to
+`mind/screenshots/v0.31-invoice.pdf` — 35710 bytes, valid PDF
+magic). 521 tests, 12 skipped, 0 failures (was 498 in v0.30).
+Vision: iOS screenshot at `mind/screenshots/v0.31.png`, sample PDF
+at `mind/screenshots/v0.31-invoice.pdf`.
+
+### v0.31.1 — Audit v2: predictive (forecast trends) ⏳ (deferred from v0.31)
 **What**: Audit synthesizer gains a "Forecast" section: project the
 3 main metrics (perf, SEO, security score) over the next quarter
 based on industry baselines. **Acceptance**: each audit shows

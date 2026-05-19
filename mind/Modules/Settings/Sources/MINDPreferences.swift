@@ -28,6 +28,20 @@ public final class MINDPreferences {
         // in the user's local timezone (default 7 = 7am).
         static let dailyBriefEnabled         = "mind.pref.dailyBriefEnabled"
         static let dailyBriefHour            = "mind.pref.dailyBriefHour"
+        // v0.31 — Stripe Invoice Generator. The user pastes a Stripe
+        // Payment Link prefix into Settings once (e.g.
+        // `https://buy.stripe.com/3cs5ll…`) and the InvoiceKit
+        // builder appends the per-invoice amount on the fly. The
+        // four consultant identity fields fold into every PDF the
+        // renderer emits — SIRET + IBAN + VAT number show up in the
+        // legal footer, address sits in the header block. All four
+        // optional; empty defaults render a graceful fallback (e.g.
+        // "SIRET : en cours d'immatriculation").
+        static let stripePaymentLinkBase     = "mind.pref.stripePaymentLinkBase"
+        static let consultantSIRET           = "mind.pref.consultantSIRET"
+        static let consultantIBAN            = "mind.pref.consultantIBAN"
+        static let consultantVATNumber       = "mind.pref.consultantVATNumber"
+        static let consultantAddress         = "mind.pref.consultantAddress"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -149,6 +163,63 @@ public final class MINDPreferences {
         }
     }
 
+    /// v0.31 — Stripe Payment Link prefix the user pasted into
+    /// Settings once. Empty default = invoicing falls back to a
+    /// "no link configured" PDF (Stripe block hidden, IBAN-only).
+    /// The InvoiceKit `InvoiceStripeLinkBuilder` appends the
+    /// `prefilled_amount=<cents>` query parameter per invoice.
+    public var stripePaymentLinkBase: String {
+        didSet {
+            let trimmed = stripePaymentLinkBase.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.stripePaymentLinkBase)
+        }
+    }
+
+    /// v0.31 — French SIRET number (14 digits) folded into every
+    /// generated invoice's legal footer. Empty default = the PDF
+    /// renders "SIRET : en cours d'immatriculation" so a freshly-
+    /// installed consultant ships a legal invoice out of the box.
+    public var consultantSIRET: String {
+        didSet {
+            let trimmed = consultantSIRET.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.consultantSIRET)
+        }
+    }
+
+    /// v0.31 — IBAN for wire-transfer alternative to the Stripe
+    /// Payment Link. Renders in the PDF "PAIEMENT" section when
+    /// non-empty.
+    public var consultantIBAN: String {
+        didSet {
+            let trimmed = consultantIBAN.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.consultantIBAN)
+        }
+    }
+
+    /// v0.31 — French/EU VAT number (e.g. "FR12345678910"). Empty
+    /// + `vatPercent == 0` → PDF appends the art. 293 B mention
+    /// (auto-entrepreneur exemption). Non-empty → renders the
+    /// VAT line in the legal footer.
+    public var consultantVATNumber: String {
+        didSet {
+            let trimmed = consultantVATNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.consultantVATNumber)
+        }
+    }
+
+    /// v0.31 — Multi-line postal address rendered under the
+    /// consultant name in the invoice header. Newlines are
+    /// preserved on render.
+    public var consultantAddress: String {
+        didSet {
+            // Don't trim — multi-line addresses keep their final
+            // newline conventions. Only strip trailing whitespace.
+            let trimmed = consultantAddress
+                .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.consultantAddress)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -194,6 +265,15 @@ public final class MINDPreferences {
         self.dailyBriefEnabled = storedDailyBrief ?? false
         let storedBriefHour = suite.object(forKey: Key.dailyBriefHour) as? Int
         self.dailyBriefHour = storedBriefHour ?? 7
+
+        // v0.31 — Stripe + consultant identity. Empty defaults so a
+        // fresh install ships a usable (but identity-less) invoice
+        // path the first time Mehdi drops a client on Won.
+        self.stripePaymentLinkBase = suite.string(forKey: Key.stripePaymentLinkBase) ?? ""
+        self.consultantSIRET       = suite.string(forKey: Key.consultantSIRET) ?? ""
+        self.consultantIBAN        = suite.string(forKey: Key.consultantIBAN) ?? ""
+        self.consultantVATNumber   = suite.string(forKey: Key.consultantVATNumber) ?? ""
+        self.consultantAddress     = suite.string(forKey: Key.consultantAddress) ?? ""
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -286,6 +366,59 @@ public final class MINDPreferences {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         let stored = suite.object(forKey: Key.dailyBriefHour) as? Int ?? 7
         return max(0, min(23, stored))
+    }
+
+    /// v0.31 — Non-Observable accessor for the Stripe Payment Link
+    /// prefix. Returns nil when empty so the InvoiceSheet can branch
+    /// on optional-binding to hide the Stripe block when the
+    /// preference isn't configured yet.
+    public static func currentStripePaymentLinkBase(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.stripePaymentLinkBase)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v0.31 — Non-Observable accessor for the consultant SIRET.
+    public static func currentConsultantSIRET(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.consultantSIRET)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v0.31 — Non-Observable accessor for the consultant IBAN.
+    public static func currentConsultantIBAN(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.consultantIBAN)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v0.31 — Non-Observable accessor for the consultant VAT number.
+    public static func currentConsultantVATNumber(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.consultantVATNumber)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v0.31 — Non-Observable accessor for the consultant address.
+    public static func currentConsultantAddress(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.consultantAddress)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
     }
 }
 

@@ -140,6 +140,16 @@ let testTarget: Target = .target(
         // `OutreachEmailGenerator` actor's HTTP path is exercised
         // end-to-end via the simulator screenshot.
         .target(name: Module.outreachKit.rawValue),
+        // v0.31 — InvoiceTests lock the pure `Invoice` value type
+        // (Codable, VAT math, due-date defaults), the
+        // `InvoiceStripeLinkBuilder.appendAmount(...)` URL builder
+        // (query parameter escaping, amount rounding, base URL
+        // validation), and the `InvoicePDFRenderer.render(...)` Data
+        // contract (non-empty output, optional SIRET/IBAN graceful
+        // skip). The `InvoiceStore` actor's sequential numbering
+        // is also exercised — a hermetic temp directory keeps the
+        // counter ratchet test from leaking onto disk between runs.
+        .target(name: Module.invoiceKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",
