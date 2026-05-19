@@ -16,20 +16,44 @@ struct NodeDetailView: View {
     let node: Node
 
     @State private var showClientDetail: Bool = false
+    /// v0.18 — Singleton voice player drives the Listen button + the
+    /// mini playback bar. SwiftUI's `@State` plus the player's
+    /// `@Observable` macro reactively re-renders the icon when
+    /// `isPlaying` / `currentNodeID` flip.
+    @State private var voicePlayer = VoicePlayer.shared
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                content
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    header
+                    content
+                }
+                .padding(20)
+                .padding(.top, 16)
+                // v0.18 — Pad the bottom an extra ~80pt when the voice
+                // mini-bar is visible so the last paragraph doesn't get
+                // hidden behind the overlay.
+                .padding(.bottom, isReadingThisNode ? 120 : 40)
             }
-            .padding(20)
-            .padding(.top, 16)
-            .padding(.bottom, 40)
+            .background {
+                LiquidBackground().ignoresSafeArea()
+            }
+
+            // v0.18 — Liquid Glass mini playback bar. Shows only while
+            // this Node is the one reading aloud; tapping another node
+            // re-targets the player, which auto-hides the bar here.
+            if isReadingThisNode {
+                VoicePlaybackMiniBar(
+                    voicePlayer: voicePlayer,
+                    onStop: { voicePlayer.stop() }
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
-        .background {
-            LiquidBackground().ignoresSafeArea()
-        }
+        .animation(LiquidMetrics.spring, value: isReadingThisNode)
         .onAppear {
             node.touchAccess()
             try? context.save()
@@ -48,6 +72,37 @@ struct NodeDetailView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(.ultraThinMaterial)
         }
+    }
+
+    // MARK: - Voice helpers
+
+    /// `true` when the voice player is currently reading THIS node
+    /// (as opposed to silence or a different node). Drives both the
+    /// header Listen icon swap and the mini-bar visibility.
+    private var isReadingThisNode: Bool {
+        voicePlayer.isPlaying && voicePlayer.currentNodeID == node.id
+    }
+
+    /// Localized accessibility label for the Listen button — reflects
+    /// the current state so VoiceOver users hear "Stop listening" when
+    /// audio is in flight instead of always "Listen".
+    private var listenLabelKey: LocalizedStringKey {
+        isReadingThisNode ? "node.action.stop.listening" : "node.action.listen"
+    }
+
+    /// Toggle handler for the Listen button. Reads the node's title +
+    /// content as one continuous sentence so the speaker hears the
+    /// context (title) before the body.
+    private func toggleListen() {
+        LiquidHaptics.select()
+        if isReadingThisNode {
+            voicePlayer.stop()
+            return
+        }
+        let payload = node.title.isEmpty
+            ? node.content
+            : node.title + ". " + node.content
+        Task { await voicePlayer.play(text: payload, nodeID: node.id) }
     }
 
     // MARK: - Header
@@ -76,6 +131,21 @@ struct NodeDetailView: View {
                 }
             }
             Spacer()
+            // v0.18 — Listen button reads the node aloud via
+            // AVSpeechSynthesizer + Siri Natural voices. The icon
+            // flips between speaker (idle) and speaker-slash (playing
+            // this node) so the visual state tracks the audio state.
+            Button(action: toggleListen) {
+                Image(systemName: isReadingThisNode
+                      ? "speaker.slash.fill"
+                      : "speaker.wave.2.fill")
+                    .font(.title2)
+                    .foregroundStyle(isReadingThisNode
+                                     ? LiquidPalette.iris
+                                     : .secondary)
+                    .symbolEffect(.bounce, value: isReadingThisNode)
+            }
+            .accessibilityLabel(Text(listenLabelKey))
             Button {
                 dismiss()
             } label: {
@@ -452,6 +522,63 @@ private struct FlowLayout: Layout {
             view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
+        }
+    }
+}
+
+// MARK: - Voice playback mini-bar (v0.18)
+
+/// Floating Liquid Glass control surface that appears at the bottom of
+/// NodeDetailView while the voice player is reading this Node aloud.
+/// Mirrors the lock-screen now-playing widget in spirit: a single line
+/// of status, a progress capsule that fills as the read advances, and
+/// a stop affordance. Pause/resume routes through the synthesizer so a
+/// quick tap on the bar matches what the AirPods double-tap does.
+private struct VoicePlaybackMiniBar: View {
+    let voicePlayer: VoicePlayer
+    let onStop: () -> Void
+
+    var body: some View {
+        LiquidCard(cornerRadius: 26) {
+            VStack(spacing: 10) {
+                HStack(spacing: 14) {
+                    Image(systemName: "waveform.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(LiquidPalette.iris)
+                        .symbolEffect(.variableColor.iterative.dimInactiveLayers,
+                                      options: .repeat(.continuous),
+                                      isActive: voicePlayer.isPlaying)
+                    Text("node.voice.playing.banner")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer()
+                    Button(action: onStop) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    .accessibilityLabel(Text("node.action.stop.listening"))
+                }
+                // Slim progress capsule. Min height keeps the geometry
+                // stable when `progress` is 0 (start of read) so the bar
+                // doesn't pop in height as the first delegate callback
+                // fires.
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(LiquidPalette.lavender.opacity(0.35))
+                        Capsule()
+                            .fill(LiquidGradient.glassFill)
+                            .frame(width: max(4, proxy.size.width * CGFloat(voicePlayer.progress)))
+                            .animation(.linear(duration: 0.25), value: voicePlayer.progress)
+                    }
+                }
+                .frame(height: 4)
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
         }
     }
 }

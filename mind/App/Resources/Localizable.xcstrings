@@ -71,6 +71,23 @@
         }
       }
     },
+    "audit.error.checkKeyHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check that your Anthropic key is set in Settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifie que ta clé Anthropic est bien renseignée dans Settings."
+          }
+        }
+      }
+    },
     "audit.error.title": {
       "extractionState": "manual",
       "localizations": {
@@ -88,19 +105,257 @@
         }
       }
     },
-    "audit.error.checkKeyHint": {
+    "audit.export.linear.all.button": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check that your Anthropic key is set in Settings."
+            "value": "Push all Quick Wins to Linear"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vérifie que ta clé Anthropic est bien renseignée dans Settings."
+            "value": "Envoyer tous les Quick Wins vers Linear"
+          }
+        }
+      }
+    },
+    "audit.export.linear.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push to Linear"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer vers Linear"
+          }
+        }
+      }
+    },
+    "audit.export.linear.error": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linear push failed: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de l'envoi Linear : %@"
+          }
+        }
+      }
+    },
+    "audit.export.linear.partial": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linear push partial: %1$d created, %2$d failed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi Linear partiel : %1$d créées, %2$d échouées."
+          }
+        }
+      }
+    },
+    "audit.export.linear.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One Linear issue per Quick Win, priority mapped from impact."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une issue Linear par Quick Win, priorité mappée sur l'impact."
+          }
+        }
+      }
+    },
+    "audit.export.linear.success": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pushed to Linear: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé sur Linear : %@"
+          }
+        }
+      }
+    },
+    "audit.export.linear.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push Quick Wins to Linear"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer les Quick Wins vers Linear"
+          }
+        }
+      }
+    },
+    "audit.export.linear.toast.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linear sync"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync Linear"
+          }
+        }
+      }
+    },
+    "audit.export.notion.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync to Notion"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync vers Notion"
+          }
+        }
+      }
+    },
+    "audit.export.notion.error": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notion sync failed: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la sync Notion : %@"
+          }
+        }
+      }
+    },
+    "audit.export.notion.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creates a Notion page in the database you configured in Settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crée une page Notion dans la base configurée dans Réglages."
+          }
+        }
+      }
+    },
+    "audit.export.notion.success": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit pushed to Notion: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit envoyé sur Notion : %@"
+          }
+        }
+      }
+    },
+    "audit.export.notion.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync to Notion"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync vers Notion"
+          }
+        }
+      }
+    },
+    "audit.export.notion.toast.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notion sync"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync Notion"
+          }
+        }
+      }
+    },
+    "audit.field.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name (optional)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom (optionnel)"
           }
         }
       }
@@ -135,23 +390,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "stripe.com ou https://stripe.com"
-          }
-        }
-      }
-    },
-    "audit.field.name": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name (optional)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nom (optionnel)"
           }
         }
       }
@@ -343,36 +581,308 @@
         }
       }
     },
-    "common.cancel": {
+    "brief.detail.captures.header": {
+      "comment": "Section header above the recent captures list on the v0.17 brief detail sheet.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancel"
+            "value": "Recent captures"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annuler"
+            "value": "Captures récentes"
           }
         }
       }
     },
-    "common.ok": {
+    "brief.detail.events.header": {
+      "comment": "Section header above the events list on the v0.17 brief detail sheet.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "OK"
+            "value": "Today's meetings"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "OK"
+            "value": "Rendez-vous du jour"
+          }
+        }
+      }
+    },
+    "brief.detail.suggestion.body": {
+      "comment": "Body of the focus suggestion call-out on the v0.17 brief detail sheet. %d is the suggested minutes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aim for one %d-minute Deep Focus session today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vise une session Deep Focus de %d minutes aujourd'hui."
+          }
+        }
+      }
+    },
+    "brief.detail.suggestion.header": {
+      "comment": "Header of the focus suggestion call-out on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested focus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus suggéré"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.focus": {
+      "comment": "Column label under the suggested focus minutes on the v0.17 brief card and sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.header": {
+      "comment": "Section header above the meetings / tasks / focus counters on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synthèse"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.meetings": {
+      "comment": "Column label under the meeting count on the v0.17 brief card and sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meetings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RDV"
+          }
+        }
+      }
+    },
+    "brief.detail.summary.tasks": {
+      "comment": "Column label under the open task count on the v0.17 brief card and sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tâches"
+          }
+        }
+      }
+    },
+    "brief.detail.tasks.header": {
+      "comment": "Section header above the open task list on the v0.17 brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tasks"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tâches ouvertes"
+          }
+        }
+      }
+    },
+    "brief.detail.title": {
+      "comment": "Title of the v0.17 daily morning brief detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, in detail"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd'hui, en détail"
+          }
+        }
+      }
+    },
+    "brief.headline.both": {
+      "comment": "Headline branch for v0.17 brief when the user has both meetings and open tasks today. First %d is the task count, second is the meeting count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks, %d meetings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tâches, %d rendez-vous."
+          }
+        }
+      }
+    },
+    "brief.headline.calmDay": {
+      "comment": "Headline shown on the v0.17 brief card when the user has 0 meetings and 0 open tasks today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A calm day. Enjoy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journée calme. Profite."
+          }
+        }
+      }
+    },
+    "brief.headline.meetings": {
+      "comment": "Headline branch for v0.17 brief when there are %d meetings and 0 tasks today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d meetings ahead today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d rendez-vous aujourd'hui."
+          }
+        }
+      }
+    },
+    "brief.headline.tasks": {
+      "comment": "Headline branch for v0.17 brief when there are %d open tasks and 0 meetings today.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks to close out."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tâches à clôturer."
+          }
+        }
+      }
+    },
+    "brief.notification.body": {
+      "comment": "Body of the v0.17 daily morning brief local notification. Generic enough not to leak the user's data into the system tray — the brief itself is rendered inside the app.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open MIND to see what's on today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre MIND pour voir ce qui t'attend."
+          }
+        }
+      }
+    },
+    "brief.notification.title": {
+      "comment": "Title of the v0.17 daily morning brief local notification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning brief"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brief du matin"
+          }
+        }
+      }
+    },
+    "brief.sheet.start.focus": {
+      "comment": "v0.17 — CTA on the daily brief sheet that starts a Deep Focus session with the suggested duration and dismisses the sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrer maintenant"
           }
         }
       }
@@ -496,23 +1006,6 @@
         }
       }
     },
-    "clients.empty.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No clients yet"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pas encore de client"
-          }
-        }
-      }
-    },
     "clients.empty.detail": {
       "extractionState": "manual",
       "localizations": {
@@ -526,6 +1019,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tape un domaine pour lancer un audit, ou essaie un des exemples ci-dessous."
+          }
+        }
+      }
+    },
+    "clients.empty.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No clients yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas encore de client"
           }
         }
       }
@@ -547,23 +1057,6 @@
         }
       }
     },
-    "clients.noresults.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No results"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun résultat"
-          }
-        }
-      }
-    },
     "clients.noresults.detail": {
       "extractionState": "manual",
       "localizations": {
@@ -581,6 +1074,23 @@
         }
       }
     },
+    "clients.noresults.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun résultat"
+          }
+        }
+      }
+    },
     "clients.search.placeholder": {
       "extractionState": "manual",
       "localizations": {
@@ -594,6 +1104,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chercher un client…"
+          }
+        }
+      }
+    },
+    "clients.subtitle.many": {
+      "comment": "Plural-count subtitle. %lld = total prospects (>=2).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld prospects in your graph."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld prospects dans ton graphe."
           }
         }
       }
@@ -632,37 +1160,121 @@
         }
       }
     },
-    "clients.subtitle.many": {
-      "comment": "Plural-count subtitle. %lld = total prospects (>=2).",
+    "common.cancel": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld prospects in your graph."
+            "value": "Cancel"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld prospects dans ton graphe."
+            "value": "Annuler"
           }
         }
       }
     },
-    "greeting.morning": {
+    "common.ok": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Good morning"
+            "value": "OK"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bonjour"
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "graph.empty.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a note, run an audit, or share contacts and emails to start growing your knowledge network."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture une note, lance un audit ou partage des contacts et e-mails pour faire grandir ton réseau de connaissances."
+          }
+        }
+      }
+    },
+    "graph.empty.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your graph is empty"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton graphe est vide"
+          }
+        }
+      }
+    },
+    "graph.header.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graph"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graphe"
+          }
+        }
+      }
+    },
+    "graph.reset.accessibility": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset zoom and position"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réinitialiser le zoom et la position"
+          }
+        }
+      }
+    },
+    "graph.showMore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show more"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher plus"
           }
         }
       }
@@ -701,6 +1313,23 @@
         }
       }
     },
+    "greeting.morning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonjour"
+          }
+        }
+      }
+    },
     "greeting.night": {
       "extractionState": "manual",
       "localizations": {
@@ -714,23 +1343,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encore debout"
-          }
-        }
-      }
-    },
-    "greeting.subtitle.morning": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stay soft. Stay focused."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reste doux. Reste concentré."
           }
         }
       }
@@ -765,6 +1377,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Décompresse. Capture ce qui a compté."
+          }
+        }
+      }
+    },
+    "greeting.subtitle.morning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay soft. Stay focused."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reste doux. Reste concentré."
           }
         }
       }
@@ -854,6 +1483,41 @@
         }
       }
     },
+    "home.brief.title": {
+      "comment": "Header of the v0.17 daily morning brief card on HomeView, shown 5h-11h local.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning brief"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brief du matin"
+          }
+        }
+      }
+    },
+    "home.deepFocus.endButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End focus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter le focus"
+          }
+        }
+      }
+    },
     "home.deepFocus.idle": {
       "extractionState": "manual",
       "localizations": {
@@ -884,23 +1548,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "En focus"
-          }
-        }
-      }
-    },
-    "home.deepFocus.endButton": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "End focus"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arrêter le focus"
           }
         }
       }
@@ -1058,6 +1705,95 @@
         }
       }
     },
+    "home.focusWeek.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus this week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus cette semaine"
+          }
+        }
+      }
+    },
+    "home.healthWeek.active": {
+      "comment": "Label under the active-minutes figure on the v0.9 health card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actif"
+          }
+        }
+      }
+    },
+    "home.healthWeek.header": {
+      "comment": "Header of the HomeView 'Cette semaine' health card (v0.9 — HealthInsights).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Santé cette semaine"
+          }
+        }
+      }
+    },
+    "home.healthWeek.sleep": {
+      "comment": "Label under the average sleep figure on the v0.9 health card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sommeil"
+          }
+        }
+      }
+    },
+    "home.healthWeek.steps": {
+      "comment": "Label under the steps figure on the v0.9 health card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas"
+          }
+        }
+      }
+    },
     "home.lifeModule.goals": {
       "extractionState": "manual",
       "localizations": {
@@ -1109,23 +1845,6 @@
         }
       }
     },
-    "home.quickSearch.placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search your graph…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cherche dans ton graphe…"
-          }
-        }
-      }
-    },
     "home.quickSearch.accessibility": {
       "extractionState": "manual",
       "localizations": {
@@ -1139,6 +1858,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chercher dans le graphe"
+          }
+        }
+      }
+    },
+    "home.quickSearch.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search your graph…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cherche dans ton graphe…"
           }
         }
       }
@@ -1245,95 +1981,6 @@
         }
       }
     },
-    "home.focusWeek.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus this week"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus cette semaine"
-          }
-        }
-      }
-    },
-    "home.healthWeek.header": {
-      "comment": "Header of the HomeView 'Cette semaine' health card (v0.9 — HealthInsights).",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This week"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Santé cette semaine"
-          }
-        }
-      }
-    },
-    "home.healthWeek.steps": {
-      "comment": "Label under the steps figure on the v0.9 health card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steps"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pas"
-          }
-        }
-      }
-    },
-    "home.healthWeek.sleep": {
-      "comment": "Label under the average sleep figure on the v0.9 health card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sommeil"
-          }
-        }
-      }
-    },
-    "home.healthWeek.active": {
-      "comment": "Label under the active-minutes figure on the v0.9 health card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Active"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Actif"
-          }
-        }
-      }
-    },
     "home.today.header": {
       "comment": "Header of the HomeView 'Aujourd'hui' card (v0.8 — CalendarKit).",
       "extractionState": "manual",
@@ -1366,6 +2013,237 @@
           "stringUnit": {
             "state": "translated",
             "value": "Réunion sans titre"
+          }
+        }
+      }
+    },
+    "home.weekly.audits": {
+      "comment": "Column label under the audits figure on the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audits"
+          }
+        }
+      }
+    },
+    "home.weekly.captures": {
+      "comment": "Column label under the captures figure on the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.captures.header": {
+      "comment": "Section header above the highlighted captures list on the v0.16 weekly digest sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures of the week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures de la semaine"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.empty": {
+      "comment": "Fallback row when there are no highlighted captures to show on the v0.16 weekly digest detail sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No captures this week yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune capture cette semaine."
+          }
+        }
+      }
+    },
+    "home.weekly.detail.focus.header": {
+      "comment": "Section header above the focus sessions list on the v0.16 weekly digest sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus sessions"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions Focus"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.summary.header": {
+      "comment": "Section header above the per-counter summary on the v0.16 weekly digest sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synthèse"
+          }
+        }
+      }
+    },
+    "home.weekly.detail.title": {
+      "comment": "Title of the expandable detail sheet opened by tapping the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your week, in detail"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta semaine, en détail"
+          }
+        }
+      }
+    },
+    "home.weekly.focusHours": {
+      "comment": "Column label under the focus-hours figure on the v0.16 weekly digest card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus h"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus h"
+          }
+        }
+      }
+    },
+    "home.weekly.narrative.fallback": {
+      "comment": "Italic paragraph rendered under the v0.16 weekly digest counts when the on-device narrative model is unavailable or returned nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A solid week."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une semaine bien remplie."
+          }
+        }
+      }
+    },
+    "home.weekly.title": {
+      "comment": "Header of the v0.16 weekly digest card on HomeView, shown on Sunday evenings and Monday mornings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly digest"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilan de la semaine"
+          }
+        }
+      }
+    },
+    "node.action.listen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écouter"
+          }
+        }
+      }
+    },
+    "node.action.stop.listening": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop listening"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter la lecture"
+          }
+        }
+      }
+    },
+    "node.voice.playing.banner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading aloud…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture en cours…"
           }
         }
       }
@@ -1608,6 +2486,23 @@
         }
       }
     },
+    "onboarding.ready.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIND will learn the way you think as you capture."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIND apprendra ta manière de penser au fil de tes captures."
+          }
+        }
+      }
+    },
     "onboarding.ready.checklist.icloud": {
       "extractionState": "manual",
       "localizations": {
@@ -1655,23 +2550,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications d'audit"
-          }
-        }
-      }
-    },
-    "onboarding.ready.body": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MIND will learn the way you think as you capture."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MIND apprendra ta manière de penser au fil de tes captures."
           }
         }
       }
@@ -1740,6 +2618,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Commencer"
+          }
+        }
+      }
+    },
+    "onboarding.welcome.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your second brain. Notes, focus, client audits, voice captures — synced across all your devices via iCloud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton second cerveau. Notes, focus, audits clients, captures vocales — synchronisés sur tous tes appareils via iCloud."
           }
         }
       }
@@ -1846,23 +2741,6 @@
         }
       }
     },
-    "onboarding.welcome.body": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your second brain. Notes, focus, client audits, voice captures — synced across all your devices via iCloud."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ton second cerveau. Notes, focus, audits clients, captures vocales — synchronisés sur tous tes appareils via iCloud."
-          }
-        }
-      }
-    },
     "onboarding.welcome.title": {
       "extractionState": "manual",
       "localizations": {
@@ -1880,172 +2758,55 @@
         }
       }
     },
-    "settings.header.subtitle": {
+    "settings.brief.enable": {
+      "comment": "Title of the v0.17 daily morning brief toggle row in Settings → Préférences.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configure your second brain."
+            "value": "Morning brief"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configure ton second cerveau."
+            "value": "Brief du matin"
           }
         }
       }
     },
-    "settings.header.title": {
+    "settings.brief.subtitle": {
+      "comment": "Subtitle of the v0.17 morning brief toggle row in Settings → Préférences.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings"
+            "value": "Wake up to a quick summary of today's meetings, open tasks and a focus suggestion."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Réglages"
+            "value": "Reçois chaque matin un résumé éclair de tes rendez-vous, tâches ouvertes et une suggestion de focus."
           }
         }
       }
     },
-    "settings.section.anthropicKey": {
+    "settings.button.clear": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anthropic API Key"
+            "value": "Clear"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clé API Anthropic"
-          }
-        }
-      }
-    },
-    "settings.section.about": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "À propos"
-          }
-        }
-      }
-    },
-    "settings.section.intelligence": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intelligence"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intelligence"
-          }
-        }
-      }
-    },
-    "settings.section.preferences": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preferences"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préférences"
-          }
-        }
-      }
-    },
-    "settings.section.iCloud": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud Sync"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sync iCloud"
-          }
-        }
-      }
-    },
-    "settings.section.openAIKey": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OpenAI API Key (visual boards)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clé API OpenAI (boards visuels)"
-          }
-        }
-      }
-    },
-    "settings.section.sentry": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crash reporting (Sentry)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rapports de crash (Sentry)"
-          }
-        }
-      }
-    },
-    "settings.section.dangerZone": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Danger zone"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zone dangereuse"
+            "value": "Effacer"
           }
         }
       }
@@ -2084,19 +2845,19 @@
         }
       }
     },
-    "settings.button.clear": {
+    "settings.danger.resetSpotlight.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear"
+            "value": "Reset Spotlight index"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Effacer"
+            "value": "Réinitialiser l'index Spotlight"
           }
         }
       }
@@ -2118,23 +2879,6 @@
         }
       }
     },
-    "settings.danger.resetSpotlight.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset Spotlight index"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Réinitialiser l'index Spotlight"
-          }
-        }
-      }
-    },
     "settings.danger.wipeAll.title": {
       "extractionState": "manual",
       "localizations": {
@@ -2152,87 +2896,172 @@
         }
       }
     },
-    "settings.preferences.reminders.title": {
+    "settings.header.subtitle": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync Reminders"
+            "value": "Configure your second brain."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Synchroniser les Rappels"
+            "value": "Configure ton second cerveau."
           }
         }
       }
     },
-    "settings.preferences.reminders.detail": {
+    "settings.header.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mirrors your MIND tasks with the Reminders app — check one off from Siri, Apple Watch or your Mac and it disappears here too."
+            "value": "Settings"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mirroite tes tâches MIND avec l'app Rappels — coche depuis Siri, l'Apple Watch ou ton Mac et la tâche disparaît ici aussi."
+            "value": "Réglages"
           }
         }
       }
     },
-    "settings.notion.section": {
+    "settings.linear.section": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notion sync"
+            "value": "Linear sync"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync Notion"
+            "value": "Sync Linear"
           }
         }
       }
     },
-    "settings.notion.subtitle": {
+    "settings.linear.status.fail": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create an internal integration at notion.so/my-integrations, paste its secret here, then paste the database ID you want audits to land in. Token is stored in the Keychain."
+            "value": "Token refused"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Crée une intégration interne sur notion.so/my-integrations, colle son secret ici, puis colle l'ID de la base où atterrissent les audits. Le token est stocké dans le trousseau."
+            "value": "Token refusé"
           }
         }
       }
     },
-    "settings.notion.token.placeholder": {
+    "settings.linear.status.ok": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ntn_…"
+            "value": "Token validated"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "ntn_…"
+            "value": "Token validé"
+          }
+        }
+      }
+    },
+    "settings.linear.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a personal API key at linear.app/settings/api, paste it here, then pick the team that audit Quick Wins should land in. Token is stored in the Keychain."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crée une clé API perso sur linear.app/settings/api, colle-la ici, puis choisis l'équipe où atterrissent les Quick Wins. Le token est stocké dans le trousseau."
+          }
+        }
+      }
+    },
+    "settings.linear.team.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No team yet — tap Load teams once your token validates."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas encore d'équipe — touche Charger une fois ton token validé."
+          }
+        }
+      }
+    },
+    "settings.linear.team.fetch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load teams"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charger les équipes"
+          }
+        }
+      }
+    },
+    "settings.linear.team.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default team"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Équipe par défaut"
+          }
+        }
+      }
+    },
+    "settings.linear.token.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lin_api_…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lin_api_…"
           }
         }
       }
@@ -2271,6 +3100,91 @@
         }
       }
     },
+    "settings.notion.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notion sync"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync Notion"
+          }
+        }
+      }
+    },
+    "settings.notion.status.fail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token rejected"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token refusé"
+          }
+        }
+      }
+    },
+    "settings.notion.status.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token OK"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token OK"
+          }
+        }
+      }
+    },
+    "settings.notion.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create an internal integration at notion.so/my-integrations, paste its secret here, then paste the database ID you want audits to land in. Token is stored in the Keychain."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crée une intégration interne sur notion.so/my-integrations, colle son secret ici, puis colle l'ID de la base où atterrissent les audits. Le token est stocké dans le trousseau."
+          }
+        }
+      }
+    },
+    "settings.notion.test.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you can read this, MIND can write to your Notion database. You're good to go — head to an audit and tap Sync to Notion in the export sheet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si tu lis ceci, MIND peut écrire dans ta base Notion. Tu peux y aller — ouvre un audit et touche Sync vers Notion dans la feuille d'export."
+          }
+        }
+      }
+    },
     "settings.notion.test.button": {
       "extractionState": "manual",
       "localizations": {
@@ -2301,23 +3215,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sync Notion"
-          }
-        }
-      }
-    },
-    "settings.notion.test.success": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Test page created in Notion: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Page de test créée dans Notion : %@"
           }
         }
       }
@@ -2356,427 +3253,206 @@
         }
       }
     },
-    "settings.notion.test.body": {
+    "settings.notion.test.success": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If you can read this, MIND can write to your Notion database. You're good to go — head to an audit and tap Sync to Notion in the export sheet."
+            "value": "Test page created in Notion: %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si tu lis ceci, MIND peut écrire dans ta base Notion. Tu peux y aller — ouvre un audit et touche Sync vers Notion dans la feuille d'export."
+            "value": "Page de test créée dans Notion : %@"
           }
         }
       }
     },
-    "settings.notion.status.ok": {
+    "settings.notion.token.placeholder": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Token OK"
+            "value": "ntn_…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Token OK"
+            "value": "ntn_…"
           }
         }
       }
     },
-    "settings.notion.status.fail": {
+    "settings.preferences.reminders.detail": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Token rejected"
+            "value": "Mirrors your MIND tasks with the Reminders app — check one off from Siri, Apple Watch or your Mac and it disappears here too."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Token refusé"
+            "value": "Mirroite tes tâches MIND avec l'app Rappels — coche depuis Siri, l'Apple Watch ou ton Mac et la tâche disparaît ici aussi."
           }
         }
       }
     },
-    "audit.export.notion.title": {
+    "settings.preferences.reminders.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync to Notion"
+            "value": "Sync Reminders"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync vers Notion"
+            "value": "Synchroniser les Rappels"
           }
         }
       }
     },
-    "audit.export.notion.subtitle": {
+    "settings.section.about": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creates a Notion page in the database you configured in Settings."
+            "value": "About"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Crée une page Notion dans la base configurée dans Réglages."
+            "value": "À propos"
           }
         }
       }
     },
-    "audit.export.notion.button": {
+    "settings.section.anthropicKey": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync to Notion"
+            "value": "Anthropic API Key"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync vers Notion"
+            "value": "Clé API Anthropic"
           }
         }
       }
     },
-    "audit.export.notion.success": {
+    "settings.section.dangerZone": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Audit pushed to Notion: %@"
+            "value": "Danger zone"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Audit envoyé sur Notion : %@"
+            "value": "Zone dangereuse"
           }
         }
       }
     },
-    "audit.export.notion.error": {
+    "settings.section.iCloud": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notion sync failed: %@"
+            "value": "iCloud Sync"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Échec de la sync Notion : %@"
+            "value": "Sync iCloud"
           }
         }
       }
     },
-    "audit.export.notion.toast.title": {
+    "settings.section.intelligence": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notion sync"
+            "value": "Intelligence"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync Notion"
+            "value": "Intelligence"
           }
         }
       }
     },
-    "settings.linear.section": {
+    "settings.section.openAIKey": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Linear sync"
+            "value": "OpenAI API Key (visual boards)"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync Linear"
+            "value": "Clé API OpenAI (boards visuels)"
           }
         }
       }
     },
-    "settings.linear.subtitle": {
+    "settings.section.preferences": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a personal API key at linear.app/settings/api, paste it here, then pick the team that audit Quick Wins should land in. Token is stored in the Keychain."
+            "value": "Preferences"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Crée une clé API perso sur linear.app/settings/api, colle-la ici, puis choisis l'équipe où atterrissent les Quick Wins. Le token est stocké dans le trousseau."
+            "value": "Préférences"
           }
         }
       }
     },
-    "settings.linear.token.placeholder": {
+    "settings.section.sentry": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "lin_api_…"
+            "value": "Crash reporting (Sentry)"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "lin_api_…"
-          }
-        }
-      }
-    },
-    "settings.linear.team.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Default team"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Équipe par défaut"
-          }
-        }
-      }
-    },
-    "settings.linear.team.fetch": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Load teams"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Charger les équipes"
-          }
-        }
-      }
-    },
-    "settings.linear.team.empty": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No team yet — tap Load teams once your token validates."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pas encore d'équipe — touche Charger une fois ton token validé."
-          }
-        }
-      }
-    },
-    "settings.linear.status.ok": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token validated"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token validé"
-          }
-        }
-      }
-    },
-    "settings.linear.status.fail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token refused"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token refusé"
-          }
-        }
-      }
-    },
-    "audit.export.linear.button": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Push to Linear"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyer vers Linear"
-          }
-        }
-      }
-    },
-    "audit.export.linear.all.button": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Push all Quick Wins to Linear"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyer tous les Quick Wins vers Linear"
-          }
-        }
-      }
-    },
-    "audit.export.linear.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Push Quick Wins to Linear"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyer les Quick Wins vers Linear"
-          }
-        }
-      }
-    },
-    "audit.export.linear.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "One Linear issue per Quick Win, priority mapped from impact."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Une issue Linear par Quick Win, priorité mappée sur l'impact."
-          }
-        }
-      }
-    },
-    "audit.export.linear.success": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pushed to Linear: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyé sur Linear : %@"
-          }
-        }
-      }
-    },
-    "audit.export.linear.partial": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Linear push partial: %1$d created, %2$d failed."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoi Linear partiel : %1$d créées, %2$d échouées."
-          }
-        }
-      }
-    },
-    "audit.export.linear.error": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Linear push failed: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Échec de l'envoi Linear : %@"
-          }
-        }
-      }
-    },
-    "audit.export.linear.toast.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Linear sync"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sync Linear"
+            "value": "Rapports de crash (Sentry)"
           }
         }
       }
@@ -2866,631 +3542,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Graphe"
-          }
-        }
-      }
-    },
-    "graph.header.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Graph"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Graphe"
-          }
-        }
-      }
-    },
-    "graph.empty.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your graph is empty"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ton graphe est vide"
-          }
-        }
-      }
-    },
-    "graph.empty.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a note, run an audit, or share contacts and emails to start growing your knowledge network."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture une note, lance un audit ou partage des contacts et e-mails pour faire grandir ton réseau de connaissances."
-          }
-        }
-      }
-    },
-    "graph.showMore": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show more"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher plus"
-          }
-        }
-      }
-    },
-    "graph.reset.accessibility": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset zoom and position"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Réinitialiser le zoom et la position"
-          }
-        }
-      }
-    },
-    "home.weekly.title": {
-      "comment": "Header of the v0.16 weekly digest card on HomeView, shown on Sunday evenings and Monday mornings.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weekly digest"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bilan de la semaine"
-          }
-        }
-      }
-    },
-    "home.weekly.captures": {
-      "comment": "Column label under the captures figure on the v0.16 weekly digest card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captures"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captures"
-          }
-        }
-      }
-    },
-    "home.weekly.audits": {
-      "comment": "Column label under the audits figure on the v0.16 weekly digest card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audits"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audits"
-          }
-        }
-      }
-    },
-    "home.weekly.focusHours": {
-      "comment": "Column label under the focus-hours figure on the v0.16 weekly digest card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus h"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus h"
-          }
-        }
-      }
-    },
-    "home.weekly.narrative.fallback": {
-      "comment": "Italic paragraph rendered under the v0.16 weekly digest counts when the on-device narrative model is unavailable or returned nothing.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A solid week."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Une semaine bien remplie."
-          }
-        }
-      }
-    },
-    "home.weekly.detail.title": {
-      "comment": "Title of the expandable detail sheet opened by tapping the v0.16 weekly digest card.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your week, in detail"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ta semaine, en détail"
-          }
-        }
-      }
-    },
-    "home.weekly.detail.captures.header": {
-      "comment": "Section header above the highlighted captures list on the v0.16 weekly digest sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captures of the week"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captures de la semaine"
-          }
-        }
-      }
-    },
-    "home.weekly.detail.focus.header": {
-      "comment": "Section header above the focus sessions list on the v0.16 weekly digest sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus sessions"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sessions Focus"
-          }
-        }
-      }
-    },
-    "home.weekly.detail.summary.header": {
-      "comment": "Section header above the per-counter summary on the v0.16 weekly digest sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Summary"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Synthèse"
-          }
-        }
-      }
-    },
-    "home.weekly.detail.empty": {
-      "comment": "Fallback row when there are no highlighted captures to show on the v0.16 weekly digest detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No captures this week yet."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucune capture cette semaine."
-          }
-        }
-      }
-    },
-    "home.brief.title": {
-      "comment": "Header of the v0.17 daily morning brief card on HomeView, shown 5h-11h local.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning brief"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brief du matin"
-          }
-        }
-      }
-    },
-    "brief.headline.calmDay": {
-      "comment": "Headline shown on the v0.17 brief card when the user has 0 meetings and 0 open tasks today.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A calm day. Enjoy."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Journée calme. Profite."
-          }
-        }
-      }
-    },
-    "brief.headline.meetings": {
-      "comment": "Headline branch for v0.17 brief when there are %d meetings and 0 tasks today.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d meetings ahead today."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d rendez-vous aujourd'hui."
-          }
-        }
-      }
-    },
-    "brief.headline.tasks": {
-      "comment": "Headline branch for v0.17 brief when there are %d open tasks and 0 meetings today.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d tasks to close out."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d tâches à clôturer."
-          }
-        }
-      }
-    },
-    "brief.headline.both": {
-      "comment": "Headline branch for v0.17 brief when the user has both meetings and open tasks today. First %d is the task count, second is the meeting count.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d tasks, %d meetings."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d tâches, %d rendez-vous."
-          }
-        }
-      }
-    },
-    "brief.notification.title": {
-      "comment": "Title of the v0.17 daily morning brief local notification.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning brief"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brief du matin"
-          }
-        }
-      }
-    },
-    "brief.notification.body": {
-      "comment": "Body of the v0.17 daily morning brief local notification. Generic enough not to leak the user's data into the system tray — the brief itself is rendered inside the app.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open MIND to see what's on today."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvre MIND pour voir ce qui t'attend."
-          }
-        }
-      }
-    },
-    "brief.detail.title": {
-      "comment": "Title of the v0.17 daily morning brief detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Today, in detail"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aujourd'hui, en détail"
-          }
-        }
-      }
-    },
-    "brief.detail.summary.header": {
-      "comment": "Section header above the meetings / tasks / focus counters on the v0.17 brief detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Summary"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Synthèse"
-          }
-        }
-      }
-    },
-    "brief.detail.summary.meetings": {
-      "comment": "Column label under the meeting count on the v0.17 brief card and sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Meetings"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RDV"
-          }
-        }
-      }
-    },
-    "brief.detail.summary.tasks": {
-      "comment": "Column label under the open task count on the v0.17 brief card and sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tâches"
-          }
-        }
-      }
-    },
-    "brief.detail.summary.focus": {
-      "comment": "Column label under the suggested focus minutes on the v0.17 brief card and sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus"
-          }
-        }
-      }
-    },
-    "brief.detail.events.header": {
-      "comment": "Section header above the events list on the v0.17 brief detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Today's meetings"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rendez-vous du jour"
-          }
-        }
-      }
-    },
-    "brief.detail.tasks.header": {
-      "comment": "Section header above the open task list on the v0.17 brief detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open tasks"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tâches ouvertes"
-          }
-        }
-      }
-    },
-    "brief.detail.captures.header": {
-      "comment": "Section header above the recent captures list on the v0.17 brief detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recent captures"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captures récentes"
-          }
-        }
-      }
-    },
-    "brief.detail.suggestion.header": {
-      "comment": "Header of the focus suggestion call-out on the v0.17 brief detail sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suggested focus"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus suggéré"
-          }
-        }
-      }
-    },
-    "brief.detail.suggestion.body": {
-      "comment": "Body of the focus suggestion call-out on the v0.17 brief detail sheet. %d is the suggested minutes.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aim for one %d-minute Deep Focus session today."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vise une session Deep Focus de %d minutes aujourd'hui."
-          }
-        }
-      }
-    },
-    "settings.brief.enable": {
-      "comment": "Title of the v0.17 daily morning brief toggle row in Settings → Préférences.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning brief"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brief du matin"
-          }
-        }
-      }
-    },
-    "settings.brief.subtitle": {
-      "comment": "Subtitle of the v0.17 morning brief toggle row in Settings → Préférences.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wake up to a quick summary of today's meetings, open tasks and a focus suggestion."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reçois chaque matin un résumé éclair de tes rendez-vous, tâches ouvertes et une suggestion de focus."
-          }
-        }
-      }
-    },
-    "brief.sheet.start.focus": {
-      "comment": "v0.17 — CTA on the daily brief sheet that starts a Deep Focus session with the suggested duration and dismisses the sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start now"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Démarrer maintenant"
           }
         }
       }
