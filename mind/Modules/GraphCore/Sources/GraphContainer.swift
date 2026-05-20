@@ -5,7 +5,20 @@ public enum GraphCore {
     public static let appGroupIdentifier = "group.app.mind.ios"
     public static let cloudKitContainerIdentifier = "iCloud.app.mind.ios"
 
-    public static let schema = Schema([Node.self, Edge.self, FocusSessionRecord.self])
+    // v1.0-alpha.2 — Cockpit Studio data spine. `Project`, `Lead`,
+    // and `Deliverable` land alongside the legacy `Node` / `Edge` /
+    // `FocusSessionRecord` rows: the CloudKit mirror keeps the old
+    // schema regardless of what the UI surfaces, so the pivot stays
+    // additive at the data layer. Wave C routes HomeView / Projects /
+    // Pipeline onto the new models without dropping the legacy ones.
+    public static let schema = Schema([
+        Node.self,
+        Edge.self,
+        FocusSessionRecord.self,
+        Project.self,
+        Lead.self,
+        Deliverable.self,
+    ])
 
     @MainActor
     public static let sharedContainer: ModelContainer = makeContainer()

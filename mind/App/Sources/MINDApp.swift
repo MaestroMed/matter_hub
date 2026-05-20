@@ -37,6 +37,39 @@ struct MINDApp: App {
         Task { @MainActor in
             await FollowUpScheduler.rescheduleAll()
         }
+        // v1.0-alpha.2 — Seed the 5 real Numelite projects on first
+        // launch so the Cockpit lands with Mehdi's actual portfolio
+        // populated. Idempotent + gated on `mind.demo.seeded` so a
+        // wipe never re-seeds without consent. Runs after the
+        // container resolves on MainActor. Routed through a `static`
+        // helper so the Task closure doesn't capture `self` — `App`
+        // is a value-type struct and `init` can't lend a mutating
+        // reference to an escaping closure.
+        Task { @MainActor in
+            MINDApp.seedDemoProjectsIfNeeded()
+        }
+    }
+
+    /// v1.0-alpha.2 — Seeds the 5 real Numelite Project rows the
+    /// first time the app launches, then sets the
+    /// `mind.demo.seeded` flag so subsequent launches no-op.
+    /// `Project.seedDemoProjects(in:)` is itself idempotent (bails
+    /// when any Project already exists), so this is safe to call
+    /// even if the flag is somehow lost. `static` so the App init
+    /// can dispatch to it from an escaping `Task` closure.
+    @MainActor
+    static func seedDemoProjectsIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: "mind.demo.seeded") == false else { return }
+        let context = GraphCore.sharedContainer.mainContext
+        let inserted = Project.seedDemoProjects(in: context)
+        defaults.set(true, forKey: "mind.demo.seeded")
+        if inserted > 0 {
+            MINDTelemetry.info(
+                "project.demo.seeded",
+                data: ["count": String(inserted)]
+            )
+        }
     }
 
     var body: some Scene {

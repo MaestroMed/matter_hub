@@ -7,6 +7,88 @@
 > chapitre 3+ ci-dessous sont **préservées pour archéologie** ; la
 > roadmap réelle vit désormais dans les versions `v1.0-alpha.x`.
 
+# v1.0-alpha.* — Cockpit Studio rebuild
+
+The Numelite cockpit needs its own data spine: `Project` (long-lived
+client engagement), `Lead` (inbound webhook from the deployed site),
+`Deliverable` (shipped page / audit / asset). Wave A pivoted the UI,
+Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
+the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
+
+## v1.0-alpha.2 — Project + Lead + Deliverable data spine ✅
+
+Shipped 2026-05-20: introduces `Project`, `Lead`, `Deliverable` as
+SwiftData `@Model` classes in `GraphCore`, sharing the same CloudKit-
+compatibility constraint set as `Node` (inline defaults, optional
+relationships with nil defaults, `@Attribute(.unique)` on UUID).
+`GraphContainer.schema` registers the three new types alongside the
+legacy Node / Edge / FocusSessionRecord rows — the pivot stays
+additive at the data layer because the CloudKit daemon refuses to
+drop existing schemas. `SpotlightIndexer` gains
+`index(_ project: Project)`, `index(_ lead: Lead)`, and
+`index(_ deliverable: Deliverable)` plus prefixed unique identifiers
+(`project:<uuid>`, `lead:<uuid>`, `deliverable:<uuid>`) so deep-link
+dispatchers can route purely from the string prefix.
+`LeadWebhookPayload` locks the on-the-wire contract a future
+Cloudflare Worker (alpha.5) will use to POST inbound leads to MIND —
+HMAC-SHA256 sign/verify helpers (CryptoKit) ship now so the iOS side
+is ready even though the worker isn't. `Project.seedDemoProjects(in:)`
+idempotently inserts the 5 real Numelite projects (AZ Construction,
+AZ Epoxy, AZ Concept, IEF & Co, Sconnect) on first launch, gated on
+`mind.demo.seeded` UserDefaults flag. New telemetry breadcrumb
+`project.demo.seeded` with `count` payload. 4 new test files (38
+tests total) lock the model defaults, enum accessor round-trips, slug
+normalisation, MRR aggregation, HMAC sign/verify happy path + every
+documented failure mode (wrong secret, tampered payload, empty / wrong-
+length signature, case-insensitive accept).
+
+### v1.0-alpha.3 — HomeView "Aujourd'hui" lead inbox ⏳
+**What**: Rewrite HomeView to surface the `@Query var leads: [Lead]`
+sorted `receivedAt` descending, replacing the greeting-only layout
+from alpha.1. New `LeadRowCard` (LiquidCard tokens), tap → detail
+sheet with status pill + Claude-drafted reply editor. **Acceptance**:
+unanswered leads from today float to the top, status chip lets Mehdi
+mark `.contacted` / `.qualified` / `.spam` from the row swipe action.
+
+### v1.0-alpha.4 — ProjectsView replaces ClientsView ⏳
+**What**: Replace the legacy `ClientsView` with `ProjectsView`
+backed by `@Query var projects: [Project]`. Columns: name + host,
+stack chip (`nextjs` / `wordpress` / …), MRR (formatted EUR), last-
+activity relative date. Sort: `lastActivityAt` desc. Add detail
+sheet showing per-Project leads + deliverables. **Acceptance**:
+seeded portfolio renders 5 rows, MRR total card sums retainer rows
+correctly, tap → detail sheet shows AZ Construction's leads.
+
+### v1.0-alpha.5 — Cloudflare Worker template + `@mind/lead-webhook` SDK ⏳
+**What**: Ship a Cloudflare Worker template under
+`mind/tools/lead-webhook-worker/` that any deployed Numelite site
+can drop into `workers/lead-webhook.ts`. Companion npm package
+`@mind/lead-webhook` exposes `signAndPost(payload, secret, endpoint)`.
+Per-project provisioning generates a `webhookSecret` on the Project
+and surfaces it as a copy-paste env var in ProjectDetailView.
+**Acceptance**: a POST to MIND's ingest endpoint with the worker-
+signed payload lands as a `.new` Lead within 2s; tampered payloads
+or wrong secrets are rejected with HMAC verification breadcrumbs.
+
+### v1.0-alpha.6 — Bootstrap scaffolder (new project wizard) ⏳
+**What**: "Nouveau projet" CTA from ProjectsView → multi-step
+wizard: name + slug, stack, contract type, MRR / one-shot, host,
+GitHub repo, Vercel project ID, paste webhook secret (or
+generate one). Wizard concludes by minting the Project row + a
+GitHub-template-style README under `mind/tools/scaffolds/<stack>/`.
+**Acceptance**: a fresh project is wizardable end-to-end in
+under 60 seconds, shows up on the Cockpit immediately.
+
+### v1.0-alpha.7 — SEO Swarm orchestrator ⏳
+**What**: Mehdi's batch `{service}×{zone}` pattern as a first-
+class feature. New `SEOSwarmSheet`: list every service + every
+zone, generate the matrix preview, ship each page as a
+`Deliverable(kind: .page)` attached to the Project. Hook into the
+existing AuditKit pipeline so each generated page gets a lighthouse
+score on commit. **Acceptance**: AZ Construction's 8 services × 12
+Paris zones → 96 deliverables generated in one batch, each with
+its own row on the Cockpit feed.
+
 ## v1.0-alpha.1 — Radical cleanup (Cockpit Studio pivot) ✅
 
 Shipped 2026-05-20: gut the second-brain modules + UI surfaces that
