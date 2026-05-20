@@ -11723,6 +11723,70 @@
         "en": { "stringUnit": { "state": "translated", "value": "No activity" } },
         "fr": { "stringUnit": { "state": "translated", "value": "Pas d'activité" } }
       }
+    },
+    "widget.leadInbox.title": {
+      "comment": "v1.0-alpha.16 · Lock Screen widget gallery name for the lead inbox accessory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads" } }
+      }
+    },
+    "widget.leadInbox.description": {
+      "comment": "v1.0-alpha.16 · Lock Screen widget gallery description for the lead inbox accessory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your most recent leads, at a glance." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tes derniers leads en un coup d'œil" } }
+      }
+    },
+    "widget.portfolioMRR.title": {
+      "comment": "v1.0-alpha.16 · Lock Screen widget gallery name for the portfolio MRR circular accessory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Portfolio MRR" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "MRR portfolio" } }
+      }
+    },
+    "widget.portfolioMRR.description": {
+      "comment": "v1.0-alpha.16 · Lock Screen widget gallery description for the portfolio MRR accessory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your monthly recurring revenue." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ton revenu mensuel récurrent" } }
+      }
+    },
+    "widget.deployment.title": {
+      "comment": "v1.0-alpha.16 · Lock Screen widget gallery name for the deployment status inline accessory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Deployments" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déploiements" } }
+      }
+    },
+    "widget.deployment.description": {
+      "comment": "v1.0-alpha.16 · Lock Screen widget gallery description for the deployment status accessory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Vercel status of your projects." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Statut Vercel de tes projets" } }
+      }
+    },
+    "widget.standBy.title": {
+      "comment": "v1.0-alpha.16 · StandBy mode dashboard widget gallery name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "StandBy Cockpit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cockpit StandBy" } }
+      }
+    },
+    "widget.standBy.description": {
+      "comment": "v1.0-alpha.16 · StandBy mode dashboard widget gallery description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your cockpit at night." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dashboard la nuit" } }
+      }
     }
   }
 }

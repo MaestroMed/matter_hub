@@ -25,9 +25,10 @@ Shipped 2026-05-20: NSE decorates lead pushes with `<contactName> · <projectNam
 
 ## v1.0-alpha.15+ — Next ⏳
 
-- **iOS 26 Lock Screen widgets** ⏳ — WidgetKit timeline reading
-  the same lead inbox + portfolio KPI surface HomeView shows, gated
-  on `WidgetFamily.accessoryRectangular` + `.accessoryInline`.
+### v1.0-alpha.16 ✅ — iOS 26 Lock Screen widgets + StandBy mode
+
+Shipped 2026-05-20: Five new widget surfaces ship in `MINDWidgets` reading the cockpit data spine. (1) `CockpitLockScreenWidget` (`.accessoryRectangular` + `.accessoryInline`) reads `Lead` + `Project` straight from `GraphCore.sharedContainer` via the same `AppIntentTimelineProvider` model the legacy `LockScreenWidget` uses, then folds it through the new pure `CockpitWidgetFormatter` namespace (lead count, MRR, contact + project body); taps deep-link to `mind://leads` (new branch in `RootView.onOpenURL` routes to Home). (2) `LeadInboxLockScreenWidget` (`.accessoryRectangular`, 15 min refresh) + (3) `PortfolioMRRLockScreenWidget` (`.accessoryCircular`, compact EUR pill via `WidgetMRRFormatter`) + (4) `DeploymentStatusLockScreenWidget` (`.accessoryInline`, "<Name> ✓"/"<Name> ⚠️" via `WidgetDeploymentFormatter`) read the cross-process `SharedSnapshotWriter` columns (`mind.shared.{leadCount,leadLastContact,totalMRR,criticalProjectName}`) the host App is expected to populate. (5) `StandByDashboardWidget` (`.systemLarge`, 5 min refresh) ships a two-column cockpit (lead inbox left, portfolio KPI right) over a dim iris→sky LG gradient for night-mode readability. All five widget kinds registered in `MINDWidgetsBundle`. New `CockpitWidgetEntry` value type + `CockpitWidgetFormatter` namespace in GraphCore expose pure-Swift APIs locked by 28 new `CockpitWidgetFormatterTests` (lead count clamp / overflow / negative guard, MRR thousand-grouping with non-breaking space, FR singular/plural rectangular header, contact+project body join, MRR fallback on empty inbox, inline brand prefix, deep-link shape, snapshot Equatable). `SharedSnapshotWriter` is nonisolated so the widget timeline providers can read it synchronously without an actor hop; MainActor MINDTelemetry calls are kicked off via fire-and-forget `Task @MainActor` so the `TimelineProvider` completion handlers stay race-free under Swift 6 strict concurrency. Telemetry: `widget.timeline.requested`, `widget.snapshot.refreshed`, `widget.standBy.appeared`, `leads.deepLink.opened`. Suite at 1029 tests, 0 failures. Vision verify at `mind/screenshots/v1.0-alpha.16.png` — host launches clean with the lead inbox + KPI bar populated (4 leads, 5 actifs, 830 €/mo) — exactly the surface the Lock Screen widgets mirror.
+
 - **Watch companion app** ⏳ — already has the
   `WatchCaptureKit` substrate (v0.22.1); ship the
   `MIND Watch.app` target + the SFSpeech transcription drain.
@@ -36,6 +37,16 @@ Shipped 2026-05-20: NSE decorates lead pushes with `<contactName> · <projectNam
 - **Vision Pro spatial cockpit** ⏳ — already has the
   `VisionSpatialKit` substrate (v0.25.1); ship the visionOS App
   target + the RealityView spatial layout.
+
+## v1.0-alpha.15+ — Pending bullets ⏳
+
+- **Watch companion app** ⏳ — `MIND Watch.app` target + SFSpeech
+  drain on top of the `WatchCaptureKit` substrate.
+- **AI Mehdi Voice clone (ElevenLabs)** ⏳ — voice-out for the
+  Daily Brief / Reply assistant via the consultant's own voice.
+- **Vision Pro spatial cockpit** ⏳ — visionOS App target +
+  RealityView spatial layout on top of the `VisionSpatialKit`
+  substrate.
 
 ## v1.0-alpha.13 — AI Reply Composer + Sales Velocity + auto-archive ✅
 

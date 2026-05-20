@@ -114,6 +114,66 @@ struct MINDApp: App {
         }
     }
 
+    /// v1.0-alpha.16 — Hands a fresh cockpit snapshot to the App
+    /// Group suite so the iOS 26 Lock Screen widgets + StandBy
+    /// dashboard surface the same lead count / MRR / critical-project
+    /// columns HomeView shows. Called on every `.active` scene phase.
+    ///
+    /// Source columns:
+    ///  - `leadCount`            = `Lead` rows with `status == "new"`
+    ///  - `leadLastContact`      = most-recent (`receivedAt` desc)
+    ///                              new lead's contact name
+    ///  - `totalMRR`             = `ProjectMRR.total(of:)` over every
+    ///                              active retainer Project
+    ///  - `criticalProjectName`  = nil — wired in a future iteration
+    ///                              once the host can stream the
+    ///                              `PortfolioHealthAggregator` snapshot
+    ///                              over the App Group bridge without
+    ///                              the heavy CloudKit reach. For
+    ///                              v1.0-alpha.16 the column starts
+    ///                              empty; the widget's deployment
+    ///                              status row collapses to the "all
+    ///                              green" branch via the formatter.
+    ///
+    /// Soft-fail: SwiftData fetch failures + an empty graph both
+    /// collapse to zeroed columns. The `SharedSnapshotWriter` itself
+    /// is the only allowed side-effect — no telemetry hop in here
+    /// keeps the call site cheap on every wake.
+    @MainActor
+    static func refreshWidgetSnapshot() {
+        let context = GraphCore.sharedContainer.mainContext
+
+        let leadDescriptor = FetchDescriptor<Lead>(
+            predicate: #Predicate<Lead> { $0.status == "new" },
+            sortBy: [SortDescriptor(\Lead.receivedAt, order: .reverse)]
+        )
+        let newLeads = (try? context.fetch(leadDescriptor)) ?? []
+
+        let projectDescriptor = FetchDescriptor<Project>()
+        let projects = (try? context.fetch(projectDescriptor)) ?? []
+        let mrr = ProjectMRR.total(of: projects)
+
+        let headContact: String? = {
+            guard let first = newLeads.first else { return nil }
+            let name = first.contactName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return name.isEmpty ? nil : name
+        }()
+
+        SharedSnapshotWriter.refresh(
+            leadCount: newLeads.count,
+            leadLastContact: headContact,
+            totalMRR: mrr,
+            criticalProjectName: nil
+        )
+        MINDTelemetry.info(
+            "widget.snapshot.refreshed",
+            data: [
+                "leads": String(newLeads.count),
+                "mrr": String(mrr),
+            ]
+        )
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -148,6 +208,17 @@ struct MINDApp: App {
                 // foreground so a lead that arrived while MIND was
                 // backgrounded surfaces immediately on the dock icon.
                 refreshDockBadge()
+                // v1.0-alpha.16 — Hand the freshest cockpit snapshot
+                // to the App Group suite (`group.app.mind.ios`) so
+                // the iOS 26 Lock Screen widgets + StandBy dashboard
+                // pull the same lead count / MRR / critical-project
+                // columns HomeView shows. Cheap: a single SwiftData
+                // fetch + four UserDefaults writes + one
+                // `WidgetCenter.shared.reloadAllTimelines()` nudge.
+                // Runs on the MainActor because both the SwiftData
+                // read and `SharedSnapshotWriter` itself are
+                // MainActor-bound.
+                MINDApp.refreshWidgetSnapshot()
                 // v0.29 — Same idempotent reschedule pass for
                 // follow-up sequences: idempotent identifiers mean
                 // every active sequence's pending touches are

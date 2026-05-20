@@ -143,6 +143,15 @@ struct RootView: View {
                 )
                 return
             }
+            // v1.0-alpha.16 — `mind://leads` deep link fired by the
+            // new Cockpit Lock Screen widget's `.accessoryRectangular`
+            // + `.accessoryInline` families. Drops the user on Home
+            // where the lead inbox card sits at the top of the scroll.
+            if url.host?.lowercased() == "leads" {
+                selection = .home
+                MINDTelemetry.info("leads.deepLink.opened")
+                return
+            }
             // v1.0-alpha.14 — `mind://lead/<UUID>` deep link fired by
             // the lead-push tap path (NotificationService decorates,
             // MINDPushDelegate routes the tap, the AppDelegate posts
