@@ -385,4 +385,74 @@ final class LocalizationTests: XCTestCase {
         XCTAssertNotNil(localized("meetingBrief.notification.body.generic", lang: "en"))
         XCTAssertNotNil(localized("meetingBrief.notification.body.generic", lang: "fr"))
     }
+
+    /// v0.32 — Audit comparisons (multi-target) strings. Locks every
+    /// FR + EN key surfaced by the HomeView "Comparer mes audits"
+    /// row, the ComparisonSheet picker phase, results phase, scoring
+    /// table, overlap section, hidden-risk differences section, and
+    /// the per-severity labels. A careless catalogue edit can't ship
+    /// a comparison screen where the section header falls back to
+    /// the raw key.
+    func test_comparisonStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("home.comparisonCard.title",        lang: "en"), "Compare audits")
+        XCTAssertEqual(localized("home.comparisonCard.title",        lang: "fr"), "Comparer mes audits")
+        XCTAssertNotNil(localized("home.comparisonCard.subtitle",    lang: "en"))
+        XCTAssertNotNil(localized("home.comparisonCard.subtitle",    lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.title",                 lang: "en"), "Audit comparison")
+        XCTAssertEqual(localized("comparison.title",                 lang: "fr"), "Comparaison d'audits")
+        XCTAssertEqual(localized("comparison.close",                 lang: "en"), "Close")
+        XCTAssertEqual(localized("comparison.close",                 lang: "fr"), "Fermer")
+
+        XCTAssertEqual(localized("comparison.picker.headline",       lang: "en"), "Pick 2–4 audits")
+        XCTAssertEqual(localized("comparison.picker.headline",       lang: "fr"), "Choisis 2 à 4 audits")
+        XCTAssertNotNil(localized("comparison.picker.subtitle",      lang: "en"))
+        XCTAssertNotNil(localized("comparison.picker.subtitle",      lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.empty.title",           lang: "en"), "No audits archived yet")
+        XCTAssertEqual(localized("comparison.empty.title",           lang: "fr"), "Aucun audit archivé pour l'instant")
+        XCTAssertNotNil(localized("comparison.empty.subtitle",       lang: "en"))
+        XCTAssertNotNil(localized("comparison.empty.subtitle",       lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.compare.cta",           lang: "en"), "Compare %d audits")
+        XCTAssertEqual(localized("comparison.compare.cta",           lang: "fr"), "Comparer %d audits")
+        XCTAssertEqual(localized("comparison.compare.cta.disabled",  lang: "en"), "Select at least 2 (currently %d)")
+        XCTAssertEqual(localized("comparison.compare.cta.disabled",  lang: "fr"), "Choisis-en au moins 2 (actuellement %d)")
+
+        XCTAssertEqual(localized("comparison.results.headline",      lang: "en"), "Side-by-side")
+        XCTAssertEqual(localized("comparison.results.headline",      lang: "fr"), "Côte à côte")
+        XCTAssertEqual(localized("comparison.results.subtitle",      lang: "en"), "Comparing %d clients across 6 axes.")
+        XCTAssertEqual(localized("comparison.results.subtitle",      lang: "fr"), "Comparaison de %d clients sur 6 axes.")
+
+        XCTAssertEqual(localized("comparison.legend.title",          lang: "en"), "Legend")
+        XCTAssertEqual(localized("comparison.legend.title",          lang: "fr"), "Légende")
+        XCTAssertEqual(localized("comparison.scoreboard.title",      lang: "en"), "Scoreboard")
+        XCTAssertEqual(localized("comparison.scoreboard.title",      lang: "fr"), "Tableau des scores")
+        XCTAssertEqual(localized("comparison.leader.label",          lang: "en"), "Leader: #%d")
+        XCTAssertEqual(localized("comparison.leader.label",          lang: "fr"), "Tête : #%d")
+
+        XCTAssertEqual(localized("comparison.overlap.title",         lang: "en"), "Shared quick wins")
+        XCTAssertEqual(localized("comparison.overlap.title",         lang: "fr"), "Quick wins partagés")
+        XCTAssertNotNil(localized("comparison.overlap.empty",        lang: "en"))
+        XCTAssertNotNil(localized("comparison.overlap.empty",        lang: "fr"))
+        XCTAssertEqual(localized("comparison.overlap.count",         lang: "en"), "%d audits")
+        XCTAssertEqual(localized("comparison.overlap.count",         lang: "fr"), "%d audits")
+
+        XCTAssertEqual(localized("comparison.differences.title",     lang: "en"), "Unique hidden risks")
+        XCTAssertEqual(localized("comparison.differences.title",     lang: "fr"), "Risques propres à un seul client")
+        XCTAssertNotNil(localized("comparison.differences.empty",    lang: "en"))
+        XCTAssertNotNil(localized("comparison.differences.empty",    lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.back.cta",              lang: "en"), "Change selection")
+        XCTAssertEqual(localized("comparison.back.cta",              lang: "fr"), "Modifier la sélection")
+
+        XCTAssertEqual(localized("comparison.severity.low",          lang: "en"), "low")
+        XCTAssertEqual(localized("comparison.severity.low",          lang: "fr"), "faible")
+        XCTAssertEqual(localized("comparison.severity.medium",       lang: "en"), "medium")
+        XCTAssertEqual(localized("comparison.severity.medium",       lang: "fr"), "moyen")
+        XCTAssertEqual(localized("comparison.severity.high",         lang: "en"), "high")
+        XCTAssertEqual(localized("comparison.severity.high",         lang: "fr"), "élevé")
+        XCTAssertEqual(localized("comparison.severity.critical",     lang: "en"), "critical")
+        XCTAssertEqual(localized("comparison.severity.critical",     lang: "fr"), "critique")
+    }
 }

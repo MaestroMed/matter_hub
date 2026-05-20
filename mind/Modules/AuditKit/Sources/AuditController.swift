@@ -324,6 +324,15 @@ public final class AuditController {
             if let broadcaster = self.liveBroadcaster {
                 await broadcaster.auditCompleted(report: synthesized)
             }
+            // v0.32 — Persist the completed report to the on-disk
+            // archive so the ComparisonSheet picker can surface it
+            // alongside every other audit Mehdi has ever run. Fire-
+            // and-forget — the archive soft-fails on disk errors
+            // (the telemetry warning records the regression) and the
+            // audit completion banner is never blocked on disk I/O.
+            Task.detached {
+                await AuditReportArchive.shared.save(synthesized)
+            }
             // v0.23 — Fire-and-forget mockup generation. Doesn't block
             // the audit completion banner — the UI renders the
             // synthesised report immediately, and the Vision section

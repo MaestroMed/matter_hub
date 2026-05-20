@@ -5096,6 +5096,206 @@
         "fr": { "stringUnit": { "state": "translated", "value": "5 variantes d'email à froid à partir de n'importe quel prospect." } }
       }
     },
+    "home.comparisonCard.title": {
+      "comment": "v0.32 · HomeView audit card — quaternary row title that opens ComparisonSheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Compare audits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Comparer mes audits" } }
+      }
+    },
+    "home.comparisonCard.subtitle": {
+      "comment": "v0.32 · HomeView audit card — quaternary row subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Side-by-side scoreboard, overlap and risk deltas across 2–4 clients." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tableau de scores, recoupements et risques uniques sur 2 à 4 clients." } }
+      }
+    },
+    "comparison.title": {
+      "comment": "v0.32 · ComparisonSheet navigation title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit comparison" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Comparaison d'audits" } }
+      }
+    },
+    "comparison.close": {
+      "comment": "v0.32 · ComparisonSheet toolbar close button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Close" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Fermer" } }
+      }
+    },
+    "comparison.picker.headline": {
+      "comment": "v0.32 · ComparisonSheet picker phase headline.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pick 2–4 audits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Choisis 2 à 4 audits" } }
+      }
+    },
+    "comparison.picker.subtitle": {
+      "comment": "v0.32 · ComparisonSheet picker phase subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Each audit ever run is archived locally. Pick at least two to compare them side by side." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chaque audit lancé est archivé en local. Sélectionne-en au moins deux pour les comparer côte à côte." } }
+      }
+    },
+    "comparison.empty.title": {
+      "comment": "v0.32 · ComparisonSheet empty-archive card title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No audits archived yet" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun audit archivé pour l'instant" } }
+      }
+    },
+    "comparison.empty.subtitle": {
+      "comment": "v0.32 · ComparisonSheet empty-archive card subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Run a couple of audits first, then come back here to benchmark them." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lance d'abord quelques audits, puis reviens ici pour les comparer." } }
+      }
+    },
+    "comparison.compare.cta": {
+      "comment": "v0.32 · ComparisonSheet primary CTA when N ≥ 2 audits selected. %d = count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Compare %d audits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Comparer %d audits" } }
+      }
+    },
+    "comparison.compare.cta.disabled": {
+      "comment": "v0.32 · ComparisonSheet CTA when fewer than 2 selected. %d = count so far.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Select at least 2 (currently %d)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Choisis-en au moins 2 (actuellement %d)" } }
+      }
+    },
+    "comparison.results.headline": {
+      "comment": "v0.32 · ComparisonSheet results phase headline.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Side-by-side" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Côte à côte" } }
+      }
+    },
+    "comparison.results.subtitle": {
+      "comment": "v0.32 · ComparisonSheet results phase subtitle. %d = number of reports.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Comparing %d clients across 6 axes." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Comparaison de %d clients sur 6 axes." } }
+      }
+    },
+    "comparison.legend.title": {
+      "comment": "v0.32 · ComparisonSheet legend card title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Legend" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Légende" } }
+      }
+    },
+    "comparison.scoreboard.title": {
+      "comment": "v0.32 · ComparisonSheet metric scoreboard title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Scoreboard" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tableau des scores" } }
+      }
+    },
+    "comparison.leader.label": {
+      "comment": "v0.32 · ComparisonSheet per-metric leader badge. %d = client index (1-based).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leader: #%d" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tête : #%d" } }
+      }
+    },
+    "comparison.overlap.title": {
+      "comment": "v0.32 · ComparisonSheet quick-wins overlap section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Shared quick wins" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Quick wins partagés" } }
+      }
+    },
+    "comparison.overlap.empty": {
+      "comment": "v0.32 · ComparisonSheet overlap section empty state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No quick win appears in two or more of these audits." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun quick win ne se retrouve dans plusieurs audits sélectionnés." } }
+      }
+    },
+    "comparison.overlap.count": {
+      "comment": "v0.32 · ComparisonSheet overlap count suffix. %d = occurrences.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d audits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d audits" } }
+      }
+    },
+    "comparison.differences.title": {
+      "comment": "v0.32 · ComparisonSheet unique hidden risks section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unique hidden risks" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Risques propres à un seul client" } }
+      }
+    },
+    "comparison.differences.empty": {
+      "comment": "v0.32 · ComparisonSheet differences section empty state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Every hidden risk is shared across these audits." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tous les risques cachés se retrouvent dans plusieurs audits." } }
+      }
+    },
+    "comparison.back.cta": {
+      "comment": "v0.32 · ComparisonSheet back-to-picker CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Change selection" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Modifier la sélection" } }
+      }
+    },
+    "comparison.severity.low": {
+      "comment": "v0.32 · Hidden risk severity label — low.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "low" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "faible" } }
+      }
+    },
+    "comparison.severity.medium": {
+      "comment": "v0.32 · Hidden risk severity label — medium.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "medium" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "moyen" } }
+      }
+    },
+    "comparison.severity.high": {
+      "comment": "v0.32 · Hidden risk severity label — high.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "high" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "élevé" } }
+      }
+    },
+    "comparison.severity.critical": {
+      "comment": "v0.32 · Hidden risk severity label — critical.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "critical" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "critique" } }
+      }
+    },
     "node.action.outreach": {
       "comment": "v0.26 · NodeDetailView client body — CTA to generate outreach.",
       "extractionState": "manual",

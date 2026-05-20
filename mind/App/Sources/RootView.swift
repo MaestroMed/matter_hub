@@ -124,6 +124,22 @@ struct RootView: View {
                 MINDTelemetry.info("pipeline.deepLink.opened")
                 return
             }
+            // v0.32 — Comparison sheet deep link: `mind://comparison`.
+            // Lands on Home (where the sheet is hosted) and posts a
+            // notification HomeView listens for to flip its
+            // `isComparing` bool. Useful for the agent's vision-
+            // verification flow (the new CTA sits below the fold of
+            // the audit card stack) and for future Shortcuts entry
+            // points.
+            if url.host?.lowercased() == "comparison" {
+                selection = .home
+                MINDTelemetry.info("comparison.deepLink.opened")
+                NotificationCenter.default.post(
+                    name: .mindOpenComparison,
+                    object: nil
+                )
+                return
+            }
             // v0.29 — Follow-up deep link: `mind://followUp/<seqID>/<touchID>`.
             // Posts a notification with both ids so HomeView can
             // resolve the prospect Node and route into the matching
@@ -483,6 +499,12 @@ private struct HomeView: View {
     /// shimmer skeletons → 5 LiquidCard variants with Copier /
     /// Ouvrir dans Mail / Aimer actions.
     @State private var isOutreaching: Bool = false
+
+    /// v0.32 — Drives the ComparisonSheet (audit comparisons / multi-
+    /// target). Surfaced via the new "Comparer mes audits" row on the
+    /// audit card. Sheet hydrates from `AuditReportArchive.shared` on
+    /// appear so the picker always reflects the current archive.
+    @State private var isComparing: Bool = false
     @State private var selectedClient: Node?
     @State private var selectedNote: Node?
     @State private var showFocusHistory: Bool = false
@@ -849,6 +871,15 @@ private struct HomeView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(isPresented: $isComparing) {
+            // v0.32 — ComparisonSheet hydrates from the on-disk
+            // archive each time it appears so the picker reflects
+            // every audit Mehdi has run since the app was installed.
+            ComparisonSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
         .sheet(isPresented: $isChatting) {
             ChatView()
                 .presentationDetents([.large])
@@ -1120,6 +1151,15 @@ private struct HomeView: View {
                 }
                 await hydrateTodaysFollowUps()
             }
+        }
+        // v0.32 — Comparison sheet deep link. Posted by RootView on
+        // `mind://comparison`. Flips `isComparing` so the
+        // ComparisonSheet presents — the picker reads from
+        // `AuditReportArchive.shared` on appear so the deep link
+        // works even before any audit has been run (empty archive
+        // card surfaces).
+        .onReceive(NotificationCenter.default.publisher(for: .mindOpenComparison)) { _ in
+            isComparing = true
         }
     }
 
@@ -2357,6 +2397,50 @@ private struct HomeView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
+
+                // v0.32 — Quaternary CTA: Audit comparisons (multi-
+                // target). Sits beneath the Outreach row so the
+                // discoverability reads single → battle → outreach →
+                // archive-review. Opens the ComparisonSheet which
+                // hydrates from `AuditReportArchive.shared` — every
+                // completed audit is auto-archived, so the picker is
+                // populated organically as Mehdi runs more audits.
+                Divider()
+                    .background(LiquidPalette.iris.opacity(0.18))
+
+                Button {
+                    LiquidHaptics.select()
+                    isComparing = true
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.lavender.opacity(0.28))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "square.split.2x1")
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("home.comparisonCard.title", bundle: .main)
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .minimumScaleFactor(0.85)
+                                .lineLimit(2)
+                            Text("home.comparisonCard.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -2945,6 +3029,14 @@ extension Notification.Name {
     /// the matching client. Falls back to a no-op when the sequence
     /// has since been deleted or marked replied.
     static let mindOpenFollowUp = Notification.Name("app.mind.ios.openFollowUp")
+
+    /// v0.32 — Posted by `RootView.onOpenURL` when iOS hands us a
+    /// `mind://comparison` deep link. Observed by HomeView's
+    /// `.onReceive` to flip its `isComparing` sheet on so the
+    /// ComparisonSheet presents. Used by the agent's vision-
+    /// verification flow (the row sits below the audit-card fold)
+    /// and by future Shortcuts entry points.
+    static let mindOpenComparison = Notification.Name("app.mind.ios.openComparison")
 }
 
 /// v0.29 — Pure row value type backing the HomeView "Relances du
