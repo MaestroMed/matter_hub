@@ -146,6 +146,20 @@ public final class Project {
     @Relationship(deleteRule: .cascade, inverse: \Deliverable.project)
     public var deliverables: [Deliverable]?
 
+    /// v1.2.0 — Notion bidirectional sync. UUID-without-dashes
+    /// identifier of the source Notion page when this Project was
+    /// imported from Notion via `NotionImportExecutor`. nil for
+    /// Projects that originated inside MIND or via the v1.0-alpha.11
+    /// GitHub bulk-import wizard. Optional so existing CloudKit rows
+    /// decode cleanly (the @Model migration is additive).
+    public var notionPageID: String?
+
+    /// v1.2.0 — Notion bidirectional sync. Timestamp of the last
+    /// successful pull from Notion. The foreground bidirectional
+    /// tick reads this + the Notion page's `lastEditedAt` to decide
+    /// whether the row needs a re-pull.
+    public var lastNotionSyncAt: Date?
+
     public init(
         id: UUID = UUID(),
         name: String,
@@ -307,6 +321,119 @@ public final class Project {
         context.insert(project)
         try context.save()
         return project
+    }
+
+    // MARK: - Notion Import (v1.2.0)
+
+    /// Idempotent insert-or-update of a `Project` from a freshly-
+    /// pulled Notion page. Match resolution order:
+    ///   1. notionPageID exact match — re-pulling the same Notion
+    ///      page always lands on the same Project row.
+    ///   2. githubRepo exact match — a Project imported via the
+    ///      GitHub wizard gets enriched with notionPageID rather
+    ///      than duplicated.
+    ///   3. Slug exact match — second-line dedup for manually-
+    ///      created Projects later linked to a Notion page.
+    ///   4. Insert.
+    @MainActor
+    @discardableResult
+    public static func upsert(
+        notionPageID: String,
+        title: String,
+        host: String? = nil,
+        notes: String? = nil,
+        githubRepo: String? = nil,
+        in context: ModelContext
+    ) throws -> Project {
+        let needleNotion = notionPageID
+        let byNotion = FetchDescriptor<Project>(
+            predicate: #Predicate<Project> { project in
+                project.notionPageID == needleNotion
+            }
+        )
+        if let existing = try context.fetch(byNotion).first {
+            applyNotionUpdates(
+                to: existing,
+                title: title,
+                host: host,
+                notes: notes,
+                notionPageID: notionPageID
+            )
+            try context.save()
+            return existing
+        }
+
+        if let repo = githubRepo, !repo.isEmpty {
+            let needleRepo = repo
+            let byRepo = FetchDescriptor<Project>(
+                predicate: #Predicate<Project> { project in
+                    project.githubRepo == needleRepo
+                }
+            )
+            if let existing = try context.fetch(byRepo).first {
+                applyNotionUpdates(
+                    to: existing,
+                    title: title,
+                    host: host,
+                    notes: notes,
+                    notionPageID: notionPageID
+                )
+                try context.save()
+                return existing
+            }
+        }
+
+        let derivedSlug = Project.normalizeSlug(title)
+        if !derivedSlug.isEmpty {
+            let needleSlug = derivedSlug
+            let bySlug = FetchDescriptor<Project>(
+                predicate: #Predicate<Project> { project in
+                    project.slug == needleSlug
+                }
+            )
+            if let existing = try context.fetch(bySlug).first {
+                applyNotionUpdates(
+                    to: existing,
+                    title: title,
+                    host: host,
+                    notes: notes,
+                    notionPageID: notionPageID
+                )
+                try context.save()
+                return existing
+            }
+        }
+
+        let project = Project(
+            name: title,
+            host: host ?? "",
+            githubRepo: githubRepo
+        )
+        project.notes = notes ?? ""
+        project.notionPageID = notionPageID
+        project.lastNotionSyncAt = .now
+        context.insert(project)
+        try context.save()
+        return project
+    }
+
+    /// Applies Notion fields onto an existing Project without
+    /// overwriting non-Notion columns the user already curated
+    /// (stack / contractType / revenue / accent colour stay put).
+    @MainActor
+    static func applyNotionUpdates(
+        to project: Project,
+        title: String,
+        host: String?,
+        notes: String?,
+        notionPageID: String
+    ) {
+        if !title.isEmpty { project.name = title }
+        if let host, !host.isEmpty { project.host = host }
+        if let notes, !notes.isEmpty { project.notes = notes }
+        project.notionPageID = notionPageID
+        project.lastNotionSyncAt = .now
+        project.lastActivityAt = .now
     }
 
     // MARK: - Demo seeding

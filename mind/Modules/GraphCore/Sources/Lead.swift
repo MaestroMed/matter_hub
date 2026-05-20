@@ -117,6 +117,20 @@ public final class Lead {
     /// persisted-then-flagged rather than silently dropped.
     public var project: Project?
 
+    /// v1.2.0 — Notion bidirectional sync. UUID-without-dashes
+    /// identifier of the source Notion page when this Lead was
+    /// imported from a Notion database. Optional + backward-
+    /// compatible default so existing CloudKit-mirrored Lead rows
+    /// decode cleanly.
+    ///
+    /// Dedup key on subsequent import runs — when the Notion page
+    /// has no email, notionPageID is the only deterministic match.
+    public var notionPageID: String?
+
+    /// v1.2.0 — Notion bidirectional sync. Timestamp of the last
+    /// successful pull from Notion.
+    public var lastNotionSyncAt: Date?
+
     public init(
         id: UUID = UUID(),
         receivedAt: Date = .now,
@@ -174,6 +188,99 @@ public final class Lead {
     public var formTypeEnum: LeadFormType {
         get { LeadFormType(rawValue: formType) ?? .other }
         set { formType = newValue.rawValue }
+    }
+
+    // MARK: - Notion Import (v1.2.0)
+
+    /// Idempotent insert-or-update of a `Lead` from a freshly-pulled
+    /// Notion page. Match resolution order:
+    ///   1. notionPageID exact match.
+    ///   2. Email exact match (only when contactEmail is non-empty).
+    ///   3. Insert.
+    ///
+    /// `notionPageID` survives across upserts.
+    @MainActor
+    @discardableResult
+    public static func upsert(
+        notionPageID: String,
+        contactName: String,
+        contactEmail: String = "",
+        message: String = "",
+        sourceURL: String = "",
+        in context: ModelContext
+    ) throws -> Lead {
+        let needleNotion = notionPageID
+        let byNotion = FetchDescriptor<Lead>(
+            predicate: #Predicate<Lead> { lead in
+                lead.notionPageID == needleNotion
+            }
+        )
+        if let existing = try context.fetch(byNotion).first {
+            applyNotionUpdates(
+                to: existing,
+                contactName: contactName,
+                contactEmail: contactEmail,
+                message: message,
+                sourceURL: sourceURL,
+                notionPageID: notionPageID
+            )
+            try context.save()
+            return existing
+        }
+
+        if !contactEmail.isEmpty {
+            let needleEmail = contactEmail
+            let byEmail = FetchDescriptor<Lead>(
+                predicate: #Predicate<Lead> { lead in
+                    lead.contactEmail == needleEmail
+                }
+            )
+            if let existing = try context.fetch(byEmail).first {
+                applyNotionUpdates(
+                    to: existing,
+                    contactName: contactName,
+                    contactEmail: contactEmail,
+                    message: message,
+                    sourceURL: sourceURL,
+                    notionPageID: notionPageID
+                )
+                try context.save()
+                return existing
+            }
+        }
+
+        let lead = Lead(
+            sourceURL: sourceURL,
+            contactName: contactName,
+            contactEmail: contactEmail,
+            message: message
+        )
+        lead.notionPageID = notionPageID
+        lead.lastNotionSyncAt = .now
+        context.insert(lead)
+        try context.save()
+        return lead
+    }
+
+    /// Applies Notion fields onto an existing Lead without
+    /// overwriting the lifecycle status / spam triage signals the
+    /// user already curated locally.
+    @MainActor
+    static func applyNotionUpdates(
+        to lead: Lead,
+        contactName: String,
+        contactEmail: String,
+        message: String,
+        sourceURL: String,
+        notionPageID: String
+    ) {
+        if !contactName.isEmpty { lead.contactName = contactName }
+        if !contactEmail.isEmpty { lead.contactEmail = contactEmail }
+        if !message.isEmpty { lead.message = message }
+        if !sourceURL.isEmpty { lead.sourceURL = sourceURL }
+        lead.notionPageID = notionPageID
+        lead.lastNotionSyncAt = .now
+        lead.statusUpdatedAt = .now
     }
 }
 

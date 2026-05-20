@@ -5596,6 +5596,197 @@
         }
       }
     },
+    "notion.import.title": {
+      "comment": "v1.2.0 · Notion bidirectional import wizard nav title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import from Notion" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer depuis Notion" } }
+      }
+    },
+    "notion.import.step.databases": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Databases" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bases" } }
+      }
+    },
+    "notion.import.step.mapping": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mapping" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mapping" } }
+      }
+    },
+    "notion.import.step.run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Import" } }
+      }
+    },
+    "notion.import.databases.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No databases shared with this integration. Add one in Notion (Share → Add connections) and reload." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune base partagée avec l'intégration. Ajoute-en une dans Notion (Partager → Connecter une intégration) puis recharge." } }
+      }
+    },
+    "notion.import.databases.loading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Loading Notion databases…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chargement des bases Notion…" } }
+      }
+    },
+    "notion.import.mapping.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Suggested mapping. Pick the target MIND entity for each database before importing." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mapping suggéré. Choisis l'entité MIND cible pour chaque base avant d'importer." } }
+      }
+    },
+    "notion.import.mapping.confidence.format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d%% confidence" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Confiance %d%%" } }
+      }
+    },
+    "notion.import.mapping.preview.format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$d sample rows will be imported as %2$@." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$d ligne(s) d'échantillon seront importées comme %2$@." } }
+      }
+    },
+    "notion.import.mapping.kind.project": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Project" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Projet" } }
+      }
+    },
+    "notion.import.mapping.kind.lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lead" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lead" } }
+      }
+    },
+    "notion.import.mapping.kind.deliverable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Deliverable" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Livrable" } }
+      }
+    },
+    "notion.import.mapping.kind.audit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Audit" } }
+      }
+    },
+    "notion.import.mapping.kind.ignored": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Skip" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ignorer" } }
+      }
+    },
+    "notion.import.run.progress.format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$d / %2$d" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$d / %2$d" } }
+      }
+    },
+    "notion.import.success.toast.format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$d pages imported · %2$d updated." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$d pages importées · %2$d mises à jour." } }
+      }
+    },
+    "notion.import.error.token": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Save your Notion integration token first." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Enregistre d'abord ton token d'intégration Notion." } }
+      }
+    },
+    "notion.import.error.http": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Notion request failed: %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Échec de la requête Notion : %@" } }
+      }
+    },
+    "notion.import.error.fields": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This database is missing required fields and will be skipped." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cette base n'a pas les champs requis et sera ignorée." } }
+      }
+    },
+    "settings.notion.import.cta": {
+      "comment": "v1.2.0 · Settings → Notion sync → \"Importer depuis Notion\" CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import from Notion" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer depuis Notion" } }
+      }
+    },
+    "settings.notion.bidirectional.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Auto-pull Notion edits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Auto-pull des édits Notion" } }
+      }
+    },
+    "settings.notion.bidirectional.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Re-pull up to 20 changed Notion pages each time MIND comes to the foreground." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Re-pull jusqu'à 20 pages Notion modifiées à chaque retour au premier plan." } }
+      }
+    },
+    "notion.bidirectional.synced.toast": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Notion sync complete" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Sync Notion terminée" } }
+      }
+    },
+    "settings.button.back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Back" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Retour" } }
+      }
+    },
+    "settings.button.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Suivant" } }
+      }
+    },
+    "settings.button.done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Done" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Terminé" } }
+      }
+    },
+    "settings.button.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Running…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "En cours…" } }
+      }
+    },
     "settings.notion.test.body": {
       "extractionState": "manual",
       "localizations": {
@@ -5864,6 +6055,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Préférences"
+          }
+        }
+      }
+    },
+    "settings.section.standBy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "StandBy Dashboard"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tableau de bord StandBy"
+          }
+        }
+      }
+    },
+    "settings.standBy.dim.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dim at night"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atténuer la nuit"
+          }
+        }
+      }
+    },
+    "settings.standBy.dim.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reduces the dashboard brightness in the evening so the bedside dock doesn't blast your room."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réduit la luminosité du tableau le soir pour ne pas éclairer ta chambre quand l'iPhone est sur le dock."
+          }
+        }
+      }
+    },
+    "settings.standBy.currentPhase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current phase"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phase actuelle"
           }
         }
       }

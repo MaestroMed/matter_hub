@@ -57,6 +57,13 @@ struct RootView: View {
     /// the Settings module doesn't need to link AVFoundation +
     /// the recorder bridges.
     @State private var showVoiceClone: Bool = false
+
+    /// v1.2.0 — Notion import wizard toggle. SettingsView's
+    /// `onPresentNotionImport` closure flips this; the wizard
+    /// itself (`NotionImportSheet`) lives in the App target so
+    /// the Settings module doesn't need to link SwiftData +
+    /// GraphCore at once.
+    @State private var showNotionImport: Bool = false
     /// Sidebar visibility on regular-width layouts. SwiftUI manages it
     /// but binding lets us collapse the sidebar after the user picks
     /// a row on iPad portrait, where the auto behaviour can leave the
@@ -128,6 +135,17 @@ struct RootView: View {
         // upload, and test playback in five visible steps.
         .sheet(isPresented: $showVoiceClone) {
             VoiceCloneSetupSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        // v1.2.0 — Notion bidirectional sync. Wizard pulls Notion
+        // databases the integration has access to, lets Mehdi pick
+        // which ones to import + how they map onto MIND entities,
+        // then runs the planned import through
+        // `NotionImportExecutor`.
+        .sheet(isPresented: $showNotionImport) {
+            NotionImportSheet()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -472,7 +490,8 @@ struct RootView: View {
         case .settings:
             SettingsView(
                 onPresentBulkImport: { showBulkImport = true },
-                onPresentVoiceClone: { showVoiceClone = true }
+                onPresentVoiceClone: { showVoiceClone = true },
+                onPresentNotionImport: { showNotionImport = true }
             )
         }
     }

@@ -50,6 +50,21 @@ public final class MINDPreferences {
         // ✓" without an extra ElevenLabs API call on every launch.
         static let elevenLabsVoiceID         = "mind.pref.elevenLabsVoiceID"
         static let elevenLabsVoiceName       = "mind.pref.elevenLabsVoiceName"
+        // v0.28.1 — Standby mode dashboard. When true (default), the
+        // `StandByDashboardWidget` reads the wall-clock hour through
+        // `StandByBrightnessAdapter` and dims its container gradient
+        // on dusk / night / deepNight phases so the bedside dock
+        // doesn't blast a wall of bright pixels at 3am. When false
+        // the gradient stays at full brightness regardless of hour
+        // — useful when the dock sits in a sunlit office and the
+        // dimming would hurt outdoor legibility.
+        static let standByNightDimEnabled    = "mind.pref.standByNightDimEnabled"
+        // v1.2.0 — Notion bidirectional sync. When true, MINDApp's
+        // `.active` scenePhase fires `NotionImportExecutor.runBidirectionalTick`
+        // (bounded to 20 pages per call so the foreground tick stays
+        // friendly with Notion's 3 req/sec quota). Off by default so
+        // a fresh install ships without any background Notion traffic.
+        static let notionBidirectionalEnabled = "mind.pref.notionBidirectionalEnabled"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -251,6 +266,29 @@ public final class MINDPreferences {
         }
     }
 
+    /// v0.28.1 — Standby mode dashboard. When `true` (default), the
+    /// `StandByDashboardWidget` dims its container gradient at dusk
+    /// / night / deepNight phases through `StandByBrightnessAdapter`.
+    /// When `false`, the widget renders at full daytime brightness
+    /// regardless of hour. Persisted in the shared App-Group suite
+    /// so the widget extension reads the same flag as the host App.
+    public var standByNightDimEnabled: Bool {
+        didSet {
+            defaults.set(standByNightDimEnabled, forKey: Key.standByNightDimEnabled)
+        }
+    }
+
+    /// v1.2.0 — Notion bidirectional sync. When true, MINDApp wires
+    /// a `NotionImportExecutor.runBidirectionalTick` on every
+    /// `.active` scenePhase (bounded to 20 pages per call). Off by
+    /// default so a fresh install never wakes Notion's API until the
+    /// user explicitly opts in from Settings.
+    public var notionBidirectionalEnabled: Bool {
+        didSet {
+            defaults.set(notionBidirectionalEnabled, forKey: Key.notionBidirectionalEnabled)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -312,6 +350,17 @@ public final class MINDPreferences {
         // the user has flowed through the VoiceCloneSetupSheet.
         self.elevenLabsVoiceID    = suite.string(forKey: Key.elevenLabsVoiceID) ?? ""
         self.elevenLabsVoiceName  = suite.string(forKey: Key.elevenLabsVoiceName) ?? ""
+
+        // v0.28.1 — StandBy night dim default-on. nil → true so a
+        // fresh install respects bedside legibility from day one;
+        // explicit false → user opted out so the gradient stays
+        // bright through the night.
+        let storedStandBy = suite.object(forKey: Key.standByNightDimEnabled) as? Bool
+        self.standByNightDimEnabled = storedStandBy ?? true
+
+        // v1.2.0 — Notion bidirectional sync, off by default.
+        let storedBidi = suite.object(forKey: Key.notionBidirectionalEnabled) as? Bool
+        self.notionBidirectionalEnabled = storedBidi ?? false
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -483,6 +532,31 @@ public final class MINDPreferences {
         let value = suite.string(forKey: Key.elevenLabsVoiceName)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v0.28.1 — Non-Observable accessor for the StandBy night-dim
+    /// preference. The `StandByDashboardWidget` reads this on every
+    /// `getTimeline(...)` call so the dim level adapts to the wall-
+    /// clock hour without holding a reference to the @MainActor
+    /// `MINDPreferences` instance (the WidgetKit extension runs in
+    /// a separate process and can't import the Settings module).
+    /// Returns `true` (default-on) when the key has never been set.
+    public static func currentStandByNightDimEnabled(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> Bool {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        return suite.object(forKey: Key.standByNightDimEnabled) as? Bool ?? true
+    }
+
+    /// v1.2.0 — Non-Observable accessor for the Notion bidirectional
+    /// sync opt-in. Lets `MINDApp.onChange(of: scenePhase)` gate the
+    /// `runBidirectionalTick` call without holding a reference to
+    /// the @MainActor `Preferences` instance.
+    public static func currentNotionBidirectionalEnabled(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> Bool {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        return suite.object(forKey: Key.notionBidirectionalEnabled) as? Bool ?? false
     }
 }
 

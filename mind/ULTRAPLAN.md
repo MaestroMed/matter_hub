@@ -26,10 +26,13 @@
 Capture only — no commitment. Items reshuffle as Numelite usage
 patterns settle.
 
-- **1.1** — Notion sync **bidirectional**. Today's NotionClient is
-  one-way (MIND → Notion). Add a delta-fetch reader that pulls back
-  manual edits made in Notion so updates flow back into the Node
-  (last-write-wins on `node.updatedAt`).
+- **1.2 ✅** — Notion sync **bidirectional**. Shipped 2026-05-20:
+  NotionClient gains `listDatabases / queryDatabase / retrievePage /
+  pageBlocks`, NotionImportPlanner heuristic resolves Notion DB →
+  MIND entity, NotionImportExecutor actor drives the import + the
+  foreground bidirectional tick, Project/Lead carry `notionPageID +
+  lastNotionSyncAt` for idempotent upserts, NotionImportSheet wizard
+  surfaces the 3-step flow from Settings → "Importer depuis Notion".
 - **1.2** — Discord bot. Self-hosted on Cloudflare Workers, one
   channel per `Project`, echoes leads + audits + invoice events.
   Reuses the existing webhook substrate from the lead inbox.
@@ -87,7 +90,72 @@ patterns settle.
 ## Shipped — 1.x series
 
 Post-1.0 quality-of-life iterations. Vercel real-time push, Lighthouse
-trend persistence, and other cinematic cockpit touch-ups.
+trend persistence, Notion bidirectional sync, and other cinematic
+cockpit touch-ups.
+
+### v1.2.0 ✅ — Notion bidirectional sync
+
+Shipped 2026-05-20: MIND now pulls Notion pages INTO the cockpit
+(not just exports audits OUT to Notion). (1) `NotionClient` actor
+gains four new methods — `listDatabases()` walks `/v1/search` for
+every database the integration was shared with (sorted by
+`last_edited_time` desc), `queryDatabase(id:filter:pageSize:)`
+pulls up to 100 rows per call with an optional `rich_text` filter,
+`retrievePage(_:)` refreshes a single page (used by the foreground
+bidirectional tick), `pageBlocks(_:)` reads the children blocks.
+(2) Four new pure value types land in `NotionDatabase.swift` —
+`NotionDatabase`, `NotionPage`, `NotionBlock`, `NotionDatabaseFilter` —
+all `Sendable + Codable + Identifiable` so they cross the actor
+boundary and persist in a future cache. (3) `NotionImportPlanner`
+namespace ships one static `suggestMapping(database:sampleRows:)`
+returning a `NotionImportMapping` — pure heuristic (kind from
+title keywords with `audit > project > lead > deliverable >
+ignored` priority, FR + EN title-property detection like "Nom" +
+"Name", body property auto-detect on Description/Notes/Content,
+confidence formula 0.30..0.95). (4) `NotionImportExecutor` actor
+drives the import — `runImport(database:mapping:applyRow:)` returns
+an `AsyncStream<NotionImportProgress>` the wizard step 3 binds to;
+`runBidirectionalTick(projects:leads:apply…)` is the foreground
+delta-pull bounded to 20 pages per call to stay friendly with
+Notion's 3 req/sec quota. (5) `Project` + `Lead` @Model classes
+gain `notionPageID: String?` + `lastNotionSyncAt: Date?` as
+backward-compatible optional fields (existing CloudKit rows
+decode nil cleanly). Each model gets a new static
+`upsert(notionPageID:…in:)` that resolves matches in order:
+notionPageID → githubRepo (Project only) / email (Lead only,
+non-empty) → slug → insert. The contract guarantees re-pulling
+the same Notion page lands on the same row, GitHub-sourced
+Projects get enriched with notionPageID rather than duplicated,
+and email-less Notion leads dedup by notionPageID alone.
+(6) `MINDPreferences.notionBidirectionalEnabled` (default false)
+gates the foreground tick — wired through a new
+`currentNotionBidirectionalEnabled` static for MINDApp's
+`onChange(of: scenePhase)` to read without an actor hop.
+(7) New `NotionImportSheet` 3-step wizard in `App/Sources/`:
+step 1 lists databases with Liquid pill toggles + multi-select,
+step 2 surfaces the auto-detected mapping per DB with a segmented
+Picker override + confidence chip, step 3 streams per-DB progress
+bars + final "X importées · Y mises à jour" toast. Wired from
+SettingsView via the new `onPresentNotionImport` closure (same
+shape as `onPresentBulkImport`); RootView wires the host-side
+sheet binding. (8) 22 new keys in `Localizable.xcstrings` (FR+EN)
+under `notion.import.*`, `settings.notion.import.cta`,
+`settings.notion.bidirectional.*`, `settings.button.{back,next,
+done,running}`. (9) MINDTelemetry breadcrumbs:
+`notion.databases.fetched`, `notion.import.started`,
+`notion.import.page.imported`, `notion.import.page.failed`,
+`notion.import.completed`, `notion.import.failed`,
+`notion.bidirectional.synced`, `notion.bidirectional.failed`.
+(10) 22 new tests across `NotionDatabaseTests` (6 — Codable round-
+trip on NotionDatabase / NotionPage / NotionBlock / NotionImportMapping
++ filter default + filter-contains), `NotionImportPlannerTests`
+(10 — kind detection per title keyword, FR `tâche` → deliverable,
+ignored has confidence 0.30, sample rows raise confidence, fallback
+title property, FR "Nom" detection, body Description/Notes/Content,
+determinism), and `NotionUpsertTests` (6 — Project insert, Project
+update-by-notionPageID, notionPageID survives, GitHub-source
+enrichment, Lead email dedup, Lead email-less notionPageID-only
+dedup). All pure (no network).
 
 ### v1.1.0 ✅ — Vercel deploy notifications + Lighthouse trend sparklines
 

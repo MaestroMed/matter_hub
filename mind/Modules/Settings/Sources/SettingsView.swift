@@ -158,12 +158,22 @@ public struct SettingsView: View {
     /// previews) skip the row.
     private let onPresentVoiceClone: (() -> Void)?
 
+    /// v1.2.0 — Notion bidirectional sync. Closure the host wires
+    /// up so the "Importer depuis Notion" CTA can present
+    /// `NotionImportSheet`. The wizard itself lives in the App
+    /// target (depends on SwiftData + GraphCore at once);
+    /// SettingsView only needs to know when to invoke it. Optional
+    /// so non-cockpit hosts (tests, previews) skip the row.
+    private let onPresentNotionImport: (() -> Void)?
+
     public init(
         onPresentBulkImport: (() -> Void)? = nil,
-        onPresentVoiceClone: (() -> Void)? = nil
+        onPresentVoiceClone: (() -> Void)? = nil,
+        onPresentNotionImport: (() -> Void)? = nil
     ) {
         self.onPresentBulkImport = onPresentBulkImport
         self.onPresentVoiceClone = onPresentVoiceClone
+        self.onPresentNotionImport = onPresentNotionImport
     }
 
     public var body: some View {
@@ -446,6 +456,14 @@ public struct SettingsView: View {
                 // wired" right next to "iCloud connected" at a glance.
                 webhookSection
 
+                // v0.28.1 — StandBy mode dashboard. Lets the user toggle
+                // night-dim on the .systemLarge StandBy widget gradient
+                // and previews the current phase + dim factor for the
+                // wall-clock hour. Sits between the webhook section
+                // (operator wiring) and iCloud (status) so a bedside-
+                // dock user lands on it without scrolling far.
+                standBySection
+
                 iCloudSection
 
                 #if targetEnvironment(macCatalyst)
@@ -711,6 +729,31 @@ public struct SettingsView: View {
                     || prefs.notionDatabaseID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     || notionBusy
                 )
+
+                // v1.2.0 — Bidirectional sync entry points.
+                if onPresentNotionImport != nil {
+                    Divider().background(.white.opacity(0.2))
+
+                    LiquidButton(
+                        title: String(localized: "settings.notion.import.cta", bundle: .main),
+                        systemImage: "tray.and.arrow.down.fill"
+                    ) {
+                        onPresentNotionImport?()
+                    }
+                    .disabled(notionToken.isEmpty)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.notion.bidirectional.title", bundle: .main)
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                            Text("settings.notion.bidirectional.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        LiquidToggle(isOn: $prefs.notionBidirectionalEnabled)
+                    }
+                }
             }
         }
     }
@@ -2018,6 +2061,95 @@ public struct SettingsView: View {
     /// dot + human-readable label. The container identifier is shown
     /// in monospaced caption so it's easy to spot at a glance and
     /// matches what the iCloud settings page expects.
+    // MARK: - StandBy section (v0.28.1)
+
+    /// v0.28.1 — StandBy mode dashboard preferences. Surfaces the
+    /// new `standByNightDimEnabled` toggle + a preview row that
+    /// resolves the current wall-clock hour through
+    /// `StandByBrightnessAdapter` so Mehdi can verify which phase
+    /// would fire right now without having to physically dock his
+    /// iPhone first. The actual `.systemLarge` StandBy widget reads
+    /// the same preference via the App-Group suite (the widget
+    /// extension target can't import the Settings module).
+    private var standBySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "settings.section.standBy", bundle: .main).uppercased())
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+
+            LiquidCard(cornerRadius: 20) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.standBy.dim.title", bundle: .main)
+                                .font(.system(.body, design: .rounded, weight: .medium))
+                            Text("settings.standBy.dim.subtitle", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        LiquidToggle(isOn: Binding(
+                            get: { prefs.standByNightDimEnabled },
+                            set: { newValue in
+                                prefs.standByNightDimEnabled = newValue
+                                MINDTelemetry.info(
+                                    "standBy.dim.toggled",
+                                    data: ["enabled": newValue ? "true" : "false"]
+                                )
+                            }
+                        ))
+                    }
+
+                    Divider().background(.white.opacity(0.2))
+
+                    // Phase preview row — re-resolves on every render
+                    // so a user toggling the dim preference sees the
+                    // dim opacity flip in place. The label is the
+                    // localised name of the current phase + the dim
+                    // factor expressed as a percentage so the math
+                    // stays legible without opening the source code.
+                    let nowPhase = StandByBrightnessAdapter.phase(for: .now)
+                    let nowDim = StandByBrightnessAdapter.dimOpacity(
+                        for: nowPhase,
+                        nightDimEnabled: prefs.standByNightDimEnabled
+                    )
+                    HStack(spacing: 12) {
+                        Image(systemName: standBySystemImage(for: nowPhase))
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.standBy.currentPhase", bundle: .main)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                            Text(StandByBrightnessAdapter.displayLabel(for: nowPhase))
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        }
+                        Spacer()
+                        Text("\(Int(nowDim * 100))%")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(.primary)
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// SF Symbol name matched to a StandBy phase for the Settings
+    /// preview row. Pure helper, kept inline so the surface stays
+    /// self-contained (no extra namespace pollution).
+    private func standBySystemImage(for phase: StandByPhase) -> String {
+        switch phase {
+        case .day:       return "sun.max.fill"
+        case .dusk:      return "sun.horizon.fill"
+        case .night:     return "moon.fill"
+        case .deepNight: return "moon.zzz.fill"
+        }
+    }
+
     private var iCloudSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: "settings.section.iCloud", bundle: .main).uppercased())

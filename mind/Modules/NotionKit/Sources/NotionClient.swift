@@ -144,4 +144,348 @@ public actor NotionClient {
             return false
         }
     }
+
+    // MARK: - v1.2.0 — Bidirectional sync (Notion → MIND)
+
+    /// `POST /v1/search` with a filter restricted to `object: "database"`.
+    /// Returns every database the integration has been shared with.
+    /// Sorts by `last_edited_time` descending so the wizard surfaces
+    /// the most-recently-touched databases first.
+    public func listDatabases() async throws -> [NotionDatabase] {
+        guard let token = NotionTokenStore.read(), !token.isEmpty else {
+            throw NotionClientError.noToken
+        }
+        let url = Self.baseURL.appendingPathComponent("v1/search")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(Self.apiVersion, forHTTPHeaderField: "Notion-Version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "filter": ["value": "database", "property": "object"],
+            "sort": ["direction": "descending", "timestamp": "last_edited_time"],
+            "page_size": 100,
+        ]
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+        } catch {
+            throw NotionClientError.decoding
+        }
+
+        let data = try await execute(request)
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let results = json["results"] as? [[String: Any]]
+        else {
+            throw NotionClientError.decoding
+        }
+        return results.compactMap(NotionClient.decodeDatabase(from:))
+    }
+
+    /// `POST /v1/databases/<id>/query` returning at most `pageSize`
+    /// pages on a single request. The optional filter narrows the
+    /// row set when the wizard wants only a slice (e.g. "Status =
+    /// Active"). Pagination is intentionally not exposed — v1.2.0
+    /// caps every import at 100 rows.
+    public func queryDatabase(
+        _ databaseID: String,
+        filter: NotionDatabaseFilter? = nil,
+        pageSize: Int = 100
+    ) async throws -> [NotionPage] {
+        guard let token = NotionTokenStore.read(), !token.isEmpty else {
+            throw NotionClientError.noToken
+        }
+        let url = Self.baseURL.appendingPathComponent("v1/databases/\(databaseID)/query")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(Self.apiVersion, forHTTPHeaderField: "Notion-Version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: Any] = [
+            "page_size": max(1, min(100, pageSize)),
+        ]
+        if let filter {
+            body["filter"] = NotionClient.encodeFilter(filter)
+        }
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+        } catch {
+            throw NotionClientError.decoding
+        }
+
+        let data = try await execute(request)
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let results = json["results"] as? [[String: Any]]
+        else {
+            throw NotionClientError.decoding
+        }
+        return results.compactMap { NotionClient.decodePage(from: $0, parentDatabaseID: databaseID) }
+    }
+
+    /// `GET /v1/pages/<id>`. Used by the foreground bidirectional
+    /// tick to refresh a single page when its `lastEditedAt` has
+    /// drifted past `lastNotionSyncAt`.
+    public func retrievePage(_ pageID: String) async throws -> NotionPage {
+        guard let token = NotionTokenStore.read(), !token.isEmpty else {
+            throw NotionClientError.noToken
+        }
+        let url = Self.baseURL.appendingPathComponent("v1/pages/\(pageID)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(Self.apiVersion, forHTTPHeaderField: "Notion-Version")
+
+        let data = try await execute(request)
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let page = NotionClient.decodePage(from: json, parentDatabaseID: nil)
+        else {
+            throw NotionClientError.decoding
+        }
+        return page
+    }
+
+    /// `GET /v1/blocks/<id>/children`. Returns the immediate-child
+    /// blocks of a page; nested children are not auto-recursed in
+    /// v1.2.0. `depth` on `NotionBlock` is reserved for v1.3 nested-
+    /// list rendering.
+    public func pageBlocks(_ pageID: String) async throws -> [NotionBlock] {
+        guard let token = NotionTokenStore.read(), !token.isEmpty else {
+            throw NotionClientError.noToken
+        }
+        let url = Self.baseURL.appendingPathComponent("v1/blocks/\(pageID)/children")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(Self.apiVersion, forHTTPHeaderField: "Notion-Version")
+
+        let data = try await execute(request)
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let results = json["results"] as? [[String: Any]]
+        else {
+            throw NotionClientError.decoding
+        }
+        return results.compactMap(NotionClient.decodeBlock(from:))
+    }
+
+    // MARK: - Internal HTTP plumbing
+
+    /// 2xx-or-throw helper — every new bidirectional GET + POST
+    /// routes through here so the 401 / 5xx / transport handling
+    /// stays in one place.
+    private func execute(_ request: URLRequest) async throws -> Data {
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw NotionClientError.transport(error.localizedDescription)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw NotionClientError.decoding
+        }
+        switch http.statusCode {
+        case 200..<300:
+            return data
+        case 401:
+            throw NotionClientError.invalidToken
+        default:
+            throw NotionClientError.http(http.statusCode)
+        }
+    }
+}
+
+// MARK: - Notion JSON decoders
+//
+// These statics are exposed `internal` (default) so the test target
+// can unit-test the flattening without spinning up a fake network
+// session. JSON shapes taken from the Notion 2022-06-28 reference.
+
+extension NotionClient {
+
+    /// Lifts a `database` object from `/v1/search` into our value
+    /// type. Soft-fails on missing required fields (returns nil so
+    /// `.compactMap` drops malformed rows).
+    static func decodeDatabase(from json: [String: Any]) -> NotionDatabase? {
+        guard
+            let id = json["id"] as? String,
+            let editedAtString = json["last_edited_time"] as? String,
+            let editedAt = parseNotionDate(editedAtString)
+        else { return nil }
+        let title = flattenRichText(json["title"] as? [[String: Any]])
+        let icon = decodeIcon(json["icon"] as? [String: Any])
+        let propertyNames: [String]
+        if let properties = json["properties"] as? [String: Any] {
+            propertyNames = properties.keys.sorted()
+        } else {
+            propertyNames = []
+        }
+        return NotionDatabase(
+            id: id,
+            title: title.isEmpty ? "Sans titre" : title,
+            icon: icon,
+            lastEditedAt: editedAt,
+            propertyNames: propertyNames
+        )
+    }
+
+    /// Lifts a page object into our value type. Walks every cell
+    /// type and flattens it into a plain String so the planner /
+    /// executor see a clean `[String: String]`.
+    static func decodePage(from json: [String: Any], parentDatabaseID: String?) -> NotionPage? {
+        guard
+            let id = json["id"] as? String,
+            let createdAtString = json["created_time"] as? String,
+            let editedAtString = json["last_edited_time"] as? String,
+            let createdAt = parseNotionDate(createdAtString),
+            let editedAt = parseNotionDate(editedAtString)
+        else { return nil }
+        let url = json["url"] as? String ?? ""
+        let icon = decodeIcon(json["icon"] as? [String: Any])
+        let parsedParentDB: String?
+        if let parent = json["parent"] as? [String: Any],
+           let dbID = parent["database_id"] as? String {
+            parsedParentDB = dbID
+        } else {
+            parsedParentDB = parentDatabaseID
+        }
+        var flat: [String: String] = [:]
+        var titleFromProperties = ""
+        if let properties = json["properties"] as? [String: Any] {
+            for (key, raw) in properties {
+                guard let cell = raw as? [String: Any] else { continue }
+                let (value, isTitle) = flattenCell(cell)
+                flat[key] = value
+                if isTitle, !value.isEmpty {
+                    titleFromProperties = value
+                }
+            }
+        }
+        return NotionPage(
+            id: id,
+            title: titleFromProperties.isEmpty ? "Sans titre" : titleFromProperties,
+            icon: icon,
+            createdAt: createdAt,
+            lastEditedAt: editedAt,
+            properties: flat,
+            url: url,
+            parentDatabaseID: parsedParentDB
+        )
+    }
+
+    /// Lifts one block child. Polymorphic — `type` discriminator
+    /// points at a sibling key that holds the rich-text array.
+    static func decodeBlock(from json: [String: Any]) -> NotionBlock? {
+        guard
+            let id = json["id"] as? String,
+            let type = json["type"] as? String
+        else { return nil }
+        let body = json[type] as? [String: Any]
+        let rich = body?["rich_text"] as? [[String: Any]]
+        let text = flattenRichText(rich)
+        return NotionBlock(id: id, type: type, plainText: text, depth: 0)
+    }
+
+    /// Single-source-of-truth filter encoder. Encodes `rich_text`
+    /// filters — they work against text + title columns alike.
+    static func encodeFilter(_ filter: NotionDatabaseFilter) -> [String: Any] {
+        let comparator = filter.comparator.lowercased() == "contains" ? "contains" : "equals"
+        return [
+            "property": filter.property,
+            "rich_text": [comparator: filter.value],
+        ]
+    }
+
+    /// Walks one property cell variant and returns `(value, isTitle)`.
+    /// Every supported Notion property type folds down to a String;
+    /// unsupported types return "".
+    static func flattenCell(_ cell: [String: Any]) -> (String, Bool) {
+        guard let type = cell["type"] as? String else { return ("", false) }
+        switch type {
+        case "title":
+            return (flattenRichText(cell["title"] as? [[String: Any]]), true)
+        case "rich_text":
+            return (flattenRichText(cell["rich_text"] as? [[String: Any]]), false)
+        case "number":
+            if let n = cell["number"] as? Double {
+                let asInt = Int(exactly: n)
+                return (asInt.map(String.init) ?? String(n), false)
+            }
+            return ("", false)
+        case "select":
+            if let select = cell["select"] as? [String: Any],
+               let name = select["name"] as? String { return (name, false) }
+            return ("", false)
+        case "status":
+            if let status = cell["status"] as? [String: Any],
+               let name = status["name"] as? String { return (name, false) }
+            return ("", false)
+        case "multi_select":
+            if let arr = cell["multi_select"] as? [[String: Any]] {
+                return (arr.compactMap { $0["name"] as? String }.joined(separator: ", "), false)
+            }
+            return ("", false)
+        case "date":
+            if let date = cell["date"] as? [String: Any],
+               let start = date["start"] as? String { return (start, false) }
+            return ("", false)
+        case "checkbox":
+            return ((cell["checkbox"] as? Bool == true) ? "true" : "false", false)
+        case "url":
+            return ((cell["url"] as? String) ?? "", false)
+        case "email":
+            return ((cell["email"] as? String) ?? "", false)
+        case "phone_number":
+            return ((cell["phone_number"] as? String) ?? "", false)
+        case "people":
+            if let arr = cell["people"] as? [[String: Any]] {
+                return (arr.compactMap { $0["name"] as? String }.joined(separator: ", "), false)
+            }
+            return ("", false)
+        default:
+            return ("", false)
+        }
+    }
+
+    /// Folds rich-text spans into the concatenated plain string.
+    static func flattenRichText(_ spans: [[String: Any]]?) -> String {
+        guard let spans else { return "" }
+        return spans.compactMap { $0["plain_text"] as? String }.joined()
+    }
+
+    /// Decodes the icon block — emoji vs file URL.
+    static func decodeIcon(_ icon: [String: Any]?) -> String? {
+        guard let icon else { return nil }
+        if let type = icon["type"] as? String {
+            switch type {
+            case "emoji":
+                return icon["emoji"] as? String
+            case "external":
+                if let external = icon["external"] as? [String: Any] {
+                    return external["url"] as? String
+                }
+            case "file":
+                if let file = icon["file"] as? [String: Any] {
+                    return file["url"] as? String
+                }
+            default:
+                return nil
+            }
+        }
+        return nil
+    }
+
+    /// Notion timestamps are ISO 8601 with millisecond precision and
+    /// a `Z` zone. Toggle `withFractionalSeconds`, fall back to plain.
+    static func parseNotionDate(_ raw: String) -> Date? {
+        let withFractional = ISO8601DateFormatter()
+        withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = withFractional.date(from: raw) { return date }
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return plain.date(from: raw)
+    }
 }
