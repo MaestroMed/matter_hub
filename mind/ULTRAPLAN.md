@@ -15,6 +15,106 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+## v1.0-alpha.8 (live integration wave) — Vercel + GitHub live integration in ProjectDetail ✅
+
+**What**: Surface live deployment state, recent commits, repo stats,
+and Lighthouse score per Project right inside `ProjectDetailSheet`.
+New `ProjectHealthKit` module wraps the Vercel + GitHub + PageSpeed
+APIs behind a soft-failing actor surface, a 5-minute in-memory +
+on-disk cache (`ProjectHealthCache`), and two Keychain-backed token
+stores (`VercelTokenStore` + `GitHubTokenStore`). Settings ships an
+"Intégrations dev" section that mirrors the Notion / Linear sections
+(paste token, save, "Test connexion" with green/red dot). The
+cockpit fantasy lights up — tap any project, the sheet renders the
+latest deployment chip (READY / BUILDING / ERROR / CANCELED /
+QUEUED), the last commit SHA + message + author, a 4-cell
+Lighthouse grid (Perf / A11y / Best / SEO), the repo stats (stars /
+open issues / last push), and the 5 most recent commits.
+
+Shipped 2026-05-20: new `ProjectHealthKit` module under
+`mind/Modules/ProjectHealthKit/Sources/` — `VercelClient` actor
+(`deployments(projectID:limit:)`, `latest(projectID:)`,
+`health(projectID:)`, `validateToken()`, static
+`deploymentsURL(...)` URL builder) backed by `VercelDeployment` +
+`VercelHealth` Sendable Codable value types + `VercelClientError`
+Equatable enum (`.noToken`, `.http(Int)`, `.decode`,
+`.network(String)`) for soft-fail classification. `GitHubClient`
+actor with `recentCommits(repo:limit:)`, `repoStats(repo:)`,
+`openIssues(repo:limit:)`, `validateToken()`, plus the three static
+URL builders (`commitsURL` / `repoURL` / `issuesURL`) exposed for
+tests. Value types `GitHubCommit` / `GitHubRepoStats` / `GitHubIssue`
+are all Codable + Identifiable so SwiftUI ForEach reads them
+directly. `LighthouseProbe` actor wraps Google PageSpeed Insights
+v5 (no API key required for personal use), exposing the 4-category
+score + 3 Core Web Vitals via `LighthouseScore`. The static
+`endpoint(forHost:strategy:)` helper prepends `https://` when the
+project's `host` lacks a scheme and rejects empty hosts outright.
+`ProjectHealthCache` actor mirrors the SEOSwarmStore / FollowUpStore
+shape: per-project JSON under `Documents/project-health/<UUID>.json`,
+in-memory cache backing every read, soft-fail telemetry on every
+disk error (`projectHealth.cache.{mkdir,write,decode}.failed`),
+5-min TTL with `isFresh(_:now:)` for the UI to gate spinner vs
+cached render, and a `update(_:keyPath:value:)` partial-mutate
+helper so the fan-out fetcher can land Vercel / GitHub /
+Lighthouse independently. `VercelTokenStore` + `GitHubTokenStore`
+use distinct Keychain service identifiers
+(`app.mind.ios.{vercel,github}`, account `personal-token`)
+mirroring `NotionTokenStore`.
+
+`ProjectDetailSheet.swift` gains two sections between Aperçu and
+Leads — `vercelSection` (state chip + last-deployment row + 4-cell
+Lighthouse grid + "Voir sur Vercel" Link) and `githubSection`
+(stars / open-issues / last-push stats row + 5 most-recent commits
++ "Voir sur GitHub" Link). Each section ships skeleton rows while
+loading, a "token manquant — ouvre Réglages → Intégrations dev"
+CTA when the Keychain returns nil, and a distinct empty state when
+the project has no `vercelProjectID` / `githubRepo` configured. The
+new `.task(id: project.id)` reads from `ProjectHealthCache.shared`
+first (cache.hit / cache.miss telemetry), then fans out three
+parallel fetches (Vercel `latest`, GitHub `recentCommits` +
+`repoStats`, Lighthouse `score`) that each land on their own clock
+and update their cache slot via `update(_:keyPath:value:)`.
+
+`SettingsView.swift` gains an `integrationsDevSection` between the
+Linear section and the Invoice section — two paste-PAT fields with
+eye toggles, save + clear + "Test connexion" CTAs, green/red status
+dots that reflect the last `validateToken()` call. Tokens hydrate
+on appear via the existing onAppear block.
+
+29 new FR/EN xcstrings keys under the `settings.integrations.*` /
+`project.vercel.*` / `project.github.*` / `home.kpi.*` namespaces.
+17 new MINDTelemetry breadcrumbs (`vercel.token.saved/validated/failed`,
+`vercel.deployment.fetched/fetch.failed`,
+`github.token.saved/validated/failed`,
+`github.commits.fetched/fetch.failed`,
+`lighthouse.probe.completed/failed`,
+`projectHealth.cache.hit/miss/write/mkdir.failed/write.failed/decode.failed`).
+Tests: 6 `VercelClientTests` (Codable round-trips for
+`VercelDeployment` + `VercelHealth`, URL builder shape, error
+Equatable), 7 `GitHubClientTests` (Codable + Identifiable
+round-trips, the three URL builders, empty-repo nil guard, error
+Equatable), 4 `LighthouseProbeTests` (Codable round-trip,
+`overall` average formula, endpoint builder scheme + mobile-default,
+empty-host rejection), 5 `ProjectHealthCacheTests` (save+load
+round-trip, TTL fresh/stale boundary, unknown-project nil,
+partial-update preserves slots, clearAll wipes + survives fresh
+instance), 4 `IntegrationTokenStoresTests` (Vercel + GitHub
+Keychain round-trip + clear, skip-on-Simulator guarded by
+`#if targetEnvironment(simulator)`). 811 tests total (was 755 in
+v0.22.1), 19 skipped, 0 failures. Build SUCCEEDED on iPhone 17 Pro
+simulator. Vision verify at `mind/screenshots/v1.0-alpha.8.png`
+(host launches clean on the Cockpit — Vercel + GitHub surfaces are
+intentionally hidden behind the ProjectDetail tap, matching the
+host-launches-clean vision bar used by v0.22.1 / v0.31.1 /
+v1.0-alpha.7).
+
+Future ⏳ items unlocked by this wave: APNs Notification Service
+Extension for deploy-failed push notifications, Reaper dead-code
+sweep across the Cockpit Studio pivot, repository-aware audit
+(audit le code source pas juste l'URL), Mac Catalyst polish +
+Stage Manager layout pass, iOS 26 widgets refresh on the new
+Project + Vercel surface.
+
 ## v1.0-alpha.2 — Project + Lead + Deliverable data spine ✅
 
 Shipped 2026-05-20: introduces `Project`, `Lead`, `Deliverable` as

@@ -25,6 +25,7 @@ public enum Module: String, CaseIterable {
     case swarmKit = "SwarmKit"
     case watchCaptureKit = "WatchCaptureKit"
     case visionSpatialKit = "VisionSpatialKit"
+    case projectHealthKit = "ProjectHealthKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -86,6 +87,14 @@ public enum Module: String, CaseIterable {
                 // on InvoiceKit here means the test-invoice path stays
                 // inside the same view that surfaces the inputs.
                 .target(name: Module.invoiceKit.rawValue),
+                // v1.0-alpha.8 — Settings owns the new "Intégrations
+                // dev" section (Vercel + GitHub personal tokens +
+                // "Test connexion" buttons). Depending on
+                // ProjectHealthKit here means the token save +
+                // validate flow stays inside the same view that shows
+                // its green/red dot status, mirroring the Notion /
+                // Linear sections.
+                .target(name: Module.projectHealthKit.rawValue),
             ]
         case .chat:
             return [
@@ -333,6 +342,28 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),
                 .target(name: Module.intelligence.rawValue),
+                .target(name: Module.designSystem.rawValue),
+            ]
+        case .projectHealthKit:
+            // v1.0-alpha.8 — Vercel + GitHub + Lighthouse live integration.
+            // Pulls deployment state from the Vercel API, recent commits
+            // and repo stats from the GitHub API, and Lighthouse scores
+            // from Google PageSpeed Insights. Per-project token storage
+            // sits in `VercelTokenStore` + `GitHubTokenStore` Keychain
+            // wrappers (same shape as `NotionTokenStore` and
+            // `LinearTokenStore`), and the in-memory + on-disk
+            // `ProjectHealthCache` (5 min TTL) prevents hammering the
+            // upstream APIs every time ProjectDetailSheet opens.
+            //
+            // Depends on GraphCore for `MINDTelemetry` breadcrumbs
+            // (`vercel.deployment.fetched` / `github.commits.fetched` /
+            // `lighthouse.probe.completed`) and on DesignSystem so the
+            // in-module helpers (status chips, score gauges) reuse the
+            // Liquid Glass tokens. No AuditKit dep — the Lighthouse
+            // probe is a thin re-derivation tailored for the cockpit
+            // grid, not the full AuditReport pipeline.
+            return [
+                .target(name: Module.graphCore.rawValue),
                 .target(name: Module.designSystem.rawValue),
             ]
         }

@@ -4330,6 +4330,352 @@
         }
       }
     },
+    "settings.integrations.section": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev card title (Vercel + GitHub).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dev integrations"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intégrations dev"
+          }
+        }
+      }
+    },
+    "settings.integrations.vercel.token.placeholder": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · placeholder of the Vercel PAT field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vercel personal token"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token personnel Vercel"
+          }
+        }
+      }
+    },
+    "settings.integrations.vercel.subtitle": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · explanatory caption under the Vercel token field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read deployments + Lighthouse for the Project cockpit. Token from vercel.com/account/tokens — stored in the Keychain."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lit les déploiements + Lighthouse pour le cockpit. Token depuis vercel.com/account/tokens — gardé dans le Keychain."
+          }
+        }
+      }
+    },
+    "settings.integrations.github.token.placeholder": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · placeholder of the GitHub PAT field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub personal token"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token personnel GitHub"
+          }
+        }
+      }
+    },
+    "settings.integrations.github.subtitle": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · explanatory caption under the GitHub token field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read commits + repo stats for the Project cockpit. Token from github.com/settings/tokens (repo:status, public_repo)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lit commits + stats repo pour le cockpit. Token depuis github.com/settings/tokens (repo:status, public_repo)."
+          }
+        }
+      }
+    },
+    "settings.integrations.testConnection": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · CTA to validate the saved token against the upstream API.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test connection"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tester la connexion"
+          }
+        }
+      }
+    },
+    "settings.integrations.validated": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · success label after a token validates.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token validated"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token validé"
+          }
+        }
+      }
+    },
+    "settings.integrations.invalid": {
+      "comment": "v1.0-alpha.8 · Settings → Intégrations dev · failure label after a token rejects.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token rejected"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token refusé"
+          }
+        }
+      }
+    },
+    "project.vercel.section.title": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vercel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vercel"
+          }
+        }
+      }
+    },
+    "project.vercel.state.ready": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (READY).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Live" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "En ligne" } }
+      }
+    },
+    "project.vercel.state.building": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (BUILDING).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Building" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Build en cours" } }
+      }
+    },
+    "project.vercel.state.error": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (ERROR).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Build error" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Build en erreur" } }
+      }
+    },
+    "project.vercel.state.canceled": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (CANCELED).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancelled" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annulé" } }
+      }
+    },
+    "project.vercel.state.queued": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (QUEUED).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Queued" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "En file" } }
+      }
+    },
+    "project.vercel.state.unknown": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (UNKNOWN / fallback).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unknown" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Inconnu" } }
+      }
+    },
+    "project.vercel.empty.token": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel empty state CTA when token missing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Vercel token missing — open Settings → Dev integrations" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Token Vercel manquant — ouvre Réglages → Intégrations dev" } }
+      }
+    },
+    "project.vercel.empty.projectID": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel empty state when this project has no Vercel project ID configured.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No Vercel project linked — set one in the GitHub repo field" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun projet Vercel lié — configure-le dans la fiche projet" } }
+      }
+    },
+    "project.vercel.lighthouse.perf": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse performance cell label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Perf" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Perf" } }
+      }
+    },
+    "project.vercel.lighthouse.a11y": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse accessibility cell label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A11y" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "A11y" } }
+      }
+    },
+    "project.vercel.lighthouse.bp": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse best-practices cell label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Best" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bonnes pratiques" } }
+      }
+    },
+    "project.vercel.lighthouse.seo": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse SEO cell label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "SEO" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SEO" } }
+      }
+    },
+    "project.vercel.openLink": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · CTA opening the project on vercel.com.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open on Vercel" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voir sur Vercel" } }
+      }
+    },
+    "project.github.section.title": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "GitHub" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "GitHub" } }
+      }
+    },
+    "project.github.commits.title": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub commits subsection label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recent commits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Commits récents" } }
+      }
+    },
+    "project.github.empty.token": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub empty state CTA when token missing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "GitHub token missing — open Settings → Dev integrations" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Token GitHub manquant — ouvre Réglages → Intégrations dev" } }
+      }
+    },
+    "project.github.empty.repo": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub empty state when this project has no repo configured.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No GitHub repo configured for this project." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun dépôt GitHub configuré pour ce projet." } }
+      }
+    },
+    "project.github.stats.stars": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub stars stat label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stars" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Étoiles" } }
+      }
+    },
+    "project.github.stats.issues": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub open issues stat label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open issues" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Issues ouvertes" } }
+      }
+    },
+    "project.github.stats.lastPush": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub last-push stat label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last push" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dernier push" } }
+      }
+    },
+    "project.github.openLink": {
+      "comment": "v1.0-alpha.8 · ProjectDetailSheet · CTA opening the repo on github.com.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open on GitHub" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voir sur GitHub" } }
+      }
+    },
+    "home.kpi.builds.format": {
+      "comment": "v1.0-alpha.8 · HomeView greeting subtitle · builds-in-progress KPI. Args: count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d builds in progress" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d builds en cours" } }
+      }
+    },
+    "home.kpi.builds.errors.format": {
+      "comment": "v1.0-alpha.8 · HomeView greeting subtitle · error-builds KPI. Args: count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d build errors" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d builds en erreur" } }
+      }
+    },
     "settings.notion.section": {
       "extractionState": "manual",
       "localizations": {

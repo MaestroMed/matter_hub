@@ -183,6 +183,16 @@ let testTarget: Target = .target(
         // JSON-LD + markdown), and the `SEOSwarmStore` actor's
         // hermetic JSON persistence in a temp directory.
         .target(name: Module.swarmKit.rawValue),
+        // v1.0-alpha.8 — ProjectHealthKit tests cover the pure
+        // value types (`VercelDeployment` / `GitHubCommit` /
+        // `LighthouseScore` Codable round-trips), the static URL
+        // builders (`VercelClient.deploymentsURL`, the GitHub repo /
+        // commits / issues endpoints, `LighthouseProbe.endpoint`),
+        // the on-disk cache (`ProjectHealthCache` TTL / partial
+        // update / clear-all contract), and the two Keychain stores
+        // (`VercelTokenStore` + `GitHubTokenStore`) under a skip-on-
+        // Simulator guard since the SImulator keychain is flaky.
+        .target(name: Module.projectHealthKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

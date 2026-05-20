@@ -10,6 +10,7 @@ import Intelligence
 import InvoiceKit
 import LinearKit
 import NotionKit
+import ProjectHealthKit
 import RemindersKit
 import VisualKit
 
@@ -64,6 +65,22 @@ public struct SettingsView: View {
     // having to first close + reopen the Pipeline / Won flow.
     @State private var invoiceTestURL: URL?
     @State private var showInvoiceShare: Bool = false
+
+    // v1.0-alpha.8 — Dev integrations (Vercel + GitHub). Same state
+    // shape as the Notion / Linear sections above: token in
+    // Keychain (paste personal token), `*Valid` nullable bool drives
+    // the green/red dot, `*Busy` gates the "Test connection" button
+    // during the in-flight validate call.
+    @State private var vercelToken: String = ""
+    @State private var vercelTokenSaved: Bool = false
+    @State private var showVercelToken: Bool = false
+    @State private var vercelTokenValid: Bool? = nil
+    @State private var vercelBusy: Bool = false
+    @State private var githubToken: String = ""
+    @State private var githubTokenSaved: Bool = false
+    @State private var showGitHubToken: Bool = false
+    @State private var githubTokenValid: Bool? = nil
+    @State private var githubBusy: Bool = false
 
     // v1.0-alpha.5 — Lead Webhook section. The HMAC secret is the
     // shared key the deployed Cloudflare Worker uses to verify
@@ -185,6 +202,8 @@ public struct SettingsView: View {
                 notionSection
 
                 linearSection
+
+                integrationsDevSection
 
                 invoiceSection
 
@@ -427,6 +446,14 @@ public struct SettingsView: View {
             if let stored = WebhookSecretStore.read() {
                 webhookSecret = stored
                 webhookSecretSaved = true
+            }
+            if let stored = VercelTokenStore.read() {
+                vercelToken = stored
+                vercelTokenSaved = true
+            }
+            if let stored = GitHubTokenStore.read() {
+                githubToken = stored
+                githubTokenSaved = true
             }
             loadWebhookProjects()
             refreshCloudKitStatus()
@@ -947,6 +974,269 @@ public struct SettingsView: View {
                         String(describing: error)
                     )
                     LiquidHaptics.error()
+                }
+            }
+        }
+    }
+
+    // MARK: - Dev integrations (v1.0-alpha.8)
+
+    /// Section that holds the paste-Vercel-PAT field, the paste-GitHub-
+    /// PAT field, and a "Test connexion" button per token. Tokens are
+    /// stored in `VercelTokenStore` + `GitHubTokenStore` (Keychain).
+    /// The green / red dot reflects the last `validateToken()` call —
+    /// blank until the user taps "Save". Same shape as the Notion +
+    /// Linear sections above for visual consistency.
+    private var integrationsDevSection: some View {
+        section(localized: "settings.integrations.section") {
+            VStack(alignment: .leading, spacing: 18) {
+                // ------------------------ Vercel ------------------------
+                VStack(alignment: .leading, spacing: 10) {
+                    Label {
+                        Text(verbatim: "Vercel")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    } icon: {
+                        Image(systemName: "triangle.fill")
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    Text("settings.integrations.vercel.subtitle", bundle: .main)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                    devTokenField(
+                        text: $vercelToken,
+                        isShown: $showVercelToken,
+                        placeholder: String(localized: "settings.integrations.vercel.token.placeholder", bundle: .main)
+                    )
+
+                    HStack(spacing: 8) {
+                        LiquidButton(
+                            title: vercelTokenSaved
+                                ? String(localized: "settings.button.saved", bundle: .main)
+                                : String(localized: "settings.button.save", bundle: .main),
+                            systemImage: vercelTokenSaved ? "checkmark" : "key.fill"
+                        ) {
+                            saveVercelToken()
+                        }
+                        .disabled(vercelToken.isEmpty || vercelBusy)
+
+                        Button(String(localized: "settings.button.clear", bundle: .main)) {
+                            VercelTokenStore.clear()
+                            vercelToken = ""
+                            vercelTokenSaved = false
+                            vercelTokenValid = nil
+                        }
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                        Spacer()
+                        statusDot(valid: vercelTokenValid, busy: vercelBusy)
+                    }
+
+                    LiquidButton(
+                        title: String(localized: "settings.integrations.testConnection", bundle: .main),
+                        systemImage: "antenna.radiowaves.left.and.right"
+                    ) {
+                        testVercelConnection()
+                    }
+                    .disabled(vercelToken.isEmpty || vercelBusy)
+                }
+
+                Divider().background(.white.opacity(0.2))
+
+                // ------------------------ GitHub ------------------------
+                VStack(alignment: .leading, spacing: 10) {
+                    Label {
+                        Text(verbatim: "GitHub")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    } icon: {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                            .foregroundStyle(LiquidPalette.aqua)
+                    }
+                    Text("settings.integrations.github.subtitle", bundle: .main)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                    devTokenField(
+                        text: $githubToken,
+                        isShown: $showGitHubToken,
+                        placeholder: String(localized: "settings.integrations.github.token.placeholder", bundle: .main)
+                    )
+
+                    HStack(spacing: 8) {
+                        LiquidButton(
+                            title: githubTokenSaved
+                                ? String(localized: "settings.button.saved", bundle: .main)
+                                : String(localized: "settings.button.save", bundle: .main),
+                            systemImage: githubTokenSaved ? "checkmark" : "key.fill"
+                        ) {
+                            saveGitHubToken()
+                        }
+                        .disabled(githubToken.isEmpty || githubBusy)
+
+                        Button(String(localized: "settings.button.clear", bundle: .main)) {
+                            GitHubTokenStore.clear()
+                            githubToken = ""
+                            githubTokenSaved = false
+                            githubTokenValid = nil
+                        }
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                        Spacer()
+                        statusDot(valid: githubTokenValid, busy: githubBusy)
+                    }
+
+                    LiquidButton(
+                        title: String(localized: "settings.integrations.testConnection", bundle: .main),
+                        systemImage: "antenna.radiowaves.left.and.right"
+                    ) {
+                        testGitHubConnection()
+                    }
+                    .disabled(githubToken.isEmpty || githubBusy)
+                }
+            }
+        }
+    }
+
+    /// One shared token field — eye-toggle + monospaced font. Reused
+    /// by both the Vercel and GitHub rows so the visual mass stays
+    /// identical across providers.
+    @ViewBuilder
+    private func devTokenField(
+        text: Binding<String>,
+        isShown: Binding<Bool>,
+        placeholder: String
+    ) -> some View {
+        HStack {
+            Group {
+                if isShown.wrappedValue {
+                    TextField(placeholder, text: text)
+                } else {
+                    SecureField(placeholder, text: text)
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(.system(.body, design: .monospaced))
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+
+            Button {
+                isShown.wrappedValue.toggle()
+            } label: {
+                Image(systemName: isShown.wrappedValue ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    /// Shared green/red dot used by both rows. Reads `valid` / `busy`
+    /// from the matching state pair (`vercelTokenValid` + `vercelBusy`
+    /// or the GitHub equivalents).
+    @ViewBuilder
+    private func statusDot(valid: Bool?, busy: Bool) -> some View {
+        if let valid {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(valid ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: (valid ? Color.green : Color.red).opacity(0.5), radius: 4)
+                Text(valid
+                     ? String(localized: "settings.integrations.validated", bundle: .main)
+                     : String(localized: "settings.integrations.invalid", bundle: .main))
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        } else if busy {
+            ProgressView().controlSize(.mini)
+        } else {
+            EmptyView()
+        }
+    }
+
+    private func saveVercelToken() {
+        vercelBusy = true
+        let trimmed = vercelToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        VercelTokenStore.save(trimmed)
+        vercelTokenSaved = true
+        MINDTelemetry.info("vercel.token.saved", data: ["length": "\(trimmed.count)"])
+        Task {
+            let valid = await VercelClient.shared.validateToken()
+            await MainActor.run {
+                vercelTokenValid = valid
+                vercelBusy = false
+                MINDTelemetry.info("vercel.token.validated", data: ["valid": valid ? "true" : "false"])
+                if !valid {
+                    LiquidHaptics.warning()
+                } else {
+                    LiquidHaptics.success()
+                }
+            }
+        }
+    }
+
+    private func testVercelConnection() {
+        vercelBusy = true
+        Task {
+            let valid = await VercelClient.shared.validateToken()
+            await MainActor.run {
+                vercelTokenValid = valid
+                vercelBusy = false
+                if valid {
+                    LiquidHaptics.success()
+                    MINDTelemetry.info("vercel.token.validated", data: ["surface": "settings.test", "valid": "true"])
+                } else {
+                    LiquidHaptics.warning()
+                    MINDTelemetry.warning("vercel.token.failed", data: ["surface": "settings.test"])
+                }
+            }
+        }
+    }
+
+    private func saveGitHubToken() {
+        githubBusy = true
+        let trimmed = githubToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        GitHubTokenStore.save(trimmed)
+        githubTokenSaved = true
+        MINDTelemetry.info("github.token.saved", data: ["length": "\(trimmed.count)"])
+        Task {
+            let valid = await GitHubClient.shared.validateToken()
+            await MainActor.run {
+                githubTokenValid = valid
+                githubBusy = false
+                MINDTelemetry.info("github.token.validated", data: ["valid": valid ? "true" : "false"])
+                if !valid {
+                    LiquidHaptics.warning()
+                } else {
+                    LiquidHaptics.success()
+                }
+            }
+        }
+    }
+
+    private func testGitHubConnection() {
+        githubBusy = true
+        Task {
+            let valid = await GitHubClient.shared.validateToken()
+            await MainActor.run {
+                githubTokenValid = valid
+                githubBusy = false
+                if valid {
+                    LiquidHaptics.success()
+                    MINDTelemetry.info("github.token.validated", data: ["surface": "settings.test", "valid": "true"])
+                } else {
+                    LiquidHaptics.warning()
+                    MINDTelemetry.warning("github.token.failed", data: ["surface": "settings.test"])
                 }
             }
         }

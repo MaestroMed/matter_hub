@@ -3,6 +3,7 @@ import SwiftData
 import AuditKit
 import DesignSystem
 import GraphCore
+import ProjectHealthKit
 import SwarmKit
 
 /// v1.0-alpha.3 — Project detail surface. Five sections from top to
@@ -33,6 +34,22 @@ struct ProjectDetailSheet: View {
     /// hides the row gracefully.
     @State private var healthPulse: HealthPulse?
 
+    /// v1.0-alpha.8 — Live Vercel deployment + Lighthouse + GitHub
+    /// surfaces. Each slot starts nil — the cache hydrates them on
+    /// `.task`, then the in-flight fetcher refreshes them in the
+    /// background. The matching `*Loading` flag drives the skeleton
+    /// state per row, and `*Error` carries a soft error string the
+    /// row falls back to when the upstream call fails.
+    @State private var latestDeployment: VercelDeployment?
+    @State private var lighthouseScore: LighthouseScore?
+    @State private var recentCommits: [GitHubCommit] = []
+    @State private var repoStats: GitHubRepoStats?
+    @State private var vercelLoading: Bool = false
+    @State private var githubLoading: Bool = false
+    @State private var lighthouseLoading: Bool = false
+    @State private var vercelError: String?
+    @State private var githubError: String?
+
     init(project: Project) {
         self.project = project
         _notesDraft = State(initialValue: project.notes)
@@ -43,6 +60,8 @@ struct ProjectDetailSheet: View {
             VStack(alignment: .leading, spacing: 22) {
                 header
                 overviewSection
+                vercelSection
+                githubSection
                 recentLeadsSection
                 deliverablesSection
                 actionsSection
@@ -61,6 +80,8 @@ struct ProjectDetailSheet: View {
         }
         .task(id: project.id) {
             healthPulse = await HealthPulseStore.shared.load(projectID: project.id)
+            await hydrateProjectHealth()
+            await refreshProjectHealth()
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet(initialURL: "https://\(project.host)")
@@ -265,6 +286,416 @@ struct ProjectDetailSheet: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background { Capsule().fill(.ultraThinMaterial) }
+            }
+        }
+    }
+
+    // MARK: - Vercel section (v1.0-alpha.8)
+
+    /// Live deployment status + Lighthouse 4-cell grid + "Voir sur
+    /// Vercel" link. Renders a soft empty state when the user hasn't
+    /// configured a Vercel token yet (tap-to-Settings CTA), and a
+    /// distinct one when this Project doesn't carry a
+    /// `vercelProjectID` (the most common shape on fresh seeded
+    /// projects).
+    private var vercelSection: some View {
+        LiquidCard(cornerRadius: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    Image(systemName: "triangle.fill")
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                    Text("project.vercel.section.title")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                    Spacer()
+                    if let state = latestDeployment?.state {
+                        vercelStateChip(rawState: state)
+                    } else if vercelLoading {
+                        ProgressView().controlSize(.mini)
+                    }
+                }
+
+                if VercelTokenStore.read() == nil {
+                    Text("project.vercel.empty.token")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else if let projectID = project.vercelProjectID, !projectID.isEmpty {
+                    if let latest = latestDeployment {
+                        vercelDeploymentRow(latest)
+                    } else if vercelLoading {
+                        skeletonRow()
+                    } else if let error = vercelError {
+                        Text(verbatim: error)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    lighthouseGrid
+                    Link(destination: URL(string: "https://vercel.com/dashboard")!) {
+                        HStack(spacing: 4) {
+                            Text("project.vercel.openLink")
+                            Image(systemName: "arrow.up.right")
+                        }
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                    }
+                } else {
+                    Text("project.vercel.empty.projectID")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func vercelStateChip(rawState: String) -> some View {
+        let (label, tint) = vercelStateMetadata(for: rawState)
+        Text(label)
+            .font(.system(.caption2, design: .rounded, weight: .semibold))
+            .tracking(0.5)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background { Capsule().fill(tint) }
+    }
+
+    private func vercelStateMetadata(for rawState: String) -> (LocalizedStringKey, Color) {
+        switch rawState.uppercased() {
+        case "READY":    return ("project.vercel.state.ready", .green)
+        case "BUILDING": return ("project.vercel.state.building", .orange)
+        case "ERROR":    return ("project.vercel.state.error", .red)
+        case "CANCELED": return ("project.vercel.state.canceled", .gray)
+        case "QUEUED":   return ("project.vercel.state.queued", LiquidPalette.sky)
+        default:         return ("project.vercel.state.unknown", .gray)
+        }
+    }
+
+    @ViewBuilder
+    private func vercelDeploymentRow(_ deployment: VercelDeployment) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                if let sha = deployment.commitSHA, !sha.isEmpty {
+                    Text(verbatim: String(sha.prefix(7)))
+                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                        .foregroundStyle(.primary)
+                }
+                if let message = deployment.commitMessage, !message.isEmpty {
+                    Text(verbatim: message)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                }
+            }
+            HStack(spacing: 8) {
+                Text(deployment.createdAt.formatted(.relative(presentation: .named)))
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                if let email = deployment.creatorEmail, !email.isEmpty {
+                    Text(verbatim: "·")
+                        .foregroundStyle(.tertiary)
+                    Text(verbatim: email)
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+    }
+
+    private var lighthouseGrid: some View {
+        let cells: [(LocalizedStringKey, Int?)] = [
+            ("project.vercel.lighthouse.perf", lighthouseScore?.performance),
+            ("project.vercel.lighthouse.a11y", lighthouseScore?.accessibility),
+            ("project.vercel.lighthouse.bp",   lighthouseScore?.bestPractices),
+            ("project.vercel.lighthouse.seo",  lighthouseScore?.seo),
+        ]
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+            ForEach(0..<cells.count, id: \.self) { idx in
+                let cell = cells[idx]
+                lighthouseCell(label: cell.0, value: cell.1)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func lighthouseCell(label: LocalizedStringKey, value: Int?) -> some View {
+        VStack(spacing: 4) {
+            if let value {
+                Text(verbatim: "\(value)")
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(lighthouseColor(for: value))
+            } else if lighthouseLoading {
+                ProgressView().controlSize(.mini)
+            } else {
+                Text(verbatim: "—")
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .foregroundStyle(.tertiary)
+            }
+            Text(label)
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.ultraThinMaterial)
+        }
+    }
+
+    private func lighthouseColor(for score: Int) -> Color {
+        if score >= 90 { return .green }
+        if score >= 50 { return .orange }
+        return .red
+    }
+
+    // MARK: - GitHub section (v1.0-alpha.8)
+
+    private var githubSection: some View {
+        LiquidCard(cornerRadius: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    Image(systemName: "chevron.left.forwardslash.chevron.right")
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.aqua)
+                    Text("project.github.section.title")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                    Spacer()
+                    if githubLoading {
+                        ProgressView().controlSize(.mini)
+                    }
+                }
+
+                if GitHubTokenStore.read() == nil {
+                    Text("project.github.empty.token")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else if let repo = project.githubRepo, !repo.isEmpty {
+                    if let stats = repoStats {
+                        githubStatsRow(stats)
+                    } else if githubLoading {
+                        skeletonRow()
+                    } else if let error = githubError {
+                        Text(verbatim: error)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if !recentCommits.isEmpty {
+                        Divider().background(.white.opacity(0.18))
+                        Text("project.github.commits.title")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                        VStack(spacing: 6) {
+                            ForEach(recentCommits) { commit in
+                                githubCommitRow(commit)
+                            }
+                        }
+                    }
+
+                    if let url = URL(string: "https://github.com/\(repo)") {
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Text("project.github.openLink")
+                                Image(systemName: "arrow.up.right")
+                            }
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.aqua)
+                        }
+                    }
+                } else {
+                    Text("project.github.empty.repo")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func githubStatsRow(_ stats: GitHubRepoStats) -> some View {
+        HStack(spacing: 14) {
+            githubStatCell(icon: "star.fill", label: "project.github.stats.stars", value: "\(stats.stars)")
+            githubStatCell(icon: "exclamationmark.circle.fill", label: "project.github.stats.issues", value: "\(stats.openIssues)")
+            githubStatCell(
+                icon: "clock.fill",
+                label: "project.github.stats.lastPush",
+                value: stats.lastPushedAt.formatted(.relative(presentation: .named))
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func githubStatCell(icon: String, label: LocalizedStringKey, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                Text(label)
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+            Text(verbatim: value)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func githubCommitRow(_ commit: GitHubCommit) -> some View {
+        HStack(spacing: 8) {
+            Text(verbatim: String(commit.sha.prefix(7)))
+                .font(.system(.caption, design: .monospaced, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 64, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: commit.message)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    if !commit.authorName.isEmpty {
+                        Text(verbatim: commit.authorName)
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
+                    Text(commit.committedAt.formatted(.relative(presentation: .named)))
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func skeletonRow() -> some View {
+        HStack(spacing: 8) {
+            RoundedRectangle(cornerRadius: 6).fill(.ultraThinMaterial).frame(width: 64, height: 14)
+            RoundedRectangle(cornerRadius: 6).fill(.ultraThinMaterial).frame(maxWidth: .infinity).frame(height: 14)
+        }
+    }
+
+    // MARK: - Fetch lifecycle
+
+    /// Hydrates the four UI slots from the cache without hitting the
+    /// network. Runs synchronously on `.task` appear so the sheet
+    /// renders cached data immediately while the background refresh
+    /// fires.
+    private func hydrateProjectHealth() async {
+        let bundle = await ProjectHealthCache.shared.bundle(for: project.id)
+        await MainActor.run {
+            self.latestDeployment = bundle?.latestDeployment
+            self.lighthouseScore = bundle?.lighthouse
+            self.recentCommits = bundle?.recentCommits ?? []
+            self.repoStats = bundle?.repoStats
+        }
+        if let bundle {
+            await MainActor.run {
+                MINDTelemetry.info("projectHealth.cache.hit", data: ["projectID": project.id.uuidString])
+            }
+            // Skip network fetch if cache is still fresh.
+            if Date().timeIntervalSince(bundle.refreshedAt) < ProjectHealthCache.ttl {
+                return
+            }
+        } else {
+            await MainActor.run {
+                MINDTelemetry.info("projectHealth.cache.miss", data: ["projectID": project.id.uuidString])
+            }
+        }
+    }
+
+    /// Fans out three parallel Tasks — Vercel, GitHub, Lighthouse.
+    /// Each lands on its own clock and updates the cache through the
+    /// keypath helper so a slow Lighthouse pull doesn't block the
+    /// faster Vercel + GitHub rows. Soft-fail per provider.
+    private func refreshProjectHealth() async {
+        // ----- Vercel
+        if let projectID = project.vercelProjectID, !projectID.isEmpty,
+           VercelTokenStore.read() != nil {
+            await MainActor.run { vercelLoading = true; vercelError = nil }
+            do {
+                let latest = try await VercelClient.shared.latest(projectID: projectID)
+                await MainActor.run {
+                    self.latestDeployment = latest
+                    self.vercelLoading = false
+                    MINDTelemetry.info("vercel.deployment.fetched",
+                                       data: ["projectID": project.id.uuidString])
+                }
+                if let latest {
+                    await ProjectHealthCache.shared.update(project.id, keyPath: \.latestDeployment, value: latest)
+                }
+            } catch {
+                await MainActor.run {
+                    self.vercelLoading = false
+                    self.vercelError = String(describing: error)
+                    MINDTelemetry.warning("vercel.deployment.fetch.failed",
+                                          data: ["projectID": project.id.uuidString,
+                                                 "error": String(describing: error)])
+                }
+            }
+        }
+
+        // ----- GitHub
+        if let repo = project.githubRepo, !repo.isEmpty,
+           GitHubTokenStore.read() != nil {
+            await MainActor.run { githubLoading = true; githubError = nil }
+            do {
+                let commits = try await GitHubClient.shared.recentCommits(repo: repo, limit: 5)
+                let stats = try await GitHubClient.shared.repoStats(repo: repo)
+                await MainActor.run {
+                    self.recentCommits = commits
+                    self.repoStats = stats
+                    self.githubLoading = false
+                    MINDTelemetry.info("github.commits.fetched",
+                                       data: ["projectID": project.id.uuidString,
+                                              "count": "\(commits.count)"])
+                }
+                await ProjectHealthCache.shared.update(project.id, keyPath: \.recentCommits, value: commits)
+                await ProjectHealthCache.shared.update(project.id, keyPath: \.repoStats, value: stats)
+            } catch {
+                await MainActor.run {
+                    self.githubLoading = false
+                    self.githubError = String(describing: error)
+                    MINDTelemetry.warning("github.commits.fetch.failed",
+                                          data: ["projectID": project.id.uuidString,
+                                                 "error": String(describing: error)])
+                }
+            }
+        }
+
+        // ----- Lighthouse (Project host)
+        if !project.host.isEmpty {
+            await MainActor.run { lighthouseLoading = true }
+            do {
+                let score = try await LighthouseProbe.shared.score(for: project.host)
+                await MainActor.run {
+                    self.lighthouseScore = score
+                    self.lighthouseLoading = false
+                    MINDTelemetry.info("lighthouse.probe.completed",
+                                       data: ["projectID": project.id.uuidString,
+                                              "perf": "\(score.performance)"])
+                }
+                await ProjectHealthCache.shared.update(project.id, keyPath: \.lighthouse, value: score)
+            } catch {
+                await MainActor.run {
+                    self.lighthouseLoading = false
+                    MINDTelemetry.warning("lighthouse.probe.failed",
+                                          data: ["projectID": project.id.uuidString,
+                                                 "error": String(describing: error)])
+                }
             }
         }
     }
