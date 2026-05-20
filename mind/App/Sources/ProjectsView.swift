@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import BootstrapKit
 import DesignSystem
 import GraphCore
 
@@ -66,10 +67,16 @@ struct ProjectsView: View {
                 .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $presentingNewProject) {
-            NewProjectSheet()
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(.ultraThinMaterial)
+            // v1.0-alpha.6 — Replace the basic NewProjectSheet with
+            // the BootstrapWizardSheet, which is the full 3-step
+            // scaffolder. The minimal sheet stays compiled for any
+            // path that still wants the lightweight form.
+            BootstrapWizardSheet(onProjectCreated: { project in
+                selectedProject = project
+            })
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
         }
     }
 

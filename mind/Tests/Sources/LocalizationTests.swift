@@ -511,4 +511,62 @@ final class LocalizationTests: XCTestCase {
         XCTAssertTrue(localized("settings.webhook.copied.body", lang: "en")?.contains("%@") == true)
         XCTAssertTrue(localized("settings.webhook.copied.body", lang: "fr")?.contains("%@") == true)
     }
+
+    /// v1.0-alpha.7 — SEO Swarm Orchestrator strings. The wizard
+    /// surface goes through three steps + a result sheet — every
+    /// label must resolve in both languages so the FR build never
+    /// silently falls back to the EN source on a 1140-page swarm.
+    func test_swarmStrings_resolveBothLanguages() {
+        // Wizard frame
+        XCTAssertEqual(localized("swarm.title",          lang: "en"), "SEO Swarm")
+        XCTAssertEqual(localized("swarm.title",          lang: "fr"), "Swarm SEO")
+        XCTAssertEqual(localized("swarm.step.target",    lang: "en"), "Target")
+        XCTAssertEqual(localized("swarm.step.target",    lang: "fr"), "Cible")
+        XCTAssertEqual(localized("swarm.step.config",    lang: "en"), "Configuration")
+        XCTAssertEqual(localized("swarm.step.config",    lang: "fr"), "Configuration")
+        XCTAssertEqual(localized("swarm.step.launch",    lang: "en"), "Launch")
+        XCTAssertEqual(localized("swarm.step.launch",    lang: "fr"), "Lancement")
+
+        // Form labels
+        XCTAssertNotNil(localized("swarm.field.services", lang: "en"))
+        XCTAssertNotNil(localized("swarm.field.services", lang: "fr"))
+        XCTAssertNotNil(localized("swarm.field.zones",    lang: "en"))
+        XCTAssertNotNil(localized("swarm.field.zones",    lang: "fr"))
+        XCTAssertNotNil(localized("swarm.field.project",  lang: "en"))
+        XCTAssertNotNil(localized("swarm.field.project",  lang: "fr"))
+
+        // Preview format strings — placeholders survive
+        XCTAssertTrue(localized("swarm.preview.count.format", lang: "en")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.preview.count.format", lang: "fr")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.preview.cost.format",  lang: "en")?.contains("%@") == true)
+        XCTAssertTrue(localized("swarm.preview.cost.format",  lang: "fr")?.contains("%@") == true)
+
+        // Confirm + CTA
+        XCTAssertTrue(localized("swarm.cta.generate", lang: "en")?.contains("%d") == true)
+        XCTAssertTrue(localized("swarm.cta.generate", lang: "fr")?.contains("%d") == true)
+        XCTAssertNotNil(localized("swarm.confirm.title", lang: "en"))
+        XCTAssertNotNil(localized("swarm.confirm.title", lang: "fr"))
+        XCTAssertTrue(localized("swarm.confirm.body.format", lang: "en")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.confirm.body.format", lang: "fr")?.contains("%") == true)
+
+        // Running + completed
+        XCTAssertTrue(localized("swarm.running.progress.format", lang: "en")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.running.progress.format", lang: "fr")?.contains("%") == true)
+        XCTAssertEqual(localized("swarm.running.cancel", lang: "en"), "Cancel")
+        XCTAssertEqual(localized("swarm.running.cancel", lang: "fr"), "Annuler")
+        XCTAssertTrue(localized("swarm.completed.title", lang: "en")?.contains("%d") == true)
+        XCTAssertTrue(localized("swarm.completed.title", lang: "fr")?.contains("%d") == true)
+        XCTAssertNotNil(localized("swarm.completed.actions.summary", lang: "en"))
+        XCTAssertNotNil(localized("swarm.completed.actions.summary", lang: "fr"))
+        XCTAssertNotNil(localized("swarm.completed.actions.zip",     lang: "en"))
+        XCTAssertNotNil(localized("swarm.completed.actions.zip",     lang: "fr"))
+        XCTAssertNotNil(localized("swarm.completed.actions.github",  lang: "en"))
+        XCTAssertNotNil(localized("swarm.completed.actions.github",  lang: "fr"))
+
+        // HomeView card
+        XCTAssertEqual(localized("home.swarm.title",    lang: "en"), "SEO Swarm")
+        XCTAssertEqual(localized("home.swarm.title",    lang: "fr"), "SEO Swarm")
+        XCTAssertNotNil(localized("home.swarm.subtitle", lang: "en"))
+        XCTAssertNotNil(localized("home.swarm.subtitle", lang: "fr"))
+    }
 }

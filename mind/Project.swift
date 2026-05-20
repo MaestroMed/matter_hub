@@ -150,6 +150,16 @@ let testTarget: Target = .target(
         // is also exercised — a hermetic temp directory keeps the
         // counter ratchet test from leaking onto disk between runs.
         .target(name: Module.invoiceKit.rawValue),
+        // v1.0-alpha.7 — SwarmKit tests cover the pure
+        // `SEOSwarmPromptBuilder` (system + page prompt anchors,
+        // deterministic shape, JSON-only contract, population
+        // gracing), the `SwarmZoneCatalog` static reference data
+        // (>=200 zones, URL-safe slugs, no duplicates), the
+        // `SEOSwarmExporter` directory-tree shape (one file per
+        // page, path uses forward slashes, content includes
+        // JSON-LD + markdown), and the `SEOSwarmStore` actor's
+        // hermetic JSON persistence in a temp directory.
+        .target(name: Module.swarmKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

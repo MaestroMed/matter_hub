@@ -3,6 +3,7 @@ import SwiftData
 import AuditKit
 import DesignSystem
 import GraphCore
+import SwarmKit
 
 /// v1.0-alpha.3 — Project detail surface. Five sections from top to
 /// bottom:
@@ -21,6 +22,7 @@ struct ProjectDetailSheet: View {
 
     @State private var notesDraft: String
     @State private var isAuditing: Bool = false
+    @State private var isSwarming: Bool = false
     @State private var selectedLead: Lead?
     @State private var showLeadsListSheet: Bool = false
     @State private var showArchiveConfirm: Bool = false
@@ -55,6 +57,12 @@ struct ProjectDetailSheet: View {
             AuditSheet(initialURL: "https://\(project.host)")
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $isSwarming) {
+            SwarmWizardSheet(initialProject: project)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .sheet(item: $selectedLead) { lead in
             LeadDetailSheet(lead: lead)
@@ -365,6 +373,13 @@ struct ProjectDetailSheet: View {
                     title: String(localized: "project.action.audit")
                 ) {
                     isAuditing = true
+                }
+                actionRow(
+                    icon: "tornado",
+                    tint: LiquidPalette.aqua,
+                    title: "Lancer un swarm SEO"
+                ) {
+                    isSwarming = true
                 }
                 actionRow(
                     icon: "tray.full.fill",

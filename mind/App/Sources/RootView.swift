@@ -2,11 +2,13 @@ import SwiftUI
 import SwiftData
 import CoreSpotlight
 import AuditKit
+import BootstrapKit
 import DesignSystem
 import GraphCore
 import Intelligence
 import Settings
 import OutreachKit
+import SwarmKit
 
 /// v1.0-alpha.3 — Cockpit Studio. Four tabs:
 /// Home (Aujourd'hui lead inbox + Projets actifs + Pipeline +
@@ -355,6 +357,8 @@ private struct HomeView: View {
     @State private var isBattling: Bool = false
     @State private var isOutreaching: Bool = false
     @State private var isComparing: Bool = false
+    @State private var isBootstrapping: Bool = false
+    @State private var isSwarming: Bool = false
     @State private var selectedLead: Lead?
     @State private var selectedProject: Project?
 
@@ -379,6 +383,7 @@ private struct HomeView: View {
                 leadInboxCard
                 projectsCarouselCard
                 pipelineSummaryCard
+                bootstrapCard
                 auditCardStack
             }
             .padding(20)
@@ -404,6 +409,15 @@ private struct HomeView: View {
             ComparisonSheet()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $isBootstrapping) {
+            BootstrapWizardSheet(onProjectCreated: { _ in
+                // Route to the Projects tab where the new row lives.
+                onOpenProjects()
+            })
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
         }
         .sheet(item: $selectedLead) { lead in
             LeadDetailSheet(lead: lead)
@@ -846,6 +860,50 @@ private struct HomeView: View {
         var lost: Int = 0
     }
 
+    // MARK: - Bootstrap card (v1.0-alpha.6)
+
+    /// Rocket-iconned card that opens the `BootstrapWizardSheet`.
+    /// Sits between the pipeline summary and the audit card stack
+    /// because it's a "start a new project" action that mirrors the
+    /// "+" CTA on ProjectsView but lives one tap closer than that
+    /// tab switch.
+    private var bootstrapCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                LiquidHaptics.select()
+                isBootstrapping = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.iris.opacity(0.18))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "sparkles.rectangle.stack.fill")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("home.bootstrap.title")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("home.bootstrap.subtitle")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     // MARK: - Audit card stack (kept)
 
     private var auditCardStack: some View {
@@ -924,6 +982,50 @@ private struct HomeView: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - SEO Swarm card (v1.0-alpha.7)
+
+    /// v1.0-alpha.7 — Single-tap entry to the SEO Swarm Orchestrator.
+    /// Sits below the audit card stack because the swarm is the
+    /// heavier operation (batch of N pages) — placing it last avoids
+    /// pushing the more-common Audit / Battle / Reply actions
+    /// off-screen on iPhone portrait.
+    private var swarmCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            Button {
+                LiquidHaptics.select()
+                isSwarming = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.aqua.opacity(0.18))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "tornado")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.aqua)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("home.swarm.title")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("home.swarm.subtitle")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
 

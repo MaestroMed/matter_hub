@@ -21,6 +21,8 @@ public enum Module: String, CaseIterable {
     case liveBroadcastKit = "LiveBroadcastKit"
     case outreachKit = "OutreachKit"
     case invoiceKit = "InvoiceKit"
+    case bootstrapKit = "BootstrapKit"
+    case swarmKit = "SwarmKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -236,6 +238,24 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.designSystem.rawValue),
             ]
+        case .bootstrapKit:
+            // v1.0-alpha.6 — Bootstrap Scaffolder. Pure value types
+            // + a script generator that turns a `BootstrapBlueprint`
+            // (the wizard output) into a runnable bash script that
+            // scaffolds a new Next.js client site from scratch
+            // (gh repo create, write template files via heredocs,
+            // git push, vercel link). Depends on GraphCore so the
+            // module can emit `MINDTelemetry` breadcrumbs
+            // (`bootstrap.script.generated` / `bootstrap.zip.built`)
+            // and reuse `ProjectStack` from the existing data spine
+            // — the wizard mirrors the same stack enum the rest of
+            // the cockpit lists. Depends on DesignSystem so any in-
+            // module SwiftUI helper (preview chip, color picker)
+            // can reuse Liquid Glass tokens without re-rolling them.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.designSystem.rawValue),
+            ]
         case .outreachKit:
             // v0.26 — AI Sales Email Generator. Generates 5 cold
             // email variants per prospect via the cloud LLM bridge,
@@ -263,6 +283,29 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),
                 .target(name: Module.intelligence.rawValue),
+            ]
+        case .swarmKit:
+            // v1.0-alpha.7 — SEO Swarm Orchestrator. Generates N
+            // {service}×{zone} Next.js pages in batch via the cloud
+            // LLM bridge, exports the result as a directory tree the
+            // user drops in their Next.js repo. The orchestrator is
+            // an actor that fans out 3 in-flight Claude requests at
+            // a time and streams progress events back to the UI.
+            //
+            // Depends on AuditKit for the `CloudIntelligenceHandle`
+            // bridge (reused from ROIEstimator / OutreachKit). Depends
+            // on Intelligence so the live factory can reach
+            // `CloudIntelligence` directly (same model as OutreachKit).
+            // Depends on GraphCore for `MINDTelemetry` breadcrumbs
+            // (`swarm.job.started` / `swarm.page.generated` /
+            // `swarm.page.failed` / `swarm.job.completed`) and on
+            // DesignSystem because the in-module helpers (page card
+            // chips) reuse Liquid Glass tokens.
+            return [
+                .target(name: Module.graphCore.rawValue),
+                .target(name: Module.auditKit.rawValue),
+                .target(name: Module.intelligence.rawValue),
+                .target(name: Module.designSystem.rawValue),
             ]
         }
     }

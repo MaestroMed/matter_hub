@@ -154,7 +154,7 @@ signed payload lands as a `.new` Lead within 2s; tampered payloads
 or wrong secrets are rejected with HMAC verification breadcrumbs.
 Shipped 2026-05-20: new `mind/tools/cloudflare-worker/` Worker template (POST `/v1/leads` with HMAC-SHA256 `X-MIND-Signature` verify via Web Crypto API, KV `LEADS` put keyed `lead:<projectID>:<ts>:<uuid>` with 30-day TTL, GET `/v1/leads?since=<iso>` pull-fallback capped at 100, OPTIONS 204 CORS preflight, ES256 APNs JWT mint + best-effort push with `app.mind.ios` topic, four required secrets `WEBHOOK_SECRET`/`APNS_KEY_P8`/`APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_DEVICE_TOKEN`); 16 Vitest cases on routing + HMAC (`tests/index.test.ts` with in-memory FakeKV stub, `timingSafeEqual` unit tests, valid-signature → 200, wrong-secret → 401, missing-header → 401, empty body → 400, missing required field → 400, unknown `formType` → 400, malformed email → 400, non-JSON body → 400, configurable TTL plumbed end-to-end, GET empty → 200, GET capped, GET `since=` filter via key-timestamp parsing, GET unparseable `since` → 400, OPTIONS 204 + CORS headers, 404 + 405 routing). New `mind/tools/npm-sdk/` shipping `@mind/lead-webhook@0.1.0` (typed `LeadPayload` with `LeadFormType` union, `SendLeadOptions`, typed `MINDWebhookError` with seven discriminated `code` cases, pure `sign(payloadJSON, secret) → hex` mirroring iOS `LeadWebhookPayload.sign(...)` byte-for-byte, `canonicalEncode(...)` sorted-keys encoder mirroring iOS `canonicalEncoder`, `sendLeadToMIND(payload, options)` injecting `receivedAt: new Date().toISOString()`, AbortController 5s timeout, normalising trailing slashes, mapping every status to the matching `MINDWebhookError.code`); 14 Vitest cases (`tests/sign.test.ts` × 5 + `tests/index.test.ts` × 9 covering RFC 4231 reference vector parity, deterministic signing, success path with intercepted fetch, every error code path, validation short-circuits, URL slash normalisation, ISO `receivedAt` injection, canonical encoder property tests). 5-step `mind/tools/INSTALL_LEAD_WEBHOOK.md` guide with Mermaid flow diagram (deploy Worker → generate `openssl rand -hex 32` secret → upload APNs `.p8` + Key ID + Team ID → paste device token → `npm install @mind/lead-webhook` + 6-line Next.js route example). iOS slice: new `WebhookSecretStore.swift` (Keychain wrapper, service `app.mind.ios.webhook`, same shape as APIKey/Notion/Linear stores); `SettingsView.swift` "Lead Webhook" section above the iCloud card (Liquid Glass capsule secret field with eye toggle + Save/Saved/Clear pattern matching every other token section, divider, per-Project copy-row list with iris-tinted `doc.on.doc.fill` icon + monospace UUID + clipboard glyph, empty-state hint when no Projects exist yet, success haptic + `webhook.secret.saved`/`webhook.projectID.copied`/`webhook.secret.cleared` telemetry breadcrumbs, toast alert after copy with "Paste %@'s UUID into MIND_PROJECT_ID" body); 6 new FR/EN xcstrings keys (`settings.webhook.{section,subtitle,projects.label,projects.empty,copied.title,copied.body}` with `%@` placeholder preserved across translations). Tests: 4 `WebhookSecretStoreTests` (read-when-never-saved → nil, clear-on-empty idempotent, save/read round-trip + overwrite + clear gated behind `XCTSkipIf(simulator)` for the keychain-signing-identity caveat); `LocalizationTests` extended with `test_webhookStrings_resolveBothLanguages` (8 asserts including `%@` survival check). Total iOS test files += 1, plus the Worker + SDK test suites in their own subfolders run via `npm test`.
 
-### v1.0-alpha.6 — Bootstrap scaffolder (new project wizard) ⏳
+### v1.0-alpha.6 — Bootstrap scaffolder (new project wizard) ✅
 **What**: "Nouveau projet" CTA from ProjectsView → multi-step
 wizard: name + slug, stack, contract type, MRR / one-shot, host,
 GitHub repo, Vercel project ID, paste webhook secret (or
@@ -162,8 +162,49 @@ generate one). Wizard concludes by minting the Project row + a
 GitHub-template-style README under `mind/tools/scaffolds/<stack>/`.
 **Acceptance**: a fresh project is wizardable end-to-end in
 under 60 seconds, shows up on the Cockpit immediately.
+Shipped 2026-05-20: Bootstrap Scaffolder ships a 3-step wizard
+(Identity / Stack / Modules) producing a runnable Next.js scaffold
+script + ZIP, pre-wired to `@mind/lead-webhook`. New `BootstrapKit`
+module wraps three pure surfaces — `BootstrapBlueprint` (Sendable
++ Equatable + Codable value type captured by the wizard);
+`BootstrapScriptGenerator.bashScript(for:)` (idempotent
+`set -e -u -o pipefail` bash with `gh repo create`, heredocs for
+every template file, `git push -u origin main`, `vercel link
+--project=<slug>` with soft-fail fallbacks); `BootstrapZipBuilder
+.archive(for:)` (in-memory `[String: Data]` mirror of the same file
+set the script heredocs); plus `TemplateLibrary` (Next.js 15 +
+Tailwind 4 + Resend + Zod + `vercel.json` security headers +
+`.env.example` listing every env var). Contact route handler
+forwards every form submission through `sendLeadToMIND(...)` before
+firing Resend so the cockpit captures the lead even when email
+errors. Optional bundle toggles (admin backoffice with bcrypt+jose
+auth, blog MDX with `next-mdx-remote`, i18n FR/EN with `next-intl`,
+Stripe with `stripe.config.ts` + webhook handler) gate their own
+heredocs + archive entries — verified by 4 `*_ONLY_when…` tests.
+iOS UI ships `BootstrapWizardSheet` (3-step `TabView` with progress
+dots, Liquid Glass cards, 5 preset color chips + hex input,
+disabled-until-valid bottom CTA) + `BootstrapResultSheet`
+(checkmark hero, 4 actions — Copier le script /
+Partager le script via tmp `.sh` + UIActivityVC / Partager le ZIP
+via `NSFileCoordinator` `.forUploading` zip / Voir le projet → routes
+back to .clients tab). HomeView gets a "Bootstrap projet" Liquid
+card with `sparkles.rectangle.stack.fill` icon between Pipeline and
+the audit stack. ProjectsView "+" CTA replaces the basic
+`NewProjectSheet` with the wizard. 29 new Localizable.xcstrings
+keys FR/EN. 6 new MINDTelemetry breadcrumbs
+(`bootstrap.wizard.opened` / `bootstrap.blueprint.created` /
+`bootstrap.project.created` / `bootstrap.script.copied` /
+`bootstrap.script.shared` / `bootstrap.zip.shared`). 32 new pure
+tests across 4 files (BootstrapBlueprintTests × 6,
+BootstrapScriptGeneratorTests × 14, TemplateLibraryTests × 8,
+BootstrapZipBuilderTests × 4) — 684 tests total (was 652), 15
+skipped, 0 failures. Vision verify saved at
+`mind/screenshots/v1.0-alpha.6.png` (HomeView launches clean, lead
+inbox + projects carousel populated) plus
+`mind/screenshots/v1.0-alpha.6-example.sh` (sample wizard output
+for AZ Construction with admin + i18n toggled on).
 
-### v1.0-alpha.7 — SEO Swarm orchestrator ⏳
+### v1.0-alpha.7 — SEO Swarm Orchestrator ✅
 **What**: Mehdi's batch `{service}×{zone}` pattern as a first-
 class feature. New `SEOSwarmSheet`: list every service + every
 zone, generate the matrix preview, ship each page as a
@@ -172,6 +213,7 @@ existing AuditKit pipeline so each generated page gets a lighthouse
 score on commit. **Acceptance**: AZ Construction's 8 services × 12
 Paris zones → 96 deliverables generated in one batch, each with
 its own row on the Cockpit feed.
+Shipped 2026-05-20: SEO Swarm Orchestrator — 3-step wizard generating N {service}×{zone} Next.js pages via Claude, exports as ZIP for `cp -r` into the client repo. New `SwarmKit` module ships five pure surfaces: `SEOSwarmJob` / `SwarmZone` / `SwarmPage` / `SwarmJobStatus` Sendable Codable value types; `SEOSwarmPromptBuilder.systemPrompt()` + `pagePrompt(project:service:zone:)` (FR senior SEO copywriter persona, 1500-2500 word page brief grounded on zone display name + department code + optional population, JSON-only response contract with `{title, metaDescription, h1, bodyMarkdown, jsonLD}` schema, no-hallucination guardrail when population nil); `SEOSwarmOrchestrator` actor (3 in-flight pages via TaskGroup with soft-fail per page, `AsyncStream<ProgressEvent>` for live UI updates, `.started/.pageCompleted/.pageFailed/.completed/.cancelled` event kinds, status reconciliation into `.completed`/`.partial`/`.failed`); `SEOSwarmStore` actor (per-job JSON persistence under `Documents/seo-swarm-jobs/<id>.json` with in-memory cache + soft-fail telemetry mirroring `FollowUpStore`); `SEOSwarmExporter.nextJSAppRouter(pages:)` (one `src/app/<service>/<zone>/page.tsx` per page with Next.js Metadata + JSON-LD script tag + ReactMarkdown body); `SwarmZoneCatalog` (226 IDF + regional commune zones with INSEE population data, URL-safe slugs, alphabetically sorted, filter helper for autocomplete). iOS UI ships `SwarmWizardSheet` (3-step wizard: Cible → chips picker for project/services/zones with autocomplete against SwarmZoneCatalog, Configuration → matrix preview + EUR cost estimate based on Sonnet 4.6 pricing × 0.93 EUR/USD with methodology alert, Lancement → confirm dialog + primary CTA, running view with progress ring + counter + scroll log + cancel CTA, completed sheet with 3 actions Voir résumé/Exporter ZIP/Pousser GitHub). HomeView gains a `tornado`-iconed aqua "SEO Swarm" card after the audit card stack; ProjectDetailSheet gains a "Lancer un swarm SEO" action row that opens the wizard pre-selected on the project. 7 MINDTelemetry breadcrumbs (`swarm.wizard.opened`, `swarm.job.created`, `swarm.job.started`, `swarm.page.generated`, `swarm.page.failed`, `swarm.job.completed`, `swarm.zip.exported`). 19 new FR/EN xcstrings keys under `swarm.*` + `home.swarm.*` namespaces. Tests: 11 `SEOSwarmPromptBuilderTests` (FR mention, project + service + zone anchors, JSON-only contract, LocalBusiness mention, word count range, determinism, slot variance, empty service fallback, population gracing); 6 `SEOSwarmExporterTests` (one file per page, forward-slash paths, route + JSON-LD + markdown body presence, determinism); 5 `SwarmZoneCatalogTests` (>=200 zones, non-empty fields, no duplicate slugs, URL-safe slugs, alphabetical sort); 4 `SEOSwarmStoreTests` (save+load round-trip, list all, delete, load-missing nil). `LocalizationTests` extended with `test_swarmStrings_resolveBothLanguages` (19 FR + EN asserts including format-string placeholder survival). Vision verify at `mind/screenshots/v1.0-alpha.7.png` (host launches clean on the Cockpit) with `mind/screenshots/v1.0-alpha.7-example.txt` carrying a sample generated SwarmPage JSON for AZ Construction × Verrière × Puteaux (92) so Mehdi sees the quality bar.
 
 ## v1.0-alpha.1 — Radical cleanup (Cockpit Studio pivot) ✅
 
