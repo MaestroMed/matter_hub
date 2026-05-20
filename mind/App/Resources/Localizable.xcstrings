@@ -4522,6 +4522,94 @@
         }
       }
     },
+    "settings.push.section.title": {
+      "comment": "v1.0-alpha.14 · Header of the Settings push-notifications section.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Push notifications" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Notifications push" } }
+      }
+    },
+    "settings.push.toggle.title": {
+      "comment": "v1.0-alpha.14 · Title of the toggle that requests APNs permission and registers with iOS.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable push notifications" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Activer notifications push" } }
+      }
+    },
+    "settings.push.toggle.subtitle": {
+      "comment": "v1.0-alpha.14 · Subtitle of the push toggle row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lets the Cloudflare Worker ring your device when a lead lands." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Permet au Worker Cloudflare de te notifier dès qu'un lead arrive." } }
+      }
+    },
+    "settings.push.token.label": {
+      "comment": "v1.0-alpha.14 · Label of the persisted APNs device token row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Device token" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Token appareil" } }
+      }
+    },
+    "settings.push.token.copy": {
+      "comment": "v1.0-alpha.14 · Title of the copy-to-clipboard button + confirmation toast.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Copy" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Copier" } }
+      }
+    },
+    "settings.push.test.button": {
+      "comment": "v1.0-alpha.14 · Title of the button that schedules a local test push 3 s out.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Send test notification" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tester une notification" } }
+      }
+    },
+    "settings.push.test.toast": {
+      "comment": "v1.0-alpha.14 · Confirmation toast after the test push is scheduled.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Test scheduled — fires in 3 seconds." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Test programmé — déclenche dans 3 secondes." } }
+      }
+    },
+    "push.permission.denied.alert.title": {
+      "comment": "v1.0-alpha.14 · Title of the alert shown when APNs permission is denied.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Permission denied" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Permission refusée" } }
+      }
+    },
+    "push.permission.denied.alert.body": {
+      "comment": "v1.0-alpha.14 · Body of the APNs permission-denied alert; guides the user to Settings.app.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open iOS Settings → Notifications → MIND to re-enable push." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvre Réglages iOS → Notifications → MIND pour réactiver les notifications." } }
+      }
+    },
+    "push.notification.title.format": {
+      "comment": "v1.0-alpha.14 · Format string the NSE uses for the decorated title: contactName · projectName.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$@" } }
+      }
+    },
+    "push.notification.body.fallback": {
+      "comment": "v1.0-alpha.14 · Fallback body used by the NSE when no messagePreview is present.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New lead received." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouveau lead reçu." } }
+      }
+    },
     "settings.brief.enable": {
       "comment": "Title of the v0.17 daily morning brief toggle row in Settings → Préférences.",
       "extractionState": "manual",

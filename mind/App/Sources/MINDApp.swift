@@ -7,10 +7,12 @@ import MINDIntents
 import OutreachKit
 import Sentry
 import Settings
-#if targetEnvironment(macCatalyst)
+// v1.0-alpha.14 — APNs Notification Service Extension wiring. Both
+// imports are needed unconditionally (iPhone needs the
+// `UIApplicationDelegateAdaptor` for the device-token callbacks) so
+// the targetEnvironment-gated import block below is dropped.
 import UIKit
 import UserNotifications
-#endif
 
 /// v1.0-alpha.1 — Cockpit Studio pivot. Stripped lifecycle to the
 /// hooks the rebuild keeps using: foreground CloudKit refresh,
@@ -26,6 +28,13 @@ struct MINDApp: App {
     // processor can extract them and iOS can surface them in Siri,
     // Spotlight, Shortcuts and the Action Button.
     static let shortcutsProvider = MINDAppShortcuts.self
+
+    // v1.0-alpha.14 — APNs Notification Service Extension wiring.
+    // The adaptor lets SwiftUI hand back the legacy
+    // `UIApplicationDelegate` callbacks iOS still routes
+    // device-token registration through, plus the foreground
+    // notification + tap handlers.
+    @UIApplicationDelegateAdaptor(MINDPushDelegate.self) private var pushDelegate
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -295,5 +304,112 @@ private func sentryLevel(for level: MINDTelemetry.Level) -> SentryLevel {
     case .warning:  return .warning
     case .error:    return .error
     case .critical: return .fatal
+    }
+}
+
+// MARK: - APNs (v1.0-alpha.14)
+
+/// v1.0-alpha.14 — Adapter that routes APNs / UNUserNotificationCenter
+/// callbacks back into the SwiftUI app. SwiftUI's `App` lifecycle
+/// doesn't expose `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)`
+/// so we still need an `NSObject`-backed delegate (the only way iOS
+/// reports the device-token registration result). All work delegates
+/// to `PushRegistration` + `NotificationCenter.default` so the
+/// delegate stays a thin wrapper.
+///
+/// Marked `nonisolated` (and the class itself sits outside MainActor)
+/// because `UNUserNotificationCenterDelegate` is `@preconcurrency`
+/// nonisolated — annotating the class @MainActor would crash the
+/// Swift 6 concurrency checker on protocol conformance. Each method
+/// that needs the main actor hops there via `Task { @MainActor in … }`.
+final class MINDPushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+
+    nonisolated func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        // Become the user-notification delegate so we receive
+        // foreground presentation + tap callbacks routed below.
+        // `setDelegate` is called from the main-thread launch sequence
+        // (iOS invokes didFinishLaunching there) so the cast is safe.
+        Task { @MainActor in
+            UNUserNotificationCenter.current().delegate = self
+        }
+        return true
+    }
+
+    nonisolated func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        Task { @MainActor in
+            let hex = PushRegistration.handleDeviceToken(deviceToken)
+            MINDTelemetry.info(
+                "apns.token.registered",
+                data: ["token.prefix": String(hex.prefix(8))]
+            )
+        }
+    }
+
+    nonisolated func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        let description = String(describing: error)
+        Task { @MainActor in
+            MINDTelemetry.error(
+                "apns.token.failed",
+                data: ["error": description]
+            )
+        }
+    }
+
+    /// Foreground-presentation handler: when a lead push lands while
+    /// MIND is in the foreground, still display the banner + sound so
+    /// the operator notices it immediately. Without this iOS suppresses
+    /// the banner entirely for foreground apps.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge, .list])
+    }
+
+    /// Tap handler. Reads the `lead.id` field decorated by
+    /// `NotificationService` (the NSE) and routes it through
+    /// `Notification.Name.mindOpenLead` so `HomeView` can flip its
+    /// `selectedLead` state and present `LeadDetailSheet`. Falls back
+    /// to no-op when the userInfo is malformed — we don't want to crash
+    /// on a stray dev push.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let userInfo = response.notification.request.content.userInfo
+        let leadDict = (userInfo["lead"] as? [String: Any])
+            ?? ((userInfo["aps"] as? [String: Any])?["payload"] as? [String: Any])
+        let keys = userInfo.keys.map { "\($0)" }.joined(separator: ",")
+        let idString = leadDict?["id"] as? String
+        let leadID = idString.flatMap { UUID(uuidString: $0) }
+        // Call completionHandler synchronously before hopping to
+        // MainActor — iOS only needs to know we accepted the tap, the
+        // breadcrumb + notification post happen out-of-band.
+        completionHandler()
+        Task { @MainActor in
+            if let leadID {
+                MINDTelemetry.info(
+                    "push.tap.received",
+                    data: ["leadID.prefix": String(leadID.uuidString.prefix(8))]
+                )
+                NotificationCenter.default.post(name: .mindOpenLead, object: leadID)
+            } else {
+                MINDTelemetry.warning(
+                    "push.tap.malformed",
+                    data: ["userInfo.keys": keys]
+                )
+            }
+        }
     }
 }

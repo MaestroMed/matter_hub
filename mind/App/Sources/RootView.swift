@@ -102,6 +102,21 @@ struct RootView: View {
                 )
                 return
             }
+            // v1.0-alpha.14 — `mind://lead/<UUID>` deep link fired by
+            // the lead-push tap path (NotificationService decorates,
+            // MINDPushDelegate routes the tap, the AppDelegate posts
+            // `.mindOpenLead`). The deep-link path is the second
+            // routing channel so a user who taps a push from a Mail
+            // preview lands on the right Lead too.
+            if let leadID = PushDeepLink.parse(url) {
+                selection = .home
+                NotificationCenter.default.post(name: .mindOpenLead, object: leadID)
+                MINDTelemetry.info(
+                    "push.deepLink.opened",
+                    data: ["leadID.prefix": String(leadID.uuidString.prefix(8))]
+                )
+                return
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .mindCommandSelectTab)) { notif in
             guard let raw = notif.userInfo?["tab"] as? String,
@@ -514,6 +529,35 @@ private struct HomeView: View {
             NotificationCenter.default.publisher(for: .mindCommandNewAudit)
         ) { _ in
             isAuditing = true
+        }
+        // v1.0-alpha.14 — `MINDPushDelegate` (lead push tap) and
+        // `RootView.onOpenURL` (`mind://lead/<UUID>` deep link) both
+        // post `.mindOpenLead` with the Lead UUID as the object. We
+        // resolve the UUID against the `allLeadsForFunnel` slice (which
+        // already pulls every Lead regardless of status) so the sheet
+        // can present even for leads outside the inbox's `.new` filter.
+        .onReceive(
+            NotificationCenter.default.publisher(for: .mindOpenLead)
+        ) { notif in
+            guard let leadID = notif.object as? UUID else {
+                MINDTelemetry.warning(
+                    "push.openLead.malformed",
+                    data: ["object": String(describing: notif.object)]
+                )
+                return
+            }
+            if let match = allLeadsForFunnel.first(where: { $0.id == leadID }) {
+                selectedLead = match
+                MINDTelemetry.info(
+                    "push.openLead.matched",
+                    data: ["leadID.prefix": String(leadID.uuidString.prefix(8))]
+                )
+            } else {
+                MINDTelemetry.warning(
+                    "push.openLead.notFound",
+                    data: ["leadID.prefix": String(leadID.uuidString.prefix(8))]
+                )
+            }
         }
     }
 
@@ -1537,6 +1581,37 @@ extension Notification.Name {
     /// Posted when `mind://comparison` is opened. HomeView listens
     /// for it to flip its comparison sheet bool.
     static let mindOpenComparison = Notification.Name("mind.openComparison")
+
+    /// v1.0-alpha.14 — Posted when a lead push is tapped OR when the
+    /// `mind://lead/<UUID>` deep link is opened. HomeView listens for
+    /// it, looks the matching `Lead` up via its `@Query` slice, and
+    /// presents `LeadDetailSheet`.
+    static let mindOpenLead = Notification.Name("mind.openLead")
+}
+
+// MARK: - Push deep-link parser (v1.0-alpha.14)
+
+/// Pure URL → UUID parser for the `mind://lead/<UUID>` deep link
+/// spawned by the APNs push tap routing. Lives at file scope so
+/// `PushDeepLinkTests` can exercise every branch without standing up
+/// SwiftUI / SwiftData.
+enum PushDeepLink {
+    /// Returns the lead UUID encoded in `url`, or nil if the URL
+    /// doesn't match the `mind://lead/<UUID>` shape. Tolerates a
+    /// trailing slash + uppercase host (`mind://LEAD/<id>/`) so
+    /// share-sheet copies don't silently swallow the tap.
+    static func parse(_ url: URL) -> UUID? {
+        guard
+            let scheme = url.scheme?.lowercased(),
+            scheme == "mind",
+            url.host?.lowercased() == "lead"
+        else { return nil }
+        // pathComponents includes a leading "/" entry; drop it so the
+        // last segment is the UUID candidate.
+        let segments = url.pathComponents.filter { $0 != "/" && !$0.isEmpty }
+        guard let last = segments.last else { return nil }
+        return UUID(uuidString: last)
+    }
 }
 
 // MARK: - PortfolioHealthSheet (v1.0-alpha.9)

@@ -79,6 +79,10 @@ let appTarget: Target = .target(
     dependencies: Module.allCases.map { .target(name: $0.rawValue) } + [
         .target(name: "MINDWidgets"),
         .target(name: "MINDShareExtension"),
+        // v1.0-alpha.14 — APNs Notification Service Extension. Bundled
+        // into the app so iOS picks it up at install time and routes
+        // every push payload through `NotificationService.didReceive`.
+        .target(name: "MINDPushService"),
         .external(name: "Sentry"),
     ],
     settings: .settings(base: [
@@ -295,6 +299,35 @@ let shareExtensionTarget: Target = .target(
     ])
 )
 
+// v1.0-alpha.14 — APNs Notification Service Extension. The Cloudflare
+// Worker (mind/tools/cloudflare-worker) posts lead notifications to
+// Apple's APNs endpoint; iOS routes the alert through this extension
+// before the banner displays so we can decorate it with the lead's
+// contactName / projectName / messagePreview AND group leads per
+// project via `threadIdentifier = "lead.<projectID>"`.
+let pushExtensionTarget: Target = .target(
+    name: "MINDPushService",
+    destinations: .iOS,
+    product: .appExtension,
+    bundleId: "\(appBundleId).pushservice",
+    deploymentTargets: .iOS("26.0"),
+    infoPlist: .extendingDefault(with: [
+        "CFBundleDisplayName": "MIND Push",
+        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleVersion": "1",
+        "NSExtension": [
+            "NSExtensionPointIdentifier": "com.apple.usernotifications.service",
+            "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).NotificationService",
+        ],
+    ]),
+    sources: ["PushExtension/Sources/**"],
+    entitlements: .file(path: "PushExtension/MINDPushService.entitlements"),
+    dependencies: [],
+    settings: .settings(base: [
+        "SWIFT_VERSION": "6.0",
+    ])
+)
+
 let project = Project(
     name: appName,
     organizationName: "MIND",
@@ -312,5 +345,5 @@ let project = Project(
             .release(name: "Release"),
         ]
     ),
-    targets: [appTarget, widgetTarget, shareExtensionTarget, testTarget] + Module.allCases.map { $0.target() }
+    targets: [appTarget, widgetTarget, shareExtensionTarget, pushExtensionTarget, testTarget] + Module.allCases.map { $0.target() }
 )

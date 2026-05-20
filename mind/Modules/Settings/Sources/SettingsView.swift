@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import CloudKit
 import UIKit
+import UserNotifications
 import AuditKit
 import DesignSystem
 import GraphCore
@@ -104,6 +105,17 @@ public struct SettingsView: View {
     /// Live CloudKit account status. Refreshed .onAppear and when iOS
     /// posts `CKAccountChanged` (sign in / out, restrict toggle).
     @State private var cloudKitStatus: CKAccountStatus = .couldNotDetermine
+
+    // v1.0-alpha.14 — APNs push notifications. Toggle drives the
+    // permission request + APNs registration; `deviceTokenHex` is
+    // hydrated `.onAppear` from `UserDefaults` (the AppDelegate
+    // adapter writes the token there) so the copy-able token row
+    // surfaces immediately when the user reopens Settings.
+    @State private var pushEnabled: Bool = false
+    @State private var pushPermissionDenied: Bool = false
+    @State private var deviceTokenHex: String?
+    @State private var pushTestToast: String?
+    @State private var pushTokenCopiedToast: String?
 
     private let availableModels: [(id: String, name: String)] = [
         ("claude-sonnet-4-6", "Claude Sonnet 4.6"),
@@ -403,6 +415,14 @@ public struct SettingsView: View {
 
                 iCloudSection
 
+                // v1.0-alpha.14 — APNs push toggle + device-token row
+                // + test-notification button. Sits between iCloud and
+                // Beta so the operator can verify the device token
+                // pasted right next to "iCloud connected" — same
+                // mental model as the webhook secret section right
+                // above.
+                pushSection
+
                 // v0.20 — Beta-only section: lives just above About so a
                 // tester landing on Settings sees "Beta" pinned at the top
                 // of the metadata block. Hidden on stable (>= 1.0.0)
@@ -467,6 +487,14 @@ public struct SettingsView: View {
             }
             loadWebhookProjects()
             refreshCloudKitStatus()
+            // v1.0-alpha.14 — Hydrate the persisted device token (the
+            // AppDelegate adapter writes it to UserDefaults on
+            // `didRegisterForRemoteNotificationsWithDeviceToken`) so
+            // the copy-able token row reads correctly the moment
+            // Settings opens. Also pull the live permission status so
+            // the toggle reflects reality on launch.
+            deviceTokenHex = UserDefaults.standard.string(forKey: Self.pushTokenDefaultsKey)
+            refreshPushAuthorizationStatus()
         }
         .alert(String(localized: "settings.notion.test.done", bundle: .main),
                isPresented: Binding(get: { notionTestToast != nil },
@@ -539,6 +567,35 @@ public struct SettingsView: View {
                 InvoiceTestActivityView(items: [url])
                     .ignoresSafeArea()
             }
+        }
+        // v1.0-alpha.14 — Tap-the-test-button confirmation toast.
+        .alert(String(localized: "settings.push.test.toast", bundle: .main),
+               isPresented: Binding(
+                get: { pushTestToast != nil },
+                set: { if !$0 { pushTestToast = nil } }
+               )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(pushTestToast ?? "")
+        }
+        // v1.0-alpha.14 — Token copy confirmation toast.
+        .alert(String(localized: "settings.push.token.copy", bundle: .main),
+               isPresented: Binding(
+                get: { pushTokenCopiedToast != nil },
+                set: { if !$0 { pushTokenCopiedToast = nil } }
+               )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(pushTokenCopiedToast ?? "")
+        }
+        // v1.0-alpha.14 — Permission-denied alert. Fires when the user
+        // toggles push on but iOS reports `denied` — guides them into
+        // the Settings.app push permission row.
+        .alert(String(localized: "push.permission.denied.alert.title", bundle: .main),
+               isPresented: $pushPermissionDenied) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("push.permission.denied.alert.body", bundle: .main)
         }
     }
 
@@ -1936,6 +1993,203 @@ public struct SettingsView: View {
                         .fill(LiquidPalette.iris)
                 }
             Spacer()
+        }
+    }
+
+    // MARK: - Push notifications (v1.0-alpha.14)
+
+    /// v1.0-alpha.14 — UserDefaults key the App-side `PushRegistration`
+    /// also writes to, exposed at file scope so SettingsView's
+    /// `.onAppear` reads the same well-known key. Keep this in sync
+    /// with `PushRegistration.tokenKey` in the App target.
+    private static let pushTokenDefaultsKey = "mind.apns.deviceToken"
+
+    /// Settings → Notifications push. Three rows:
+    ///   1. Toggle "Activer notifications push" — flipping ON triggers
+    ///      `requestAuthorization` + `registerForRemoteNotifications`;
+    ///      flipping OFF clears the in-memory `pushEnabled` so the UI
+    ///      reflects the user's intent until iOS reports the real
+    ///      permission state again on next `.onAppear`.
+    ///   2. Device-token row (only visible when registered) — shows
+    ///      `<prefix>…<suffix>` and a "Copier" CTA that copies the
+    ///      full hex into `UIPasteboard.general`.
+    ///   3. "Tester une notification" — schedules a `UNNotificationRequest`
+    ///      with the same `userInfo` shape the Cloudflare Worker emits
+    ///      so the NSE has a real path to exercise locally.
+    @ViewBuilder
+    private var pushSection: some View {
+        section(localized: "settings.push.section.title") {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.push.toggle.title", bundle: .main)
+                            .font(.system(.body, design: .rounded, weight: .medium))
+                        Text("settings.push.toggle.subtitle", bundle: .main)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    LiquidToggle(isOn: Binding(
+                        get: { pushEnabled },
+                        set: { newValue in
+                            if newValue {
+                                Task { await enablePushNotifications() }
+                            } else {
+                                pushEnabled = false
+                                MINDTelemetry.info("apns.toggle.off")
+                            }
+                        }
+                    ))
+                }
+
+                if let token = deviceTokenHex, !token.isEmpty {
+                    Divider().background(.white.opacity(0.2))
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.push.token.label", bundle: .main)
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Text(verbatim: Self.truncatedToken(token))
+                                .font(.system(.footnote, design: .monospaced))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                        }
+                        Spacer()
+                        Button {
+                            UIPasteboard.general.string = token
+                            pushTokenCopiedToast = String(localized: "settings.push.token.copy", bundle: .main)
+                            LiquidHaptics.success()
+                            MINDTelemetry.info(
+                                "apns.token.copied",
+                                data: ["token.prefix": String(token.prefix(8))]
+                            )
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "doc.on.doc")
+                                Text("settings.push.token.copy", bundle: .main)
+                            }
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                Divider().background(.white.opacity(0.2))
+
+                Button {
+                    Task { await scheduleTestNotification() }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "bell.badge.fill")
+                            .foregroundStyle(LiquidPalette.iris)
+                            .frame(width: 24)
+                        Text("settings.push.test.button", bundle: .main)
+                            .font(.system(.body, design: .rounded, weight: .medium))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.footnote, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    /// Returns a truncated representation `<prefix>…<suffix>` of `hex`
+    /// suitable for the device-token row. Uses 8 + 8 chars so both ends
+    /// of the token are visible (helpful when matching against the
+    /// Apple Developer console's "registered devices" list).
+    private static func truncatedToken(_ hex: String) -> String {
+        if hex.count <= 20 { return hex }
+        return "\(hex.prefix(8))…\(hex.suffix(8))"
+    }
+
+    /// Asks the user for permission and, on grant, registers with APNs.
+    /// The actual `didRegisterForRemoteNotifications…` callback lands
+    /// in the App-target `MINDPushDelegate`, which writes the hex to
+    /// the same UserDefaults key this view watches.
+    @MainActor
+    private func enablePushNotifications() async {
+        do {
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(
+                options: [.alert, .badge, .sound]
+            )
+            if granted {
+                pushEnabled = true
+                MINDTelemetry.info("apns.permission.granted")
+                UIApplication.shared.registerForRemoteNotifications()
+                // Poll the persisted token a moment later so the row
+                // surfaces immediately when registration completes
+                // (the AppDelegate writes it asynchronously). Pulling
+                // it again on subsequent `.onAppear` keeps it fresh.
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 700_000_000)
+                    deviceTokenHex = UserDefaults.standard.string(forKey: Self.pushTokenDefaultsKey)
+                }
+            } else {
+                pushEnabled = false
+                pushPermissionDenied = true
+                MINDTelemetry.warning("apns.permission.denied")
+            }
+        } catch {
+            pushEnabled = false
+            MINDTelemetry.error(
+                "apns.permission.error",
+                data: ["error": String(describing: error)]
+            )
+        }
+    }
+
+    /// Refreshes `pushEnabled` from iOS's authoritative status. Called
+    /// on `.onAppear` so the toggle never lies after the user toggles
+    /// the permission in Settings.app and comes back. The status value
+    /// is extracted inside the callback so the MainActor hop captures
+    /// a Sendable raw enum (avoids the Swift 6 data-race diagnostic on
+    /// `UNNotificationSettings` itself, which isn't Sendable).
+    @MainActor
+    private func refreshPushAuthorizationStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            let isAuthorized = settings.authorizationStatus == .authorized
+            Task { @MainActor in
+                pushEnabled = isAuthorized
+            }
+        }
+    }
+
+    /// Schedules a fake lead push that fires in 3 seconds. The
+    /// userInfo shape matches what the Cloudflare Worker emits in
+    /// production so the NSE has a real codepath to exercise.
+    @MainActor
+    private func scheduleTestNotification() async {
+        let content = UNMutableNotificationContent()
+        content.title = "Test"
+        content.body = "Vérifie le décorage NSE"
+        content.userInfo = [
+            "lead": [
+                "id": UUID().uuidString,
+                "projectID": "test-project",
+                "projectName": "Démo",
+                "contactName": "Sarah Demo",
+                "messagePreview": "Bonjour Mehdi, votre site m'intéresse pour notre lancement...",
+            ],
+        ]
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false)
+        let req = UNNotificationRequest(identifier: "mind.push.test", content: content, trigger: trigger)
+        do {
+            try await UNUserNotificationCenter.current().add(req)
+            pushTestToast = String(localized: "settings.push.test.toast", bundle: .main)
+            LiquidHaptics.success()
+            MINDTelemetry.info("apns.test.scheduled")
+        } catch {
+            MINDTelemetry.error(
+                "apns.test.failed",
+                data: ["error": String(describing: error)]
+            )
         }
     }
 

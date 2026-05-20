@@ -15,6 +15,10 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+### v1.0-alpha.14 ✅ — APNs Notification Service Extension
+
+Shipped 2026-05-20: NSE decorates lead pushes with `<contactName> · <projectName>` titles + 120-char truncated body + `lead.<projectID>` thread grouping; App-side `MINDPushDelegate` adapter handles APNs registration + tap routing into the new `.mindOpenLead` notification + `mind://lead/<UUID>` deep link; Settings → Notifications push surfaces the toggle, device token, and "Tester une notification" CTA.
+
 ## v1.0-alpha.14+ — Next ⏳
 
 - **v1.0-alpha.12.1** ⏳ — Mac Catalyst destination flip. Split
@@ -22,9 +26,6 @@ the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
   can adopt `[.iPhone, .iPad, .macCatalyst]` cleanly, then turn on
   the Catalyst toolbar wiring + Touch Bar + the "Apparence Mac"
   Settings section the v1.0-alpha.12 substrate already locks.
-- **APNs Notification Service Extension** ⏳ — server-side push
-  decryption for the lead webhook so a webhook fired while MIND is
-  off-device still rings the dock badge.
 - **iOS 26 Lock Screen widgets** ⏳ — WidgetKit timeline reading
   the same lead inbox + portfolio KPI surface HomeView shows, gated
   on `WidgetFamily.accessoryRectangular` + `.accessoryInline`.
