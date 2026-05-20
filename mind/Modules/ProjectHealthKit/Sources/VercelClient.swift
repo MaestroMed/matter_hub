@@ -158,6 +158,68 @@ public actor VercelClient {
         return list.first
     }
 
+    /// v1.0-alpha.9 — Trigger a fresh production deployment for the
+    /// given project. POST `/v13/deployments` with the project's
+    /// `name`, the `gitSource` block pointing at the GitHub repo's
+    /// `main` ref by default, and `target: "production"`.
+    ///
+    /// Returns the freshly-minted deployment (typically in `QUEUED`
+    /// state). Callers refresh the project's health bundle on a 3s
+    /// delay to pick up the new `BUILDING` state.
+    public func redeploy(
+        projectID: String,
+        projectName: String,
+        githubRepo: String,
+        branch: String = "main"
+    ) async throws -> VercelDeployment {
+        guard let token = VercelTokenStore.read(), !token.isEmpty else {
+            throw VercelClientError.noToken
+        }
+
+        let url = Self.baseURL.appendingPathComponent("v13/deployments")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 20
+        do {
+            request.httpBody = try JSONSerialization.data(
+                withJSONObject: Self.redeployBody(
+                    projectName: projectName,
+                    githubRepo: githubRepo,
+                    branch: branch
+                )
+            )
+        } catch {
+            throw VercelClientError.decode
+        }
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw VercelClientError.network(error.localizedDescription)
+        }
+
+        guard let http = response as? HTTPURLResponse else {
+            throw VercelClientError.decode
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw VercelClientError.http(http.statusCode)
+        }
+
+        do {
+            let dto = try JSONDecoder().decode(VercelDeploymentDTO.self, from: data)
+            // The redeploy response carries `uid` like the listing
+            // envelope's items, so the existing DTO mapper applies
+            // directly. State on creation is typically `QUEUED`.
+            return dto.deployment
+        } catch {
+            throw VercelClientError.decode
+        }
+    }
+
     /// Aggregates the last `limit` deployments (default 20, matching
     /// the Vercel free-tier UI's window) into a `VercelHealth`
     /// snapshot. Soft-defaults the duration to 0 when Vercel omits
@@ -217,6 +279,37 @@ public actor VercelClient {
             URLQueryItem(name: "limit", value: "\(limit)"),
         ]
         return components.url
+    }
+
+    /// v1.0-alpha.9 — Pure helper for the `/v13/deployments` URL the
+    /// redeploy action POSTs against. Same convention as
+    /// `deploymentsURL(...)` so tests assert the shape without going
+    /// through URLSession.
+    public static func redeployURL() -> URL {
+        baseURL.appendingPathComponent("v13/deployments")
+    }
+
+    /// v1.0-alpha.9 — Pure body builder for the `/v13/deployments`
+    /// POST. Exposed as `[String: Any]` so tests can assert each
+    /// field independently. The contract matches Vercel's API: the
+    /// `name` is the project slug, `gitSource` carries `type ==
+    /// "github"` + `repo == "<org>/<name>"` + `ref` (the branch),
+    /// and `target == "production"` flips the deploy from a preview
+    /// to a production redeploy.
+    public static func redeployBody(
+        projectName: String,
+        githubRepo: String,
+        branch: String = "main"
+    ) -> [String: Any] {
+        return [
+            "name": projectName,
+            "gitSource": [
+                "type": "github",
+                "repo": githubRepo,
+                "ref": branch,
+            ],
+            "target": "production",
+        ]
     }
 }
 

@@ -1,10 +1,12 @@
 import SwiftUI
 import SwiftData
 import AuditKit
+import ClientPortalKit
 import DesignSystem
 import GraphCore
 import ProjectHealthKit
 import SwarmKit
+import UIKit
 
 /// v1.0-alpha.3 — Project detail surface. Five sections from top to
 /// bottom:
@@ -27,6 +29,15 @@ struct ProjectDetailSheet: View {
     @State private var selectedLead: Lead?
     @State private var showLeadsListSheet: Bool = false
     @State private var showArchiveConfirm: Bool = false
+
+    /// v1.0-alpha.9 — Redeploy flow state. Confirmation alert before
+    /// the POST fires, in-flight spinner gate during the call, toast
+    /// text that drives the bottom-pinned `redeployToast` view.
+    @State private var showRedeployConfirm: Bool = false
+    @State private var redeployInFlight: Bool = false
+    @State private var redeployToast: ToastMessage?
+    /// v1.0-alpha.9 — Share sheet driver for the client portal action.
+    @State private var sharePortalURL: URL?
 
     /// v1.0-alpha.8 — Latest health pulse hydrated from
     /// `HealthPulseStore.shared` on appear. nil until the async load
@@ -120,6 +131,34 @@ struct ProjectDetailSheet: View {
         } message: {
             Text(verbatim: project.name)
         }
+        .alert(
+            String(localized: "project.action.redeploy.confirm.title"),
+            isPresented: $showRedeployConfirm
+        ) {
+            Button(String(localized: "project.action.redeploy"), role: .destructive) {
+                MINDTelemetry.info(
+                    "vercel.redeploy.confirmed",
+                    data: ["projectID": project.id.uuidString]
+                )
+                Task { await runRedeploy() }
+            }
+            Button(String(localized: "audit.button.cancel"), role: .cancel) {}
+        } message: {
+            let format = String(localized: "project.action.redeploy.confirm.body")
+            Text(verbatim: String(format: format, project.name))
+        }
+        .sheet(item: $sharePortalURL.asIdentifiable) { wrapped in
+            ProjectPortalShareView(activityItems: [wrapped.url])
+        }
+        .overlay(alignment: .bottom) {
+            if let toast = redeployToast {
+                ToastBanner(message: toast)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 28)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: redeployToast)
     }
 
     // MARK: - Header
@@ -880,6 +919,82 @@ struct ProjectDetailSheet: View {
                 ) {
                     isSwarming = true
                 }
+
+                // v1.0-alpha.9 — Live actions. Each is guarded so a
+                // missing token / missing config soft-empties the row
+                // rather than throwing an error sheet.
+                if canRedeploy {
+                    actionRow(
+                        icon: "arrow.up.forward.app.fill",
+                        tint: LiquidPalette.iris,
+                        title: String(localized: "project.action.redeploy"),
+                        trailing: redeployInFlight ? .spinner : .chevron,
+                        enabled: !redeployInFlight
+                    ) {
+                        MINDTelemetry.info(
+                            "vercel.redeploy.tapped",
+                            data: ["projectID": project.id.uuidString]
+                        )
+                        showRedeployConfirm = true
+                    }
+                }
+
+                if !project.host.isEmpty {
+                    actionRow(
+                        icon: "globe",
+                        tint: LiquidPalette.aqua,
+                        title: String(localized: "project.action.openSite")
+                    ) {
+                        if let url = URL(string: "https://\(project.host)") {
+                            UIApplication.shared.open(url)
+                            MINDTelemetry.info(
+                                "project.openSite.tapped",
+                                data: ["projectID": project.id.uuidString]
+                            )
+                        }
+                    }
+                }
+
+                if let repo = project.githubRepo, !repo.isEmpty {
+                    actionRow(
+                        icon: "chevron.left.forwardslash.chevron.right",
+                        tint: LiquidPalette.lavender,
+                        title: String(localized: "project.action.openRepo")
+                    ) {
+                        if let url = URL(string: "https://github.com/\(repo)") {
+                            UIApplication.shared.open(url)
+                            MINDTelemetry.info(
+                                "project.openRepo.tapped",
+                                data: ["projectID": project.id.uuidString]
+                            )
+                        }
+                    }
+                }
+
+                if let projectID = project.vercelProjectID, !projectID.isEmpty {
+                    actionRow(
+                        icon: "triangle.fill",
+                        tint: LiquidPalette.iris,
+                        title: String(localized: "project.action.openVercel")
+                    ) {
+                        if let url = URL(string: "https://vercel.com/dashboard") {
+                            UIApplication.shared.open(url)
+                            MINDTelemetry.info(
+                                "project.openVercel.tapped",
+                                data: ["projectID": project.id.uuidString]
+                            )
+                        }
+                    }
+                }
+
+                actionRow(
+                    icon: "square.and.arrow.up",
+                    tint: LiquidPalette.aqua,
+                    title: String(localized: "project.action.sharePortal")
+                ) {
+                    Task { await sharePortalFolder() }
+                }
+
                 actionRow(
                     icon: "tray.full.fill",
                     tint: LiquidPalette.aqua,
@@ -900,11 +1015,126 @@ struct ProjectDetailSheet: View {
         }
     }
 
+    /// v1.0-alpha.9 — Gate for the "Redeploy to production" action.
+    /// Requires a stored Vercel token + a project-side
+    /// `vercelProjectID` + a `githubRepo` (the redeploy POST needs
+    /// the git source). Hidden otherwise so we never present a
+    /// button that will throw on tap.
+    private var canRedeploy: Bool {
+        guard VercelTokenStore.read() != nil else { return false }
+        guard let pid = project.vercelProjectID, !pid.isEmpty else { return false }
+        guard let repo = project.githubRepo, !repo.isEmpty else { return false }
+        return true
+    }
+
+    /// Drives the redeploy flow end-to-end. Confirmation already fired
+    /// (caller flipped the alert). Marks the row spinning, fires the
+    /// POST, hops back to the main actor for haptics + toast + a 3s
+    /// delayed re-pull of the latest deployment so the Vercel section
+    /// updates to BUILDING without a manual refresh.
+    private func runRedeploy() async {
+        guard
+            let projectID = project.vercelProjectID,
+            !projectID.isEmpty,
+            let repo = project.githubRepo,
+            !repo.isEmpty
+        else { return }
+        await MainActor.run {
+            redeployInFlight = true
+            redeployToast = nil
+        }
+        do {
+            let deployment = try await VercelClient.shared.redeploy(
+                projectID: projectID,
+                projectName: project.slug,
+                githubRepo: repo,
+                branch: "main"
+            )
+            await MainActor.run {
+                latestDeployment = deployment
+                redeployInFlight = false
+                LiquidHaptics.success()
+                redeployToast = ToastMessage(
+                    text: String(localized: "project.action.redeploy.success.toast"),
+                    tone: .success
+                )
+                MINDTelemetry.info(
+                    "vercel.redeploy.success",
+                    data: ["projectID": project.id.uuidString, "deploymentID": deployment.id]
+                )
+            }
+            await ProjectHealthCache.shared.update(
+                project.id,
+                keyPath: \.latestDeployment,
+                value: deployment
+            )
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await refreshProjectHealth()
+            await MainActor.run {
+                // Auto-dismiss the toast after the refresh completes.
+                redeployToast = nil
+            }
+        } catch {
+            await MainActor.run {
+                redeployInFlight = false
+                LiquidHaptics.warning()
+                let format = String(localized: "project.action.redeploy.error.toast")
+                redeployToast = ToastMessage(
+                    text: String(format: format, String(describing: error)),
+                    tone: .error
+                )
+                MINDTelemetry.warning(
+                    "vercel.redeploy.failed",
+                    data: [
+                        "projectID": project.id.uuidString,
+                        "error": String(describing: error),
+                    ]
+                )
+            }
+        }
+    }
+
+    /// Finds the most recently written client portal under the
+    /// per-project slug + presents the system share sheet. When
+    /// nothing exists, falls back to a toast telling Mehdi to
+    /// generate one from the audit.
+    private func sharePortalFolder() async {
+        let folder = ProjectPortalLocator.latestPortalFolder(for: project)
+        await MainActor.run {
+            if let folder {
+                sharePortalURL = folder
+                MINDTelemetry.info(
+                    "project.sharePortal.opened",
+                    data: ["projectID": project.id.uuidString]
+                )
+            } else {
+                redeployToast = ToastMessage(
+                    text: String(localized: "project.action.sharePortal.empty"),
+                    tone: .info
+                )
+                MINDTelemetry.info(
+                    "project.sharePortal.empty",
+                    data: ["projectID": project.id.uuidString]
+                )
+            }
+        }
+    }
+
+    /// v1.0-alpha.9 — Trailing accessory variants for `actionRow`. The
+    /// stock `.chevron` keeps the v1.0-alpha.8 row chrome; `.spinner`
+    /// flips the chevron to a `ProgressView` so an in-flight redeploy
+    /// reads "busy" from the same row that triggered it.
+    enum ActionRowTrailing {
+        case chevron
+        case spinner
+    }
+
     @ViewBuilder
     private func actionRow(
         icon: String,
         tint: Color,
         title: String,
+        trailing: ActionRowTrailing = .chevron,
         enabled: Bool = true,
         action: @escaping () -> Void
     ) -> some View {
@@ -924,9 +1154,15 @@ struct ProjectDetailSheet: View {
                     .font(.system(.body, design: .rounded, weight: .medium))
                     .foregroundStyle(.primary)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(.caption, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.tertiary)
+                switch trailing {
+                case .chevron:
+                    Image(systemName: "chevron.right")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                case .spinner:
+                    ProgressView()
+                        .controlSize(.small)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -1056,6 +1292,7 @@ struct NewProjectSheet: View {
     @State private var name: String = ""
     @State private var host: String = ""
     @State private var githubRepo: String = ""
+    @State private var vercelProjectID: String = ""
     @State private var stack: ProjectStack = .nextjs
     @State private var contractType: ProjectContractType = .oneshot
     @State private var mrr: String = ""
@@ -1072,6 +1309,14 @@ struct NewProjectSheet: View {
                     TextField(String(localized: "project.new.repo"), text: $githubRepo)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                    // v1.0-alpha.9 — Optional Vercel Project ID
+                    // (`prj_abc123`). Persists on the Project model
+                    // so the new Redeploy + Vercel surfaces light up
+                    // for fresh projects without a Settings detour.
+                    TextField(String(localized: "project.new.vercelProjectID"), text: $vercelProjectID)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.system(.body, design: .monospaced))
                 }
                 Section(String(localized: "project.new.section.stack")) {
                     Picker(String(localized: "project.new.stack"), selection: $stack) {
@@ -1114,6 +1359,7 @@ struct NewProjectSheet: View {
             name: name.trimmingCharacters(in: .whitespaces),
             host: host.trimmingCharacters(in: .whitespaces),
             githubRepo: githubRepo.isEmpty ? nil : githubRepo,
+            vercelProjectID: vercelProjectID.isEmpty ? nil : vercelProjectID,
             stack: stack,
             contractType: contractType,
             monthlyRecurringRevenueEUR: contractType == .retainer ? (Int(mrr) ?? 0) : 0,
@@ -1130,5 +1376,134 @@ struct NewProjectSheet: View {
             ]
         )
         dismiss()
+    }
+}
+
+// MARK: - ToastMessage + ToastBanner
+
+/// v1.0-alpha.9 — Tiny value type that drives the bottom-pinned
+/// banner overlay used by the redeploy + share-portal flows. The
+/// `tone` picks an accent + an SF Symbol so success / warning / info
+/// reads consistently without a custom card per call site.
+struct ToastMessage: Identifiable, Equatable {
+    enum Tone: Equatable { case success, error, info }
+    let id: UUID = UUID()
+    let text: String
+    let tone: Tone
+}
+
+/// Bottom-pinned banner. Liquid Glass card + iris tint, max-2 lines,
+/// auto-disposed by the parent's `.animation(...)` modifier so we
+/// don't need a timer here.
+struct ToastBanner: View {
+    let message: ToastMessage
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(.body, design: .rounded, weight: .semibold))
+                .foregroundStyle(tint)
+            Text(verbatim: message.text)
+                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(tint.opacity(0.25), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
+        }
+    }
+
+    private var icon: String {
+        switch message.tone {
+        case .success: return "checkmark.circle.fill"
+        case .error:   return "exclamationmark.triangle.fill"
+        case .info:    return "info.circle.fill"
+        }
+    }
+
+    private var tint: Color {
+        switch message.tone {
+        case .success: return .green
+        case .error:   return .red
+        case .info:    return LiquidPalette.iris
+        }
+    }
+}
+
+// MARK: - Portal share helpers
+
+/// `URL.asIdentifiable` lets `.sheet(item:)` bind to an
+/// `Optional<URL>` without rolling a custom wrapper at every call
+/// site. The wrapper hashes on `absoluteString` so the same folder
+/// URL re-presents the sheet idempotently.
+struct IdentifiableURL: Identifiable, Hashable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
+extension Binding where Value == URL? {
+    /// Binding adapter that maps `URL?` → `IdentifiableURL?` so
+    /// `.sheet(item:)` can drive an activity-view-controller presenter.
+    var asIdentifiable: Binding<IdentifiableURL?> {
+        Binding<IdentifiableURL?>(
+            get: { self.wrappedValue.map(IdentifiableURL.init) },
+            set: { newValue in self.wrappedValue = newValue?.url }
+        )
+    }
+}
+
+/// `UIActivityViewController` bridge — same shape as the
+/// `PortalActivityView` in `PortalSuccessSheet.swift`, kept private
+/// here so the ProjectDetail flow doesn't depend on that file's
+/// internals.
+struct ProjectPortalShareView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+/// Locates the most recent on-disk client portal for a given Project.
+/// `PortalWriter` writes to `Documents/client-portals/<slug>` so we
+/// scan that directory for entries whose name starts with the
+/// project's slug + sort by modification date desc.
+enum ProjectPortalLocator {
+    static func latestPortalFolder(for project: Project) -> URL? {
+        let root = PortalWriter.defaultDestinationRoot()
+        let fm = FileManager.default
+        guard
+            let entries = try? fm.contentsOfDirectory(
+                at: root,
+                includingPropertiesForKeys: [.contentModificationDateKey, .isDirectoryKey]
+            )
+        else { return nil }
+        let needle = project.slug.lowercased()
+        // The portal folder slug embeds the project slug + a timestamp
+        // suffix (e.g. `az-construction-2026-05-20-1430`). Match on
+        // prefix + lowercased to dodge case-mismatch on the Docs root.
+        let candidates = entries.filter { url in
+            let name = url.lastPathComponent.lowercased()
+            return name.hasPrefix(needle)
+        }
+        let sorted = candidates.sorted { a, b in
+            let amod = (try? a.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            let bmod = (try? b.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            return amod > bmod
+        }
+        return sorted.first
     }
 }

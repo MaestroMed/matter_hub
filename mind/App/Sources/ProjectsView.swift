@@ -3,6 +3,7 @@ import SwiftData
 import BootstrapKit
 import DesignSystem
 import GraphCore
+import ProjectHealthKit
 
 /// v1.0-alpha.3 — Project-first replacement for ClientsView's tab
 /// slot. Query backed by the new `Project` @Model, with search +
@@ -59,6 +60,9 @@ struct ProjectsView: View {
             .padding(20)
             .padding(.top, 40)
             .padding(.bottom, 120)
+        }
+        .refreshable {
+            await refreshAllProjects()
         }
         .sheet(item: $selectedProject) { project in
             ProjectDetailSheet(project: project)
@@ -174,6 +178,30 @@ struct ProjectsView: View {
             .frame(maxWidth: .infinity)
         }
     }
+
+    /// v1.0-alpha.9 — Pull-to-refresh handler. Re-fans every project
+    /// with a `vercelProjectID` through `PortfolioHealthAggregator`'s
+    /// fresh-fetch path. Heart-beat haptic on start + success haptic
+    /// on finish.
+    private func refreshAllProjects() async {
+        await MainActor.run {
+            LiquidHaptics.tap()
+            MINDTelemetry.info("projects.pulldown.refresh",
+                               data: ["count": "\(projects.count)"])
+        }
+        let identities = projects.map { project in
+            ProjectIdentity(
+                id: project.id,
+                vercelProjectID: project.vercelProjectID,
+                githubRepo: project.githubRepo,
+                host: project.host
+            )
+        }
+        _ = await PortfolioHealthAggregator.shared.refreshAndSnapshot(for: identities)
+        await MainActor.run {
+            LiquidHaptics.success()
+        }
+    }
 }
 
 // MARK: - ProjectCard
@@ -186,31 +214,48 @@ private struct ProjectCard: View {
     /// returns, which the dot reads as `.unknown`.
     @State private var healthPulse: HealthPulse?
 
+    /// v1.0-alpha.9 — Latest Vercel deployment state, hydrated from
+    /// `ProjectHealthCache.shared` on `.task`. nil until the cache
+    /// read returns; the pill renders the gray "—" sentinel in that
+    /// case.
+    @State private var deploymentState: String?
+
     var body: some View {
         LiquidCard(cornerRadius: 20) {
-            HStack(spacing: 14) {
-                avatar
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(verbatim: project.name)
-                        .font(.system(.headline, design: .rounded, weight: .semibold))
-                        .lineLimit(1)
-                        .foregroundStyle(.primary)
-                    Text(verbatim: project.host)
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    HStack(spacing: 6) {
-                        stackBadge
-                        lifecycleDot
+            ZStack(alignment: .topTrailing) {
+                HStack(spacing: 14) {
+                    avatar
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: project.name)
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .lineLimit(1)
+                            .foregroundStyle(.primary)
+                        Text(verbatim: project.host)
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        HStack(spacing: 6) {
+                            stackBadge
+                            lifecycleDot
+                        }
                     }
+                    Spacer(minLength: 8)
+                    mrrPill
                 }
-                Spacer(minLength: 8)
-                mrrPill
+                .padding(.horizontal, 14)
+                .padding(.vertical, 14)
+                .frame(minHeight: 88)
+
+                // v1.0-alpha.9 — Deployment pill anchored to the
+                // top-right corner. Renders nothing for the "unknown"
+                // bucket on a project the cache hasn't seen yet.
+                if let state = deploymentState {
+                    deploymentPill(for: state)
+                        .padding(.top, 8)
+                        .padding(.trailing, 12)
+                }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 14)
-            .frame(minHeight: 88)
         }
         .task(id: project.id) {
             // Hydrate the dot lazily — we never block the render on
@@ -219,6 +264,72 @@ private struct ProjectCard: View {
             // inside `HealthPulseStore` keeps this O(1) after the
             // first hit.
             healthPulse = await HealthPulseStore.shared.load(projectID: project.id)
+            // v1.0-alpha.9 — Cache hit only; the per-project sheet's
+            // fan-out fetcher is the canonical refresh path, so we
+            // never burn a Vercel API call on the list view.
+            if let bundle = await ProjectHealthCache.shared.bundle(for: project.id) {
+                deploymentState = bundle.latestDeployment?.state.uppercased()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func deploymentPill(for rawState: String) -> some View {
+        let metadata = deploymentPillMetadata(for: rawState)
+        HStack(spacing: 4) {
+            Circle()
+                .fill(metadata.tint)
+                .frame(width: 6, height: 6)
+                .opacity(metadata.pulsing ? 0.8 : 1.0)
+            Text(verbatim: metadata.label)
+                .font(.system(.caption2, design: .rounded, weight: .bold))
+                .tracking(0.6)
+                .foregroundStyle(metadata.tint)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background {
+            Capsule(style: .continuous)
+                .fill(metadata.tint.opacity(0.14))
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(metadata.tint.opacity(0.30), lineWidth: 0.8)
+                }
+        }
+    }
+
+    private struct DeploymentPillMetadata {
+        let label: String
+        let tint: Color
+        let pulsing: Bool
+    }
+
+    private func deploymentPillMetadata(for rawState: String) -> DeploymentPillMetadata {
+        switch rawState {
+        case "READY":
+            return DeploymentPillMetadata(
+                label: String(localized: "project.card.deploymentPill.ready"),
+                tint: .green,
+                pulsing: false
+            )
+        case "BUILDING", "QUEUED", "INITIALIZING":
+            return DeploymentPillMetadata(
+                label: String(localized: "project.card.deploymentPill.building"),
+                tint: .orange,
+                pulsing: true
+            )
+        case "ERROR":
+            return DeploymentPillMetadata(
+                label: String(localized: "project.card.deploymentPill.error"),
+                tint: .red,
+                pulsing: false
+            )
+        default:
+            return DeploymentPillMetadata(
+                label: String(localized: "project.card.deploymentPill.unknown"),
+                tint: .gray,
+                pulsing: false
+            )
         }
     }
 

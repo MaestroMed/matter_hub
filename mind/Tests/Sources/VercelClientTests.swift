@@ -108,4 +108,15 @@ final class VercelClientTests: XCTestCase {
         XCTAssertNotEqual(VercelClientError.noToken, VercelClientError.decode)
         XCTAssertEqual(VercelClientError.network("offline"), VercelClientError.network("offline"))
     }
+
+    /// v1.0-alpha.9 — `redeployURL()` builds against the
+    /// `https://api.vercel.com/v13/deployments` endpoint. Locks the
+    /// URL shape so a refactor that bumps the API version has to
+    /// come through this test first.
+    func test_redeployURL_buildsAgainstV13Deployments() {
+        let url = VercelClient.redeployURL()
+        XCTAssertEqual(url.scheme, "https")
+        XCTAssertEqual(url.host, "api.vercel.com")
+        XCTAssertEqual(url.path, "/v13/deployments")
+    }
 }

@@ -6,6 +6,7 @@ import BootstrapKit
 import DesignSystem
 import GraphCore
 import Intelligence
+import ProjectHealthKit
 import Settings
 import OutreachKit
 import SwarmKit
@@ -362,6 +363,13 @@ private struct HomeView: View {
     @State private var selectedLead: Lead?
     @State private var selectedProject: Project?
 
+    // v1.0-alpha.9 — Portfolio health rollup that drives the new KPI
+    // bar in the greeting subtitle + the tap-through sheet. `nil`
+    // until the first snapshot lands. Refreshes on `.task` + on
+    // pull-to-refresh.
+    @State private var portfolioHealth: PortfolioHealth?
+    @State private var showPortfolioSheet: Bool = false
+
     private var sortedNewLeads: [Lead] {
         Array(LeadInboxSorter.sort(newLeads, by: .dateDescending).prefix(10))
     }
@@ -380,6 +388,7 @@ private struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 greeting
+                portfolioKPIBar
                 leadInboxCard
                 projectsCarouselCard
                 pipelineSummaryCard
@@ -389,6 +398,26 @@ private struct HomeView: View {
             .padding(20)
             .padding(.top, 40)
             .padding(.bottom, 120)
+        }
+        .refreshable {
+            await refreshAllHealth(origin: "home.pulldown.refresh")
+        }
+        .task {
+            // v1.0-alpha.9 — Pull the portfolio rollup from the cache
+            // on first appear so the KPI bar lights up immediately
+            // with whatever the per-Project sheets have already
+            // persisted. Subsequent refreshes happen via the
+            // pull-to-refresh gesture on the parent ScrollView.
+            await loadPortfolioSnapshot()
+        }
+        .sheet(isPresented: $showPortfolioSheet) {
+            PortfolioHealthSheet(
+                projects: activeProjects,
+                portfolioHealth: portfolioHealth
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet()
@@ -471,6 +500,136 @@ private struct HomeView: View {
         let mrr = ProjectMRR.total(of: allProjects)
         let format = String(localized: "home.greeting.subtitle.format")
         return String(format: format, leadCount, projectCount, mrr)
+    }
+
+    // MARK: - Portfolio KPI bar (v1.0-alpha.9)
+
+    /// Single-row strip of four cells: leads, active projects, builds
+    /// in flight, errors in the last 24h. Tap → opens the per-project
+    /// `PortfolioHealthSheet`.
+    private var portfolioKPIBar: some View {
+        Button {
+            LiquidHaptics.select()
+            showPortfolioSheet = true
+            MINDTelemetry.info("portfolio.sheet.opened",
+                               data: [
+                                "builds": "\(portfolioHealth?.buildsInProgress ?? 0)",
+                                "errors24h": "\(portfolioHealth?.buildErrors24h ?? 0)",
+                               ])
+        } label: {
+            HStack(spacing: 10) {
+                kpiCell(icon: "tray.fill",
+                        tint: LiquidPalette.iris,
+                        value: "\(newLeads.count)",
+                        label: "leads")
+                kpiCell(icon: "shippingbox.fill",
+                        tint: LiquidPalette.aqua,
+                        value: "\(ProjectMRR.activeCount(in: allProjects))",
+                        label: "actifs")
+                kpiCell(icon: "hammer.fill",
+                        tint: .orange,
+                        value: "\(portfolioHealth?.buildsInProgress ?? 0)",
+                        label: "builds",
+                        accessibilityKey: "home.kpi.builds.inProgress")
+                kpiCell(icon: "exclamationmark.triangle.fill",
+                        tint: .red,
+                        value: "\(portfolioHealth?.buildErrors24h ?? 0)",
+                        label: "erreurs",
+                        accessibilityKey: "home.kpi.builds.errors24h")
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .background {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                            .opacity(0.5)
+                    }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("portfolio.sheet.title"))
+    }
+
+    @ViewBuilder
+    private func kpiCell(
+        icon: String,
+        tint: Color,
+        value: String,
+        label: String,
+        accessibilityKey: String? = nil
+    ) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(tint)
+                Text(verbatim: value)
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
+            }
+            Text(verbatim: label)
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+    }
+
+    // MARK: - Refresh fan-out (v1.0-alpha.9)
+
+    /// Loads the current `ProjectHealthCache`-backed snapshot. No
+    /// network calls — `refreshAllHealth(origin:)` does that.
+    private func loadPortfolioSnapshot() async {
+        let identities = makeIdentities()
+        let snapshot = await PortfolioHealthAggregator.shared.snapshot(for: identities)
+        await MainActor.run {
+            portfolioHealth = snapshot
+            MINDTelemetry.info("portfolio.health.snapshot",
+                               data: [
+                                "projects": "\(snapshot.totalActiveProjects)",
+                                "builds": "\(snapshot.buildsInProgress)",
+                                "errors24h": "\(snapshot.buildErrors24h)",
+                               ])
+        }
+    }
+
+    /// Pull-to-refresh handler. Heart-beat haptic on start + success
+    /// haptic on finish. Emits a `home.pulldown.refresh` breadcrumb
+    /// so we can see how often Mehdi pulls vs. just waiting.
+    private func refreshAllHealth(origin: String) async {
+        await MainActor.run {
+            LiquidHaptics.tap()
+            MINDTelemetry.info(origin)
+        }
+        let identities = makeIdentities()
+        let snapshot = await PortfolioHealthAggregator.shared.refreshAndSnapshot(for: identities)
+        await MainActor.run {
+            portfolioHealth = snapshot
+            LiquidHaptics.success()
+        }
+    }
+
+    /// Build the Sendable identities array the aggregator consumes.
+    /// Runs on the MainActor because `Project` is @Model-bound.
+    private func makeIdentities() -> [ProjectIdentity] {
+        activeProjects.map { project in
+            ProjectIdentity(
+                id: project.id,
+                vercelProjectID: project.vercelProjectID,
+                githubRepo: project.githubRepo,
+                host: project.host
+            )
+        }
     }
 
     // MARK: - Lead inbox card
@@ -1035,4 +1194,148 @@ extension Notification.Name {
     /// Posted when `mind://comparison` is opened. HomeView listens
     /// for it to flip its comparison sheet bool.
     static let mindOpenComparison = Notification.Name("mind.openComparison")
+}
+
+// MARK: - PortfolioHealthSheet (v1.0-alpha.9)
+
+/// Per-project status table reached from the HomeView KPI bar tap.
+/// Pure presentation — reads `PortfolioHealth` from the parent and
+/// fetches the per-project bundle lazily from `ProjectHealthCache` so
+/// we don't burn extra API calls on open.
+struct PortfolioHealthSheet: View {
+    let projects: [Project]
+    let portfolioHealth: PortfolioHealth?
+
+    @State private var rows: [ProjectHealthRow] = []
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                header
+                if rows.isEmpty {
+                    LiquidCard(cornerRadius: 18) {
+                        Text("portfolio.sheet.empty")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                } else {
+                    LazyVStack(spacing: 10) {
+                        ForEach(rows) { row in
+                            healthRow(row)
+                        }
+                    }
+                }
+            }
+            .padding(20)
+            .padding(.top, 20)
+            .padding(.bottom, 60)
+        }
+        .background { LiquidBackground().ignoresSafeArea() }
+        .task {
+            await hydrate()
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("portfolio.sheet.title")
+                .font(.system(.largeTitle, design: .rounded, weight: .semibold))
+            if let health = portfolioHealth {
+                Text(verbatim: subtitle(for: health))
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func subtitle(for h: PortfolioHealth) -> String {
+        let builds = h.buildsInProgress
+        let errors = h.buildErrors24h
+        let total = h.totalActiveProjects
+        return "\(total) projets · \(builds) builds en cours · \(errors) erreurs (24h)"
+    }
+
+    @ViewBuilder
+    private func healthRow(_ row: ProjectHealthRow) -> some View {
+        LiquidCard(cornerRadius: 16) {
+            HStack(spacing: 12) {
+                Circle()
+                    .fill(row.tint)
+                    .frame(width: 10, height: 10)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: row.name)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Text(verbatim: row.host)
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Text(verbatim: row.stateLabel.uppercased())
+                    .font(.system(.caption2, design: .rounded, weight: .bold))
+                    .tracking(0.5)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background { Capsule().fill(row.tint.opacity(0.95)) }
+            }
+            .padding(12)
+        }
+    }
+
+    private func hydrate() async {
+        let cache = ProjectHealthCache.shared
+        var built: [ProjectHealthRow] = []
+        for project in projects {
+            let bundle = await cache.bundle(for: project.id)
+            let state = bundle?.latestDeployment?.state.uppercased() ?? "UNKNOWN"
+            built.append(ProjectHealthRow(
+                id: project.id,
+                name: project.name,
+                host: project.host,
+                stateLabel: ProjectHealthRow.shortLabel(for: state),
+                tint: ProjectHealthRow.tint(for: state)
+            ))
+        }
+        await MainActor.run {
+            self.rows = built
+        }
+    }
+}
+
+/// Sendable view-model row used by `PortfolioHealthSheet`. Co-located
+/// here because it's a private surface — promoting it to GraphCore
+/// would inflate the public API for one sheet's worth of plumbing.
+struct ProjectHealthRow: Identifiable, Sendable, Equatable {
+    let id: UUID
+    let name: String
+    let host: String
+    let stateLabel: String
+    let tint: Color
+
+    static func shortLabel(for state: String) -> String {
+        switch state {
+        case "READY":    return "Ready"
+        case "BUILDING": return "Build"
+        case "QUEUED":   return "Queue"
+        case "ERROR":    return "Error"
+        case "CANCELED": return "Cancel"
+        default:         return "—"
+        }
+    }
+
+    static func tint(for state: String) -> Color {
+        switch state {
+        case "READY":    return .green
+        case "BUILDING", "QUEUED": return .orange
+        case "ERROR":    return .red
+        case "CANCELED": return .gray
+        default:         return .gray
+        }
+    }
 }

@@ -59,280 +59,630 @@
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 contract picker.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "One-shot" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Forfait" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-shot"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forfait"
+          }
+        }
       }
     },
     "bootstrap.contract.retainer": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 contract picker.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Retainer" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Récurrent" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retainer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récurrent"
+          }
+        }
       }
     },
     "bootstrap.cta.generate": {
       "comment": "v1.0-alpha.6 — Final CTA on the wizard bottom bar.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generate" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Générer" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer"
+          }
+        }
       }
     },
     "bootstrap.field.color": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 color picker label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Primary color" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Couleur principale" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primary color"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couleur principale"
+          }
+        }
       }
     },
     "bootstrap.field.contract": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 contract section header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Contract" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Contrat" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contract"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrat"
+          }
+        }
       }
     },
     "bootstrap.field.host": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 1 host field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Host" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Hôte" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôte"
+          }
+        }
       }
     },
     "bootstrap.field.mrr": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 MRR field label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "MRR" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "MRR" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MRR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MRR"
+          }
+        }
       }
     },
     "bootstrap.field.name": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 1 project name field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Name" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Nom" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom"
+          }
+        }
       }
     },
     "bootstrap.field.org": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 1 GitHub org field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "GitHub org" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Org GitHub" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub org"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Org GitHub"
+          }
+        }
       }
     },
     "bootstrap.field.slug": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 1 slug field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Slug" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Slug" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slug"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slug"
+          }
+        }
       }
     },
     "bootstrap.field.stack": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 stack section header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stack" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Stack" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        }
       }
     },
     "bootstrap.module.admin": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 admin toggle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Admin backoffice" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Backoffice admin" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin backoffice"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backoffice admin"
+          }
+        }
       }
     },
     "bootstrap.module.admin.detail": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 admin toggle detail.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "/admin route + bcrypt auth + leads CRUD" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Route /admin + auth bcrypt + CRUD leads" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/admin route + bcrypt auth + leads CRUD"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route /admin + auth bcrypt + CRUD leads"
+          }
+        }
       }
     },
     "bootstrap.module.blog": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 blog toggle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Blog MDX" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Blog MDX" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blog MDX"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blog MDX"
+          }
+        }
       }
     },
     "bootstrap.module.blog.detail": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 blog toggle detail.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "/content/blog folder + MDX renderer" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Dossier /content/blog + rendu MDX" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/content/blog folder + MDX renderer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dossier /content/blog + rendu MDX"
+          }
+        }
       }
     },
     "bootstrap.module.i18n": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 i18n toggle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "i18n FR / EN" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "i18n FR / EN" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "i18n FR / EN"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "i18n FR / EN"
+          }
+        }
       }
     },
     "bootstrap.module.i18n.detail": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 i18n toggle detail.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "next-intl + FR/EN message files" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "next-intl + fichiers messages FR/EN" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next-intl + FR/EN message files"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next-intl + fichiers messages FR/EN"
+          }
+        }
       }
     },
     "bootstrap.module.stripe": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 Stripe toggle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stripe" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Stripe" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe"
+          }
+        }
       }
     },
     "bootstrap.module.stripe.detail": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 Stripe toggle detail.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "stripe.config.ts + webhook handler" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "stripe.config.ts + gestionnaire webhook" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stripe.config.ts + webhook handler"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stripe.config.ts + gestionnaire webhook"
+          }
+        }
       }
     },
     "bootstrap.result.copyScript": {
       "comment": "v1.0-alpha.6 — BootstrapResultSheet action.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Copy script" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Copier le script" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy script"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le script"
+          }
+        }
       }
     },
     "bootstrap.result.shareScript": {
       "comment": "v1.0-alpha.6 — BootstrapResultSheet action.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Share script" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Partager le script" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share script"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager le script"
+          }
+        }
       }
     },
     "bootstrap.result.shareZip": {
       "comment": "v1.0-alpha.6 — BootstrapResultSheet action.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Share ZIP" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Partager le ZIP" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share ZIP"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager le ZIP"
+          }
+        }
       }
     },
     "bootstrap.result.success": {
       "comment": "v1.0-alpha.6 — BootstrapResultSheet hero title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Project created" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Projet créé" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project created"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projet créé"
+          }
+        }
       }
     },
     "bootstrap.result.viewProject": {
       "comment": "v1.0-alpha.6 — BootstrapResultSheet action.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "View project" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Voir le projet" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View project"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir le projet"
+          }
+        }
       }
     },
     "bootstrap.stack.nextjs": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 stack pill.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Next.js" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Next.js" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next.js"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next.js"
+          }
+        }
       }
     },
     "bootstrap.stack.other": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 stack pill.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Other" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Autre" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autre"
+          }
+        }
       }
     },
     "bootstrap.stack.shopify": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 stack pill.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Shopify" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Shopify" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopify"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopify"
+          }
+        }
       }
     },
     "bootstrap.stack.static": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 stack pill.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Static" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Statique" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Static"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statique"
+          }
+        }
       }
     },
     "bootstrap.stack.wordpress": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 stack pill.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "WordPress" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "WordPress" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WordPress"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WordPress"
+          }
+        }
       }
     },
     "bootstrap.step.identity": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 1 header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Identity" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Identité" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identity"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identité"
+          }
+        }
       }
     },
     "bootstrap.step.modules": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 3 header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Modules" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Modules" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modules"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modules"
+          }
+        }
       }
     },
     "bootstrap.step.stack": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet step 2 header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stack" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Stack" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        }
       }
     },
     "bootstrap.title": {
       "comment": "v1.0-alpha.6 — BootstrapWizardSheet navigation title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bootstrap project" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Bootstrap projet" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bootstrap project"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bootstrap projet"
+          }
+        }
       }
     },
     "home.bootstrap.subtitle": {
       "comment": "v1.0-alpha.6 — HomeView Bootstrap card subtitle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Start a new client site in 3 steps." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Démarre un nouveau site client en 3 étapes." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new client site in 3 steps."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarre un nouveau site client en 3 étapes."
+          }
+        }
       }
     },
     "home.bootstrap.title": {
       "comment": "v1.0-alpha.6 — HomeView Bootstrap card title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bootstrap project" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Bootstrap projet" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bootstrap project"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bootstrap projet"
+          }
+        }
       }
     },
     "audit.button.retry": {
@@ -4496,184 +4846,414 @@
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (READY).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Live" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "En ligne" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En ligne"
+          }
+        }
       }
     },
     "project.vercel.state.building": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (BUILDING).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Building" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Build en cours" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Building"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build en cours"
+          }
+        }
       }
     },
     "project.vercel.state.error": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (ERROR).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Build error" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Build en erreur" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build error"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build en erreur"
+          }
+        }
       }
     },
     "project.vercel.state.canceled": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (CANCELED).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cancelled" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Annulé" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulé"
+          }
+        }
       }
     },
     "project.vercel.state.queued": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (QUEUED).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Queued" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "En file" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En file"
+          }
+        }
       }
     },
     "project.vercel.state.unknown": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel state chip (UNKNOWN / fallback).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Unknown" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Inconnu" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inconnu"
+          }
+        }
       }
     },
     "project.vercel.empty.token": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel empty state CTA when token missing.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Vercel token missing — open Settings → Dev integrations" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Token Vercel manquant — ouvre Réglages → Intégrations dev" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vercel token missing — open Settings → Dev integrations"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token Vercel manquant — ouvre Réglages → Intégrations dev"
+          }
+        }
       }
     },
     "project.vercel.empty.projectID": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Vercel empty state when this project has no Vercel project ID configured.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No Vercel project linked — set one in the GitHub repo field" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aucun projet Vercel lié — configure-le dans la fiche projet" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Vercel project linked — set one in the GitHub repo field"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun projet Vercel lié — configure-le dans la fiche projet"
+          }
+        }
       }
     },
     "project.vercel.lighthouse.perf": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse performance cell label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Perf" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Perf" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perf"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perf"
+          }
+        }
       }
     },
     "project.vercel.lighthouse.a11y": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse accessibility cell label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "A11y" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "A11y" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A11y"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A11y"
+          }
+        }
       }
     },
     "project.vercel.lighthouse.bp": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse best-practices cell label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Best" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Bonnes pratiques" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonnes pratiques"
+          }
+        }
       }
     },
     "project.vercel.lighthouse.seo": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · Lighthouse SEO cell label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "SEO" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "SEO" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO"
+          }
+        }
       }
     },
     "project.vercel.openLink": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · CTA opening the project on vercel.com.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Open on Vercel" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Voir sur Vercel" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open on Vercel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir sur Vercel"
+          }
+        }
       }
     },
     "project.github.section.title": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub section header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "GitHub" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "GitHub" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        }
       }
     },
     "project.github.commits.title": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub commits subsection label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recent commits" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Commits récents" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent commits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commits récents"
+          }
+        }
       }
     },
     "project.github.empty.token": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub empty state CTA when token missing.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "GitHub token missing — open Settings → Dev integrations" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Token GitHub manquant — ouvre Réglages → Intégrations dev" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub token missing — open Settings → Dev integrations"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token GitHub manquant — ouvre Réglages → Intégrations dev"
+          }
+        }
       }
     },
     "project.github.empty.repo": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub empty state when this project has no repo configured.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No GitHub repo configured for this project." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aucun dépôt GitHub configuré pour ce projet." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No GitHub repo configured for this project."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun dépôt GitHub configuré pour ce projet."
+          }
+        }
       }
     },
     "project.github.stats.stars": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub stars stat label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stars" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Étoiles" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stars"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étoiles"
+          }
+        }
       }
     },
     "project.github.stats.issues": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub open issues stat label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Open issues" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Issues ouvertes" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open issues"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issues ouvertes"
+          }
+        }
       }
     },
     "project.github.stats.lastPush": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · GitHub last-push stat label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Last push" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Dernier push" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last push"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernier push"
+          }
+        }
       }
     },
     "project.github.openLink": {
       "comment": "v1.0-alpha.8 · ProjectDetailSheet · CTA opening the repo on github.com.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Open on GitHub" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Voir sur GitHub" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open on GitHub"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir sur GitHub"
+          }
+        }
       }
     },
     "home.kpi.builds.format": {
       "comment": "v1.0-alpha.8 · HomeView greeting subtitle · builds-in-progress KPI. Args: count.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%d builds in progress" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%d builds en cours" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d builds in progress"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d builds en cours"
+          }
+        }
       }
     },
     "home.kpi.builds.errors.format": {
       "comment": "v1.0-alpha.8 · HomeView greeting subtitle · error-builds KPI. Args: count.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%d build errors" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%d builds en erreur" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d build errors"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d builds en erreur"
+          }
+        }
       }
     },
     "settings.notion.section": {
@@ -9482,160 +10062,738 @@
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — navigation title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "SEO Swarm" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Swarm SEO" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO Swarm"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swarm SEO"
+          }
+        }
       }
     },
     "swarm.step.target": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — Step 1 heading.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Target" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Cible" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cible"
+          }
+        }
       }
     },
     "swarm.step.config": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — Step 2 heading.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Configuration" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Configuration" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration"
+          }
+        }
       }
     },
     "swarm.step.launch": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — Step 3 heading.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Launch" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Lancement" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancement"
+          }
+        }
       }
     },
     "swarm.field.services": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — services field label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Services" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Services" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Services"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Services"
+          }
+        }
       }
     },
     "swarm.field.zones": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — zones field label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Zones" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Zones" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zones"
+          }
+        }
       }
     },
     "swarm.field.project": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — project picker label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Project" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Projet" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projet"
+          }
+        }
       }
     },
     "swarm.preview.count.format": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet Step 2 — formatted count summary. %1$d services, %2$d zones, %3$d total pages.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%1$d services × %2$d zones = %3$d pages" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%1$d services × %2$d zones = %3$d pages estimées" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d services × %2$d zones = %3$d pages"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d services × %2$d zones = %3$d pages estimées"
+          }
+        }
       }
     },
     "swarm.preview.cost.format": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet Step 2 — formatted cost preview in EUR. %@ = formatted euro amount.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Estimated cost: %@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Coût estimé : %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated cost: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coût estimé : %@"
+          }
+        }
       }
     },
     "swarm.cta.generate": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet Step 3 — primary CTA label. %d = total page count.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generate %d pages" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Générer %d pages" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate %d pages"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer %d pages"
+          }
+        }
       }
     },
     "swarm.confirm.title": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — confirmation alert title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Launch the swarm?" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Lancer le swarm ?" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch the swarm?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer le swarm ?"
+          }
+        }
       }
     },
     "swarm.confirm.body.format": {
       "comment": "v1.0-alpha.7 · SwarmWizardSheet — confirmation alert body. %1$d = pages, %2$@ = cost.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%1$d pages, estimated cost %2$@. The swarm runs in the background." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%1$d pages, coût estimé %2$@. Le swarm tourne en arrière-plan." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d pages, estimated cost %2$@. The swarm runs in the background."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d pages, coût estimé %2$@. Le swarm tourne en arrière-plan."
+          }
+        }
       }
     },
     "swarm.running.progress.format": {
       "comment": "v1.0-alpha.7 · SwarmRunningView — live progress counter. %1$d done, %2$d total, %3$d remaining minutes.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%1$d / %2$d — %3$d min remaining" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%1$d / %2$d — %3$d min restantes" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d / %2$d — %3$d min remaining"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d / %2$d — %3$d min restantes"
+          }
+        }
       }
     },
     "swarm.running.cancel": {
       "comment": "v1.0-alpha.7 · SwarmRunningView — cancel CTA.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Annuler" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        }
       }
     },
     "swarm.completed.title": {
       "comment": "v1.0-alpha.7 · SwarmCompletedSheet — title above the action stack. %d = generated pages.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%d pages generated" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%d pages générées" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d pages generated"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d pages générées"
+          }
+        }
       }
     },
     "swarm.completed.actions.summary": {
       "comment": "v1.0-alpha.7 · SwarmCompletedSheet — summary action label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "View summary" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Voir le résumé" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View summary"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir le résumé"
+          }
+        }
       }
     },
     "swarm.completed.actions.zip": {
       "comment": "v1.0-alpha.7 · SwarmCompletedSheet — export as zip action label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Export as ZIP" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Exporter en ZIP" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as ZIP"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter en ZIP"
+          }
+        }
       }
     },
     "swarm.completed.actions.github": {
       "comment": "v1.0-alpha.7 · SwarmCompletedSheet — push to GitHub action label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Push to GitHub" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Pousser sur GitHub" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push to GitHub"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pousser sur GitHub"
+          }
+        }
       }
     },
     "home.swarm.title": {
       "comment": "v1.0-alpha.7 · HomeView — SEO Swarm card title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "SEO Swarm" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "SEO Swarm" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO Swarm"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO Swarm"
+          }
+        }
       }
     },
     "home.swarm.subtitle": {
       "comment": "v1.0-alpha.7 · HomeView — SEO Swarm card subtitle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generate N local SEO pages in one batch for any client." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Génère N pages SEO d'un coup pour un client." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate N local SEO pages in one batch for any client."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Génère N pages SEO d'un coup pour un client."
+          }
+        }
+      }
+    },
+    "project.action.redeploy": {
+      "comment": "v1.0-alpha.9 · ProjectDetailSheet action row · trigger production redeploy via Vercel API.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redeploy to production"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redéployer en production"
+          }
+        }
+      }
+    },
+    "project.action.openSite": {
+      "comment": "v1.0-alpha.9 · ProjectDetailSheet action row · open the production host in Safari.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the live site"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir le site"
+          }
+        }
+      }
+    },
+    "project.action.openRepo": {
+      "comment": "v1.0-alpha.9 · ProjectDetailSheet action row · open the GitHub repo in browser.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open GitHub repo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir le repo GitHub"
+          }
+        }
+      }
+    },
+    "project.action.openVercel": {
+      "comment": "v1.0-alpha.9 · ProjectDetailSheet action row · open the Vercel project dashboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Vercel dashboard"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir Vercel dashboard"
+          }
+        }
+      }
+    },
+    "project.action.sharePortal": {
+      "comment": "v1.0-alpha.9 · ProjectDetailSheet action row · share the client portal URL.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share client portal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager le portail client"
+          }
+        }
+      }
+    },
+    "project.action.sharePortal.empty": {
+      "comment": "v1.0-alpha.9 · Toast shown when no Client Portal exists for the project yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate a Client Portal from the audit first."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Génère d'abord un Client Portal depuis l'audit."
+          }
+        }
+      }
+    },
+    "project.action.redeploy.confirm.title": {
+      "comment": "v1.0-alpha.9 · Confirmation alert title before triggering a production redeploy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redeploy to production?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redéployer en production ?"
+          }
+        }
+      }
+    },
+    "project.action.redeploy.confirm.body": {
+      "comment": "v1.0-alpha.9 · Confirmation alert body (the slug is injected as %@).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trigger a fresh production deploy of %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redéployer %@ sur production ?"
+          }
+        }
+      }
+    },
+    "project.action.redeploy.success.toast": {
+      "comment": "v1.0-alpha.9 · Toast shown after a successful redeploy request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redeploy triggered"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redéploiement déclenché"
+          }
+        }
+      }
+    },
+    "project.action.redeploy.error.toast": {
+      "comment": "v1.0-alpha.9 · Toast shown when the redeploy POST fails (the error is injected as %@).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redeploy failed: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redéploiement échoué : %@"
+          }
+        }
+      }
+    },
+    "home.kpi.builds.inProgress": {
+      "comment": "v1.0-alpha.9 · HomeView KPI cell · \"%d builds in progress\".",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d builds in progress"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d builds en cours"
+          }
+        }
+      }
+    },
+    "home.kpi.builds.errors24h": {
+      "comment": "v1.0-alpha.9 · HomeView KPI cell · \"%d errors in the last 24h\".",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d errors (24h)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d erreurs (24h)"
+          }
+        }
+      }
+    },
+    "home.refresh.pull": {
+      "comment": "v1.0-alpha.9 · HomeView pull-to-refresh indicator label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh portfolio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiser le portefeuille"
+          }
+        }
+      }
+    },
+    "projects.refresh.pull": {
+      "comment": "v1.0-alpha.9 · ProjectsView pull-to-refresh indicator label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh projects"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiser les projets"
+          }
+        }
+      }
+    },
+    "portfolio.sheet.title": {
+      "comment": "v1.0-alpha.9 · PortfolioHealthSheet navigation title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portfolio health"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "État du portefeuille"
+          }
+        }
+      }
+    },
+    "portfolio.sheet.empty": {
+      "comment": "v1.0-alpha.9 · PortfolioHealthSheet empty state when no project has a deployment yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No deployment data yet. Configure Vercel + GitHub in Settings to light up the cockpit."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune donnée de déploiement encore. Configure Vercel + GitHub dans Réglages pour allumer le cockpit."
+          }
+        }
+      }
+    },
+    "project.card.deploymentPill.ready": {
+      "comment": "v1.0-alpha.9 · ProjectCard deployment pill · READY state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "READY"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRÊT"
+          }
+        }
+      }
+    },
+    "project.card.deploymentPill.building": {
+      "comment": "v1.0-alpha.9 · ProjectCard deployment pill · BUILDING state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BUILD"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BUILD"
+          }
+        }
+      }
+    },
+    "project.card.deploymentPill.error": {
+      "comment": "v1.0-alpha.9 · ProjectCard deployment pill · ERROR state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ERROR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ERREUR"
+          }
+        }
+      }
+    },
+    "project.card.deploymentPill.unknown": {
+      "comment": "v1.0-alpha.9 · ProjectCard deployment pill · unknown / placeholder state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        }
+      }
+    },
+    "project.new.vercelProjectID": {
+      "comment": "v1.0-alpha.9 · NewProjectSheet · Vercel Project ID field placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vercel Project ID (optional)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID projet Vercel (optionnel)"
+          }
+        }
       }
     }
   }

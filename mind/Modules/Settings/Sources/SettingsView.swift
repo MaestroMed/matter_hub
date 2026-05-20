@@ -1187,8 +1187,25 @@ public struct SettingsView: View {
 
     private func testVercelConnection() {
         vercelBusy = true
+        let candidateProjectID = firstKnownVercelProjectID()
         Task {
-            let valid = await VercelClient.shared.validateToken()
+            // v1.0-alpha.9 — Two-tier validation. If Mehdi has at
+            // least one Project with a `vercelProjectID`, hit the
+            // `/v6/deployments?projectId=...` endpoint which checks
+            // both the token AND the project-scope permissions in a
+            // single call. Otherwise fall back to the lightweight
+            // `/v2/user` ping which only validates the token bearer.
+            let valid: Bool
+            if let firstProjectID = candidateProjectID, !firstProjectID.isEmpty {
+                do {
+                    _ = try await VercelClient.shared.deployments(projectID: firstProjectID, limit: 1)
+                    valid = true
+                } catch {
+                    valid = false
+                }
+            } else {
+                valid = await VercelClient.shared.validateToken()
+            }
             await MainActor.run {
                 vercelTokenValid = valid
                 vercelBusy = false
@@ -1201,6 +1218,19 @@ public struct SettingsView: View {
                 }
             }
         }
+    }
+
+    /// v1.0-alpha.9 — Pulls the first `vercelProjectID` from the
+    /// SwiftData store so the "Test connexion" button can do a real
+    /// project-scoped check. Returns nil if no project has one.
+    private func firstKnownVercelProjectID() -> String? {
+        guard let container = try? ModelContainer(for: Project.self) else { return nil }
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<Project>()
+        guard let projects = try? context.fetch(descriptor) else { return nil }
+        return projects
+            .compactMap { $0.vercelProjectID }
+            .first { !$0.isEmpty }
     }
 
     private func saveGitHubToken() {

@@ -15,6 +15,98 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+## v1.0-alpha.9 — Live Actions + portfolio KPI bar ✅
+
+**What**: Light up the live actions everywhere the cockpit shows
+projects — not just in ProjectDetail. ProjectDetailSheet's Actions
+section gains 5 new live rows ("Redeploy production" with
+confirmation alert + toast, "Open site", "Open repo", "Open Vercel
+dashboard", "Share client portal") each guarded behind a Vercel /
+GitHub / portal-folder availability check so the row soft-empties
+rather than throwing. HomeView gets a 4-cell portfolio KPI bar
+(leads / active projects / builds in progress / errors 24h) driven
+by a new `PortfolioHealthAggregator` actor that rolls up the
+per-project `ProjectHealthCache` bundles. Tap the bar → opens a new
+`PortfolioHealthSheet` with a per-project status table.
+ProjectsView gets pull-to-refresh; HomeView gets pull-to-refresh;
+both fan out fresh Vercel fetches via the aggregator's parallel
+fetcher (5 in-flight max, soft-fail per project). ProjectCard gets
+a deployment pill in its top-right corner that reads
+READY / BUILD / ERROR from the cached bundle without burning fresh
+API calls on the list view. NewProjectSheet picks up a Vercel
+Project ID field so new projects can light up the live surface
+immediately. Settings's "Test connexion" buttons replace the
+hardcoded test with a real project-scoped check when a project
+with a `vercelProjectID` exists, fall back to the lightweight
+`/v2/user` ping otherwise.
+
+Shipped 2026-05-20: new `PortfolioHealthAggregator` actor in
+`ProjectHealthKit` with `snapshot(for:)` + `refreshAndSnapshot(for:)`
++ pure `reduce(bundles:totalActiveProjects:now:)` reducer (the
+TaskGroup fan-out caps in-flight Vercel calls at 5 via a `ParallelGate`
+semaphore actor, soft-fails per project, then rolls up into the
+new `PortfolioHealth` Sendable value type with `buildsInProgress`
+counting `BUILDING/QUEUED/INITIALIZING`, `buildErrors24h` gating on
+a 24h window, `avgLighthousePerf` rounded mean across projects with
+a cached `LighthouseScore`). `VercelClient` gains
+`redeploy(projectID:projectName:githubRepo:branch:)` POSTing
+`/v13/deployments` with `{name, gitSource:{type:"github",repo,ref},
+target:"production"}` plus pure helpers `redeployURL()` +
+`redeployBody(projectName:githubRepo:branch:)`.
+
+`ProjectDetailSheet.swift` gains 5 new action rows behind the
+`canRedeploy` / `host` / `githubRepo` / `vercelProjectID` /
+portal-folder guards, a confirmation `.alert` for the redeploy
+flow, a bottom-pinned `ToastBanner` overlay, a system share sheet
+binding for the client portal folder via a new
+`ProjectPortalLocator` helper (scans `Documents/client-portals/` for
+folders whose name starts with the project slug, sorts by
+modification date desc). `RootView`'s HomeView gains
+`portfolioKPIBar`, `loadPortfolioSnapshot()`,
+`refreshAllHealth(origin:)`, `.task` + `.refreshable` modifiers,
+and a new `PortfolioHealthSheet` view with a per-project status row
+table reading from `ProjectHealthCache.shared`. `ProjectsView`'s
+ProjectCard gains `deploymentState: String?` hydrated from
+`ProjectHealthCache.shared.bundle(for:)` and a new
+`deploymentPill(for:)` view that maps READY / BUILDING / QUEUED /
+ERROR to color-coded capsule chrome. `NewProjectSheet` adds the
+optional Vercel Project ID field. `SettingsView`'s
+`testVercelConnection()` now pulls the first known
+`vercelProjectID` from SwiftData and hits
+`deployments(projectID:limit:)` for a real scoped check.
+
+21 new FR/EN xcstrings keys under `project.action.*` /
+`project.action.redeploy.*` / `home.kpi.builds.*` /
+`home.refresh.pull` / `projects.refresh.pull` /
+`portfolio.sheet.*` / `project.card.deploymentPill.*` /
+`project.new.vercelProjectID` namespaces. 7 new MINDTelemetry
+breadcrumbs (`vercel.redeploy.tapped/confirmed/success/failed`,
+`portfolio.health.snapshot`, `portfolio.sheet.opened`,
+`home.pulldown.refresh`, `projects.pulldown.refresh`, plus 4
+per-action surface breadcrumbs `project.openSite/openRepo/openVercel/sharePortal.tapped`).
+
+Tests: 6 new `PortfolioHealthAggregatorTests` (empty input zero
+counts, 3 READY zero builds, 2 READY + 1 BUILDING one in progress,
+ERROR within 24h counted, ERROR > 24h dropped, avg Lighthouse
+performance mean), 6 new `VercelRedeployURLTests` (body carries
+`name`, `gitSource.type == "github"`, `gitSource.repo` echoes
+input, `target == "production"`, default `ref == "main"`, explicit
+branch overrides default), 1 new test on `VercelClientTests`
+locking the `/v13/deployments` URL shape. 824 tests total (was
+811), 19 skipped, 0 failures. Build SUCCEEDED on iPhone 17 Pro
+simulator. Vision verify at `mind/screenshots/v1.0-alpha.9.png`
+shows the host launching clean on the Cockpit with the 4-cell KPI
+bar visible immediately under the greeting subtitle: "4 leads · 5
+actifs · 0 builds · 0 erreurs" (zero-data state — the cache hasn't
+been populated yet on this fresh build, matching the acceptance
+criteria).
+
+Future ⏳ items unlocked by this wave: repository-aware audit
+(audit le code source pas juste l'URL), Mac Catalyst polish +
+Stage Manager, iOS 26 widgets refresh on the new Project + Vercel
+surface, APNs Notification Service Extension for deploy-failed
+push notifications.
+
 ## v1.0-alpha.8 (live integration wave) — Vercel + GitHub live integration in ProjectDetail ✅
 
 **What**: Surface live deployment state, recent commits, repo stats,
