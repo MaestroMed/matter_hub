@@ -24,6 +24,7 @@ public enum Module: String, CaseIterable {
     case bootstrapKit = "BootstrapKit"
     case swarmKit = "SwarmKit"
     case watchCaptureKit = "WatchCaptureKit"
+    case visionSpatialKit = "VisionSpatialKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -300,6 +301,17 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.graphCore.rawValue),
             ]
+        case .visionSpatialKit:
+            // v0.25.1 — Vision Pro spatial layout (pure substrate).
+            // Pure value types + layout math + on-disk store behind
+            // the deferred visionOS App target — same model
+            // v0.22.1 / v0.31.1 / v1.0-alpha.8 used: lock the data
+            // shape now, plug the future RealityView surface in
+            // without re-rolling the model. No GraphCore dep — every
+            // anchor / panel is self-contained and doesn't reference
+            // Node / Project. No DesignSystem dep — the future
+            // SwiftUI surface lives in the visionOS App target.
+            return []
         case .swarmKit:
             // v1.0-alpha.7 — SEO Swarm Orchestrator. Generates N
             // {service}×{zone} Next.js pages in batch via the cloud

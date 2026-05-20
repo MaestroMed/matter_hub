@@ -801,12 +801,54 @@ badges with placeholder numbers.
 
 Shipped 2026-05-19: new `AuditReport.QuickWin` gains optional `estimatedMonthlyRevenueImpactEUR: Int?` + `confidence: ConfidenceLevel?` fields with a backward-compatible Codable decoder (missing keys round-trip as nil); `quickWins` flipped from `let` to `var` so the controller can mutate per-QW ROI after synthesis. New `AuditKit/ROIEstimator.swift` ships a non-MainActor `actor ROIEstimator` (default `.shared`), a pluggable `CloudIntelligenceHandle` (test seam — `.live` bridges to the `@MainActor CloudIntelligence` through a MainActor-spawned `Task<String, Error>` so the URLSession round trip stays off the actor queue), a `ClientContext` sendable value (`industry / estimatedMonthlyTraffic / estimatedARPU_EUR`, all optional, `.unknown` default), a `ROIEstimate` sendable value, and a pure `ROIPromptBuilder` namespace that turns `(report, context) → prompt` deterministically + parses the JSON response + maps it back to `[UUID: ROIEstimate]`. The prompt caps QWs at `maxQuickWins = 10`, asks Claude for a 0-30k EUR per-win clamp, requests JSON-only output with a strict schema (`{estimates: [{id, monthlyRevenueImpactEUR, confidence, reasoning}]}`), embeds the client/host/persona/scoring + the FR/EN context lines (with "unknown" placeholders when context is nil), and stays byte-stable for identical inputs. `mapPayload(_:into:)` clamps impacts at 30k, drops unknown UUIDs silently, and falls back to `.medium` on unrecognised confidence strings. Three pure aggregation helpers (`monthlyTotalEUR`, `annualisedTotalEUR`, `aggregateConfidence`) are reused by the AuditSheet hero card and the portal HTML hero card so both surfaces always read the same number. `AuditController` gains `roiEstimator: ROIEstimator? = .shared` + `roiClientContext: ClientContext = .unknown` + a `kickOffROIEstimation(estimator:context:report:)` detached Task fired right after `kickOffMockupGeneration`; fold-in path guards on `report?.generatedAt == snapshot.generatedAt` so a stale estimate from a previous audit can't poison a fresh report. Soft-fails the whole batch on any error (missing Anthropic key, network blackout, JSON decode failure) so the audit completion banner is never blocked. Telemetry breadcrumbs: `roi.estimation.started/completed/failed` with host + counts. `AuditSheet` ships a giant Liquid Glass `roiHeroCard(for:)` mounted above the Quick Wins section header only when `ROIPromptBuilder.hasAnyEstimate(in:)` returns true — 48pt FR-grouped total in iris with monospaced digit + content transition, "Projeté sur 12 mois : 224 400 €" subtitle, optional confidence pill (gray/orange/green per level), "Méthodologie" button that opens a `ROIMethodologySheet` (full breakdown of every contributing QW + the formula body). Each `quickWinCard(_:)` now stacks a tiny iris-tinted "+2 400 € /mois" capsule above the existing impact pill via `roiInlineLabel(for:)`. Pure FR-grouped formatter `AuditSheet.roiAmountString(_:)` uses `NumberFormatter` with `fr_FR` locale + NBSP thousands separator so "+18 700 €" reads exactly as Mehdi's audience expects. Client Portal HTML (`HTMLTemplates.swift`) gains a new `roiHeroSection(report:)` between scoring and battle sections — a 56pt gradient-text amount with vanilla-JS ease-out count-up animation (1.4 s, triggered by the existing `IntersectionObserver` when the section enters the viewport, no-op when `prefers-reduced-motion`), the same FR-grouped formatter mirrored in JS via `Intl.NumberFormat('fr-FR')`, an optional FR confidence pill ("confiance : élevée"). Each `quickWinCard(_:_:)` HTML now stacks an aqua-tinted `.win__roi` badge above the title when the estimate is present, with `aria-label` for screen readers. 8 new FR/EN xcstrings keys: `roi.hero.total.label`, `roi.hero.annualized.label` (format string), `roi.confidence.{low|medium|high}`, `roi.per.month.suffix`, `roi.methodology.button`, `roi.methodology.body`, `roi.qw.badge.format` (format string). 4 telemetry breadcrumbs (`roi.estimation.started`, `roi.estimation.completed`, `roi.estimation.failed` with stage payload — `network|encode|decode|kickoff`, `roi.methodology.opened`). Tests: 17 new in `ROIEstimatorTests` (client identity in prompt, all QW titles surfaced, JSON-output instruction locked, industry/traffic/ARPU surface when provided, "unknown" placeholders when nil, `selectQuickWins` caps at `maxQuickWins`, empty input returns empty, deterministic builder for identical inputs, `maxQuickWins` hint stays in prompt body, `mapPayload` folds known IDs / drops unknown IDs / clamps above the 30k cap, aggregation = sum / annualised = × 12 / nils excluded / confidence = min-by-rank) + 4 in `ROIEstimateAggregationTests` (the four contracts the spec literal calls out, separated to make the regression target obvious) + 1 in `LocalizationTests` (`test_roiCalculatorStrings_resolveBothLanguages` locks every FR+EN ROI key) + 1 in `ROIPortalSampleEmitter` (writes the 31 KB sample portal HTML for Acme Fintech with five placeholder QWs summing to "+18 700 €/mois" + asserts critical substrings). 396 tests total, 12 skipped, 0 failures (was 373 in v0.24). Build SUCCEEDED on iPhone 17 Pro simulator. Screenshot at `mind/screenshots/v0.25.png` shows the host app launching cleanly on HomeView — the hero ROI card + per-QW badges only render inside AuditSheet after a real audit completes, which matches the documented vision-verify bar (host-launches-clean). Sample portal at `mind/screenshots/v0.25-portal.html` (31 KB) renders the full ROI hero + per-QW badges + count-up animation for Acme Fintech — open in any browser to verify the cinematic ROI surface end-to-end with placeholder numbers (real estimation requires the Anthropic API key configured in the device's Keychain).
 
-### v0.25.1 — Vision Pro spatial layout ⏳
+### v0.25.1 — Vision Pro spatial layout (pure substrate) ✅
 **What** (original v0.25 scope, deferred when ROI Calculator took
 the slot 2026-05-19): Enable visionOS target. Cards float in 3D
 space, focus timer becomes a glowing sphere, audit reports float
 as readable panels. **Acceptance**: app runs on Vision Pro
 simulator, basic interactions work.
+
+Shipped 2026-05-20 (pure substrate): same model as v0.22.1 /
+v0.31.1 / v1.0-alpha.8 — lock the value types + the layout math +
+the on-disk store now, ahead of the visionOS App target. New
+`VisionSpatialKit` module ships four pure surfaces: `SpatialAnchor`
+(Codable + Sendable + Hashable 3D point with position clamped to
+±10 m + angles wrapped into `[-π, π]` + `translated(byX:y:z:)` +
+`facing(_:)` helpers); `SpatialPanel` (Codable + Identifiable
+descriptor with `Kind` enum `.focusTimer` / `.auditReport` /
+`.noteCard` / `.projectChip` / `.generic`, size clamped to
+`[0.05, 4.0]` m, title trimmed to 80 chars, `diagonalMeters`
+helper); `SpatialLayoutPreset` (3 cases — `.bento` / `.cinema` /
+`.atelier` — with FR + EN display names + FR subtitles, stable
+raw values); `SpatialLayoutBuilder` (pure deterministic
+`layout(panels:preset:)` — Bento = 3-column grid at z=-1.2m,
+Cinema = hero centred at z=-2m with side panels splaying ±60°
+alternately left/right and `facing(.origin)` rotating each, Atelier
+= focus timer at z=-1m with other panels pushed ±1m horizontal);
+`SpatialLayoutStore` actor (per-preset JSON persistence under
+`Documents/spatial-layouts/<preset>.json` mirroring `HealthPulseStore`
+/ `WatchCaptureQueue` shape, atomic writes, `save` / `load` /
+`delete` / `isEmpty` / hydration-across-instances). Module
+registered in `Tuist/ProjectDescriptionHelpers/Module.swift` with
+zero dependencies (no GraphCore — every anchor / panel is self-
+contained). Test target gains `Module.visionSpatialKit` link.
+Tests: 29 new `VisionSpatialKitTests` lock the contract — anchor
+Codable round-trip + clamp + angle wrap + origin + translate +
+facing-yaw direction; panel Codable + size clamp + title trim +
+diagonal + anchored helper; builder empty input + Bento 3-panel-
+row alignment + 6-panel two-row layout + Cinema hero-centred +
+side alternation + Atelier focus-timer-centred + alternating
+sides + deterministic for identical input + preserves order &
+IDs; preset 3-cases + FR/EN strings non-empty + stable raw
+values; store save→load + missing-preset nil + save replaces +
+delete + delete missing returns false + isEmpty flips + hydration
+across fresh instances over same root. 784 tests total, 15
+skipped, 0 failures (was 755 in v0.22.1 — +29). Vision verify at
+`mind/screenshots/v0.25.1.png` (host launches clean on the
+Cockpit — "Bonjour Mehdi" hero + 4 leads + Projets actifs +
+Pipeline visible, Liquid Glass aesthetic intact — substrate
+invisible until the future visionOS App target lights up, which
+is the documented contract).
 
 ### v0.26 — AI Sales Email Generator ✅
 Shipped 2026-05-19: new `OutreachKit` module + `OutreachSheet` UI + 3 entry points (NodeDetailView client body, HomeView audit card tertiary row, ClientCard context menu) + 14 pure tests + FR/EN strings.

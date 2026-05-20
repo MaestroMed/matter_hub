@@ -162,6 +162,17 @@ let testTarget: Target = .target(
         // future watchOS App + CloudKit mirror plug into the same
         // substrate without re-rolling the data shape.
         .target(name: Module.watchCaptureKit.rawValue),
+        // v0.25.1 — VisionSpatialKit tests lock the pure substrate
+        // behind the deferred Vision Pro layout — the `SpatialAnchor`
+        // bounds clamping + Codable round-trip, the
+        // `SpatialPanel` size clamping + title trimming, the
+        // `SpatialLayoutBuilder` deterministic preset math (bento
+        // grid columns + cinema arc + atelier sphere), and the
+        // `SpatialLayoutStore` actor's hermetic JSON persistence
+        // round-trip. The future visionOS App + RealityView surface
+        // plug into the same substrate without re-rolling the
+        // anchor / panel shape.
+        .target(name: Module.visionSpatialKit.rawValue),
         // v1.0-alpha.7 — SwarmKit tests cover the pure
         // `SEOSwarmPromptBuilder` (system + page prompt anchors,
         // deterministic shape, JSON-only contract, population
