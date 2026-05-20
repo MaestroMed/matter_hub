@@ -1,16 +1,23 @@
 import UserNotifications
 
 /// v1.0-alpha.14 — APNs Notification Service Extension that decorates
-/// every lead push payload before iOS displays the banner. The
-/// Cloudflare Worker (mind/tools/cloudflare-worker) builds a minimal
-/// payload that includes `{ aps: { alert: { title, body } }, lead: {
-/// id, projectID, contactName, projectName, formType, messagePreview
-/// } }`. This NSE upgrades the alert with:
+/// every push payload before iOS displays the banner. The Cloudflare
+/// Worker (mind/tools/cloudflare-worker) emits two payload shapes:
 ///
-///   - title  = `<contactName> · <projectName>`
-///   - body   = first 120 chars of message (truncated with …)
-///   - threadIdentifier = `lead.<projectID>` so iOS groups leads per
-///     project in Notification Center.
+/// 1. Lead pushes: `{ aps: { alert: { title, body } }, lead: { id,
+///    projectID, contactName, projectName, formType, messagePreview } }`
+/// 2. v1.1.0 — Vercel deployment pushes: `{ aps: { alert, sound,
+///    "thread-id" }, vercel: { type, projectId, deploymentId, url,
+///    commitSHA, commitMessage, authorEmail, occurredAt } }`
+///
+/// This NSE upgrades each banner with:
+///
+///   - Lead → `title = <contactName> · <projectName>`,
+///     `body = first 120 chars of message`,
+///     `threadIdentifier = lead.<projectID>`.
+///   - Vercel → `title = MIND · <name>`,
+///     `body = <FR status label> · <commit-sha-7> <commit-message>`,
+///     `threadIdentifier = vercel.<projectId>`.
 ///
 /// Soft-fails to passthrough when the payload is malformed — better
 /// to show the raw push than to silently drop it.
@@ -31,10 +38,25 @@ final class NotificationService: UNNotificationServiceExtension {
             return
         }
 
+        let userInfo = request.content.userInfo
+
+        // v1.1.0 — Vercel payload takes precedence so a project that
+        // ships both lead + deploy events under the same APNs topic
+        // still surfaces a deploy banner without colliding with the
+        // lead path.
+        if let vercel = Self.parseVercel(userInfo: userInfo) {
+            best.title = vercel.title
+            best.body = Self.truncate(vercel.body, to: 120)
+            best.threadIdentifier = "vercel.\(vercel.projectID)"
+            best.sound = best.sound ?? .default
+            contentHandler(best)
+            return
+        }
+
         // Try the structured payload first. Worker emits `lead` as a
         // top-level userInfo dict, but we also accept it nested under
         // `aps.payload` as a backward-compatibility cushion.
-        let parsed = Self.parse(userInfo: request.content.userInfo)
+        let parsed = Self.parse(userInfo: userInfo)
         guard let lead = parsed else {
             // No structured payload — pass through the raw alert. The
             // Worker's fallback title (`Nouveau lead`) is already
@@ -98,6 +120,68 @@ final class NotificationService: UNNotificationServiceExtension {
             projectID: projectID,
             messagePreview: messagePreview
         )
+    }
+
+    /// v1.1.0 — Pure projection of the Vercel push payload. Mirrors
+    /// the Worker side's `VercelPushPayload` byte-for-byte; the App
+    /// target ships a structurally identical helper in
+    /// `PushPayloadParser` so the unit tests can exercise the same
+    /// logic without `@testable import`-ing the NSE.
+    struct VercelDecoration: Equatable {
+        var title: String
+        var body: String
+        var projectID: String
+    }
+
+    /// Extracts a `VercelDecoration` from a `userInfo` dict shipped by
+    /// the Worker's `/v1/vercel-webhook` handler. Returns nil when the
+    /// `vercel` sub-dict is missing or carries no `projectId`.
+    static func parseVercel(userInfo: [AnyHashable: Any]) -> VercelDecoration? {
+        guard let vercel = userInfo["vercel"] as? [String: Any] else { return nil }
+        let projectIDRaw = (vercel["projectId"] as? String) ?? (vercel["projectID"] as? String)
+        let projectID = trim(projectIDRaw, fallback: "unknown")
+        guard projectID != "unknown" else { return nil }
+
+        let projectName = (userInfo["aps"] as? [String: Any]).flatMap { aps -> String? in
+            (aps["alert"] as? [String: Any])?["title"] as? String
+        }
+        let titleFallback = projectName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = (titleFallback?.isEmpty == false) ? titleFallback! : "MIND · Vercel"
+
+        let typeRaw = (vercel["type"] as? String) ?? ""
+        let label = vercelStatusLabel(typeRaw)
+        let shaShort: String = {
+            guard let sha = vercel["commitSHA"] as? String else { return "" }
+            return String(sha.prefix(7))
+        }()
+        let message = (vercel["commitMessage"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        var parts: [String] = [label]
+        if !shaShort.isEmpty { parts.append(shaShort) }
+        if !message.isEmpty { parts.append(message) }
+        let body = parts.joined(separator: " · ")
+        return VercelDecoration(title: title, body: body, projectID: projectID)
+    }
+
+    /// FR labels per Vercel event type. Mirrors the Worker-side
+    /// `vercelStatusLabel(type:)` so any divergence surfaces in the
+    /// PushPayloadParser test suite.
+    static func vercelStatusLabel(_ type: String) -> String {
+        switch type {
+        case "deployment.created", "deployment-created", "deployment":
+            return "Déploiement démarré"
+        case "deployment.succeeded",
+             "deployment-succeeded",
+             "deployment-ready",
+             "deployment.ready":
+            return "✓ Déploiement réussi"
+        case "deployment.error", "deployment-error":
+            return "❌ Build échoué"
+        case "deployment.canceled", "deployment-canceled":
+            return "Annulé"
+        default:
+            return "Évènement Vercel"
+        }
     }
 
     /// Whitespace-collapsing extraction helper. Returns `fallback`

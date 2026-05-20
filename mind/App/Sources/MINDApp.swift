@@ -19,6 +19,11 @@ import UserNotifications
 // SwiftUI surfaces (`SpatialRootView`, `SpatialAuditTheaterImmersive`)
 // behind `#if os(visionOS)`.
 import VisionSpatialKit
+// v1.1.0 — Daily Lighthouse snapshot fan-out reaches `LighthouseProbe`
+// directly from the app lifecycle so the trend sparkline grid in
+// ProjectDetailSheet has data even when Mehdi never manually refreshes
+// a project for a few days.
+import ProjectHealthKit
 
 /// v1.0-alpha.1 — Cockpit Studio pivot. Stripped lifecycle to the
 /// hooks the rebuild keeps using: foreground CloudKit refresh,
@@ -215,6 +220,58 @@ struct MINDApp: App {
         )
     }
 
+    /// v1.1.0 — Per-day rate-limited Lighthouse snapshot writer. Run on
+    /// every `.active` scene phase, but only fires the network probe
+    /// when:
+    ///   - The project has a non-empty `host`.
+    ///   - No `LighthouseSnapshot` exists for that project today.
+    /// Capped at 5 active projects per call so the very-rare large
+    /// portfolio doesn't burn through Google's anonymous quota in a
+    /// single foreground (PageSpeed Insights default rate ≈ 100/day
+    /// per origin).
+    @MainActor
+    static func refreshLighthouseSnapshotsIfNeeded() async {
+        let context = GraphCore.sharedContainer.mainContext
+        let projectDescriptor = FetchDescriptor<Project>()
+        let projects = ((try? context.fetch(projectDescriptor)) ?? [])
+            .filter { !$0.host.isEmpty }
+            .filter { $0.lifecycleStageEnum != .archived }
+            .prefix(5)
+
+        guard !projects.isEmpty else { return }
+
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: .now)
+        // Drop the projects that already have today's row — keeps the
+        // fan-out idempotent across multiple foregroundings per day.
+        for project in projects {
+            let projectID = project.id
+            let snapshotDescriptor = FetchDescriptor<LighthouseSnapshot>(
+                predicate: #Predicate<LighthouseSnapshot> { $0.projectID == projectID && $0.capturedAt >= startOfToday },
+                sortBy: [SortDescriptor(\LighthouseSnapshot.capturedAt, order: .reverse)]
+            )
+            if let fetched = try? context.fetch(snapshotDescriptor), !fetched.isEmpty {
+                continue
+            }
+            do {
+                let score = try await LighthouseProbe.shared.score(for: project.host)
+                LighthouseSnapshotStore.persist(
+                    score: score,
+                    projectID: project.id,
+                    host: project.host
+                )
+            } catch {
+                MINDTelemetry.warning(
+                    "lighthouse.daily.probe.failed",
+                    data: [
+                        "projectID": project.id.uuidString,
+                        "error": String(describing: error),
+                    ]
+                )
+            }
+        }
+    }
+
     var body: some Scene {
         #if os(visionOS)
         // v1.0-alpha.19 — Vision Pro spatial cockpit. The visionOS
@@ -287,6 +344,15 @@ struct MINDApp: App {
                 // while the app was backgrounded.
                 Task { @MainActor in
                     await FollowUpScheduler.rescheduleAll()
+                }
+                // v1.1.0 — Daily Lighthouse snapshot fan-out. Caps at
+                // one fresh snapshot per project per calendar day (the
+                // sparkline grid only needs day-resolution anyway, and
+                // PageSpeed Insights's anonymous quota is sized in
+                // hundreds-per-day not thousands). Skips silently when
+                // probes fail.
+                Task { @MainActor in
+                    await MINDApp.refreshLighthouseSnapshotsIfNeeded()
                 }
             case .background:
                 MINDTelemetry.info("lifecycle.background")

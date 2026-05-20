@@ -28,6 +28,12 @@ struct ProjectsView: View {
     @State private var selectedProject: Project?
     @State private var presentingNewProject: Bool = false
 
+    /// v1.1.0 — Optional scroll anchor passed through to the
+    /// presented `ProjectDetailSheet`. Set by the Vercel deep link
+    /// listener so the sheet opens at the Vercel section instead of
+    /// the header.
+    @State private var pendingSheetAnchor: ProjectDetailSheet.SectionAnchor?
+
     private var filtered: [Project] {
         let filtered = ProjectSorter.filter(projects, query: searchText)
         return ProjectSorter.sort(filtered, by: sortKey)
@@ -65,10 +71,47 @@ struct ProjectsView: View {
             await refreshAllProjects()
         }
         .sheet(item: $selectedProject) { project in
-            ProjectDetailSheet(project: project)
+            ProjectDetailSheet(project: project, initialAnchor: pendingSheetAnchor)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mindOpenProjectVercel)) { notif in
+            // v1.1.0 — Vercel push tap or `mind://vercel/<id>` deep
+            // link. The notification object is the raw Vercel
+            // project ID (`prj_*`). Resolve it against the local
+            // SwiftData store and present the sheet auto-scrolled to
+            // the Vercel section. Soft-fail when no matching project
+            // exists so a stray push from an old project never
+            // crashes the cockpit.
+            guard let projectID = notif.object as? String, !projectID.isEmpty else {
+                MINDTelemetry.warning(
+                    "vercel.push.routed.malformed",
+                    data: ["object": String(describing: notif.object)]
+                )
+                return
+            }
+            if let match = projects.first(where: { ($0.vercelProjectID ?? "") == projectID }) {
+                pendingSheetAnchor = .vercel
+                selectedProject = match
+                MINDTelemetry.info(
+                    "vercel.push.routed",
+                    data: [
+                        "projectID": projectID,
+                        "match": match.slug,
+                    ]
+                )
+            } else {
+                MINDTelemetry.warning(
+                    "vercel.push.routed.notFound",
+                    data: ["projectID": projectID]
+                )
+            }
+        }
+        .onChange(of: selectedProject?.id) { _, _ in
+            // Once the user dismisses the sheet, reset the anchor so
+            // a fresh tap-from-list opens at the header again.
+            if selectedProject == nil { pendingSheetAnchor = nil }
         }
         .sheet(isPresented: $presentingNewProject) {
             // v1.0-alpha.6 — Replace the basic NewProjectSheet with

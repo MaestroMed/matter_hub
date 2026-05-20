@@ -183,6 +183,31 @@ struct RootView: View {
                 )
                 return
             }
+            // v1.1.0 — `mind://vercel/<projectID>` deep link fired by
+            // the Vercel-push tap path. Drops the user on Projects so
+            // the matching `ProjectDetailSheet` opens at the Vercel
+            // section. The project ID is Vercel's opaque `prj_*`
+            // string — never a SwiftData UUID — so we forward the raw
+            // string and let `ProjectsView` resolve it against the
+            // SwiftData store.
+            if url.host?.lowercased() == "vercel", url.pathComponents.count >= 2 {
+                let projectID = url.pathComponents[1]
+                selection = .pipeline
+                // The matching Project lives in either the Pipeline or
+                // the Projects tab depending on Mehdi's current
+                // arrangement — Pipeline is the closest "portfolio
+                // overview" surface, so we land there for visibility,
+                // and the listener resolves the sheet.
+                NotificationCenter.default.post(
+                    name: .mindOpenProjectVercel,
+                    object: projectID
+                )
+                MINDTelemetry.info(
+                    "vercel.deepLink.opened",
+                    data: ["projectID": projectID]
+                )
+                return
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .mindCommandSelectTab)) { notif in
             guard let raw = notif.userInfo?["tab"] as? String,
@@ -1725,6 +1750,14 @@ extension Notification.Name {
     /// it, looks the matching `Lead` up via its `@Query` slice, and
     /// presents `LeadDetailSheet`.
     static let mindOpenLead = Notification.Name("mind.openLead")
+
+    /// v1.1.0 — Posted when a Vercel deploy push is tapped OR when
+    /// the `mind://vercel/<projectID>` deep link is opened. The
+    /// `object` is the Vercel project ID string (`prj_*`). ProjectsView
+    /// listens, resolves it against any `Project.vercelProjectID`,
+    /// and presents `ProjectDetailSheet` auto-scrolled to the Vercel
+    /// section.
+    static let mindOpenProjectVercel = Notification.Name("mind.openProjectVercel")
 }
 
 // MARK: - Push deep-link parser (v1.0-alpha.14)

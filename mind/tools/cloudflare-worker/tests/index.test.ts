@@ -7,7 +7,13 @@
 // real Cloudflare account.
 
 import { describe, expect, it, beforeEach } from "vitest";
-import worker, { signBody, timingSafeEqual, Env } from "../src/index";
+import worker, {
+  signBody,
+  signBodySHA1,
+  timingSafeEqual,
+  vercelStatusLabel,
+  Env,
+} from "../src/index";
 
 class FakeKV {
   store = new Map<string, { value: string; ttl: number }>();
@@ -29,6 +35,7 @@ class FakeKV {
 function makeEnv(overrides: Partial<Env> = {}): Env {
   return {
     WEBHOOK_SECRET: "test-secret",
+    VERCEL_WEBHOOK_SECRET: "test-vercel-secret",
     APNS_KEY_P8: "",
     APNS_KEY_ID: "",
     APNS_TEAM_ID: "",
@@ -264,5 +271,103 @@ describe("misc routing", () => {
     const req = new Request("https://w.example.com/v1/leads", { method: "PUT" });
     const res = await worker.fetch(req, makeEnv(), makeCtx());
     expect(res.status).toBe(405);
+  });
+});
+
+// MARK: - Vercel webhook (v1.1.0)
+
+function vercelEvent(overrides: Partial<{
+  type: string;
+  createdAt: number;
+  payload: object;
+}> = {}) {
+  return {
+    type: "deployment.succeeded",
+    createdAt: 1_716_000_000_000,
+    payload: {
+      deploymentId: "dpl_abc123",
+      projectId: "prj_xyz789",
+      name: "az-construction",
+      url: "az-construction-abc123.vercel.app",
+      team: { name: "Numelite", id: "team_1" },
+      meta: {
+        githubCommitSha: "f1e2d3c4b5a6978899aabbccddeeff0011223344",
+        githubCommitMessage: "feat: refresh hero section",
+        githubCommitAuthorName: "Mehdi Nafaa",
+      },
+    },
+    ...overrides,
+  };
+}
+
+async function signedVercelRequest(body: object, secret: string): Promise<Request> {
+  const bodyText = JSON.stringify(body);
+  const sig = await signBodySHA1(bodyText, secret);
+  return new Request("https://w.example.com/v1/vercel-webhook", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-vercel-signature": sig,
+    },
+    body: bodyText,
+  });
+}
+
+describe("POST /v1/vercel-webhook (v1.1.0)", () => {
+  let env: Env;
+  beforeEach(() => {
+    env = makeEnv();
+  });
+
+  it("accepts a SHA-1 HMAC-signed event and stores the vercel row in KV", async () => {
+    const req = await signedVercelRequest(vercelEvent(), "test-vercel-secret");
+    const res = await worker.fetch(req, env, makeCtx());
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { status: string };
+    expect(body.status).toBe("queued");
+
+    const fake = env.LEADS as unknown as FakeKV;
+    expect(fake.store.size).toBe(1);
+    const [key] = [...fake.store.keys()];
+    expect(key).toMatch(/^vercel:prj_xyz789:\d+:dpl_abc123$/);
+    const stored = JSON.parse([...fake.store.values()][0].value);
+    expect(stored.type).toBe("deployment.succeeded");
+    expect(stored.projectId).toBe("prj_xyz789");
+    expect(stored.deploymentId).toBe("dpl_abc123");
+    expect(stored.commitSHA).toBe("f1e2d3c4b5a6978899aabbccddeeff0011223344");
+    expect(stored.commitMessage).toBe("feat: refresh hero section");
+    expect(stored.occurredAt).toBe(new Date(1_716_000_000_000).toISOString());
+  });
+
+  it("rejects an event signed with the wrong secret", async () => {
+    const req = await signedVercelRequest(vercelEvent(), "wrong-secret");
+    const res = await worker.fetch(req, env, makeCtx());
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("unauthorized");
+
+    const fake = env.LEADS as unknown as FakeKV;
+    expect(fake.store.size).toBe(0);
+  });
+
+  it("rejects an event whose payload lacks a projectId", async () => {
+    const broken = vercelEvent({ payload: { deploymentId: "dpl_no_proj" } as object });
+    const req = await signedVercelRequest(broken, "test-vercel-secret");
+    const res = await worker.fetch(req, env, makeCtx());
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("invalid_payload");
+
+    const fake = env.LEADS as unknown as FakeKV;
+    expect(fake.store.size).toBe(0);
+  });
+
+  it("uses the right FR label per Vercel event type", () => {
+    expect(vercelStatusLabel("deployment.created")).toBe("Déploiement démarré");
+    expect(vercelStatusLabel("deployment.succeeded")).toBe("✓ Déploiement réussi");
+    expect(vercelStatusLabel("deployment.error")).toBe("❌ Build échoué");
+    expect(vercelStatusLabel("deployment.canceled")).toBe("Annulé");
+    expect(vercelStatusLabel("deployment-ready")).toBe("✓ Déploiement réussi");
+    expect(vercelStatusLabel("unknown.future.event")).toBe("Évènement Vercel");
   });
 });

@@ -12227,6 +12227,198 @@
         "en": { "stringUnit": { "state": "translated", "value": "MIND Cockpit" } },
         "fr": { "stringUnit": { "state": "translated", "value": "MIND Cockpit" } }
       }
+    },
+    "settings.vercel.webhook.header": {
+      "comment": "v1.1.0 · Settings → Intégrations dev → Vercel sub-section: webhook block header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "DEPLOY WEBHOOK" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "WEBHOOK DÉPLOIEMENT" } }
+      }
+    },
+    "settings.vercel.webhook.url.label": {
+      "comment": "v1.1.0 · Settings · Vercel webhook URL row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Webhook URL (paste into Vercel)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "URL webhook (à coller dans Vercel)" } }
+      }
+    },
+    "settings.vercel.webhook.url.placeholder": {
+      "comment": "v1.1.0 · Settings · Placeholder for the Worker base URL field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "https://mind-lead-webhook.<you>.workers.dev" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "https://mind-lead-webhook.<toi>.workers.dev" } }
+      }
+    },
+    "settings.vercel.webhook.url.copy": {
+      "comment": "v1.1.0 · Settings · Copy resolved /v1/vercel-webhook URL button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Copy URL" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Copier l'URL" } }
+      }
+    },
+    "settings.vercel.webhook.url.empty": {
+      "comment": "v1.1.0 · Settings · Empty state when no Worker URL is configured yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Paste your Cloudflare Worker URL above to reveal the webhook endpoint." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Colle l'URL de ton Cloudflare Worker ci-dessus pour révéler l'endpoint." } }
+      }
+    },
+    "settings.vercel.webhook.url.copied": {
+      "comment": "v1.1.0 · Settings · Toast title after copying the resolved URL.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Webhook URL copied" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "URL webhook copiée" } }
+      }
+    },
+    "settings.vercel.webhook.secret.label": {
+      "comment": "v1.1.0 · Settings · Label above the SHA-1 secret SecureField.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Webhook secret (SHA-1)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Secret webhook (SHA-1)" } }
+      }
+    },
+    "settings.vercel.webhook.secret.placeholder": {
+      "comment": "v1.1.0 · Settings · Placeholder for the SHA-1 secret SecureField.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Paste the Vercel webhook secret" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Colle le secret webhook Vercel" } }
+      }
+    },
+    "settings.vercel.webhook.secret.save": {
+      "comment": "v1.1.0 · Settings · Save CTA for the Vercel webhook secret.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Save secret" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Enregistrer" } }
+      }
+    },
+    "vercel.status.started": {
+      "comment": "v1.1.0 · NSE / iOS fallback label for a `deployment.created` push.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Deployment started" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déploiement démarré" } }
+      }
+    },
+    "vercel.status.succeeded": {
+      "comment": "v1.1.0 · NSE / iOS fallback label for a `deployment.succeeded` push.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Deployment succeeded" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déploiement réussi" } }
+      }
+    },
+    "vercel.status.error": {
+      "comment": "v1.1.0 · NSE / iOS fallback label for a `deployment.error` push.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Build failed" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Build échoué" } }
+      }
+    },
+    "vercel.status.canceled": {
+      "comment": "v1.1.0 · NSE / iOS fallback label for a `deployment.canceled` push.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancelled" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annulé" } }
+      }
+    },
+    "vercel.notification.title.format": {
+      "comment": "v1.1.0 · Vercel notification title format. %1$@ = team or brand. %2$@ = project name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ — %2$@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$@ — %2$@" } }
+      }
+    },
+    "vercel.notification.body.format": {
+      "comment": "v1.1.0 · Vercel notification body format. %1$@ = status label. %2$@ = commit message (truncated).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$@" } }
+      }
+    },
+    "project.lighthouse.trend.title": {
+      "comment": "v1.1.0 · ProjectDetailSheet · Title above the 30-day Lighthouse trend grid.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "30-day trend" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tendance 30 jours" } }
+      }
+    },
+    "project.lighthouse.trend.empty": {
+      "comment": "v1.1.0 · ProjectDetailSheet · Empty state shown when no Lighthouse snapshot has been captured yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No snapshot yet — an audit or portfolio refresh starts the collection." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun snapshot — un audit ou un refresh portfolio lance la collecte." } }
+      }
+    },
+    "project.lighthouse.trend.snapshotCount.format": {
+      "comment": "v1.1.0 · Trend caption — count of snapshots in the rolling window. %d = count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d snapshots in 30 days" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d snapshots sur 30 jours" } }
+      }
+    },
+    "project.lighthouse.trend.lastSnapshot.format": {
+      "comment": "v1.1.0 · Trend caption — relative time of the most-recent snapshot. %@ = relative date.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "last %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "dernier %@" } }
+      }
+    },
+    "project.lighthouse.trend.metric.perf": {
+      "comment": "v1.1.0 · Sparkline label · Performance metric.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Perf" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Perf" } }
+      }
+    },
+    "project.lighthouse.trend.metric.a11y": {
+      "comment": "v1.1.0 · Sparkline label · Accessibility metric.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A11y" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "A11y" } }
+      }
+    },
+    "project.lighthouse.trend.metric.bp": {
+      "comment": "v1.1.0 · Sparkline label · Best practices metric.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Best" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bonnes pratiques" } }
+      }
+    },
+    "project.lighthouse.trend.metric.seo": {
+      "comment": "v1.1.0 · Sparkline label · SEO metric.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "SEO" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SEO" } }
+      }
+    },
+    "lighthouse.snapshot.persisted": {
+      "comment": "v1.1.0 · MINDTelemetry breadcrumb label — never user-facing, present here for any future audit / translator pass.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lighthouse snapshot saved" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Snapshot Lighthouse enregistré" } }
+      }
     }
   }
 }

@@ -3,6 +3,10 @@
 > Wire any deployed client site (Next.js / Astro / WordPress / static) so
 > its `/api/contact` form pushes leads into your MIND iOS cockpit, with
 > an APNs push notification fired the moment the lead lands.
+>
+> v1.1.0 — Also documents the **Vercel deployment webhook**, which uses
+> the same Worker + APNs pipeline to push a notification each time a
+> Vercel deploy starts, succeeds, fails, or is canceled.
 
 Shipped as part of MIND `v1.0-alpha.5`. Lives under `mind/tools/`.
 
@@ -114,6 +118,36 @@ export async function POST(req: Request) {
 ```
 
 Ship the site. The next form submission lands in MIND in < 2 seconds.
+
+## Bonus — Vercel deployment webhook (v1.1.0)
+
+Wire each Vercel project so a fresh deploy lights up your iPhone with
+the project name, status (started / succeeded / failed / canceled) and
+the commit message:
+
+1. Generate a second secret + push it to the Worker:
+
+    ```bash
+    openssl rand -hex 32                                            # save this
+    cd mind/tools/cloudflare-worker
+    npx wrangler secret put VERCEL_WEBHOOK_SECRET                   # paste it
+    ```
+
+2. In MIND iOS → **Réglages** → **Webhook Vercel**, paste the same
+   secret. The "URL webhook" row above shows the URL to copy.
+
+3. In Vercel: **Project → Settings → Webhooks → Add Webhook**:
+
+    - **URL** — `https://<your-worker-host>/v1/vercel-webhook`
+    - **Secret** — paste the secret from step 1
+    - **Events** — tick `deployment.created`, `deployment.succeeded`,
+      `deployment.error`, and `deployment.canceled`
+
+4. Trigger a `git push` and a `MIND — <project>` notification lands on
+   your iPhone in < 5 s. Tap it to open the project detail at the Vercel
+   section.
+
+Repeat step 3 for each Vercel project you want to track.
 
 ## Troubleshooting
 

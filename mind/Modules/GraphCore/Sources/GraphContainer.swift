@@ -18,6 +18,11 @@ public enum GraphCore {
         Project.self,
         Lead.self,
         Deliverable.self,
+        // v1.1.0 — Lighthouse trend snapshots. One row per Lighthouse
+        // probe (manual + scheduled), filtered by `projectID` from
+        // ProjectDetailSheet's sparkline grid. Additive: existing
+        // CloudKit zones absorb the new entity on first sync.
+        LighthouseSnapshot.self,
     ])
 
     @MainActor

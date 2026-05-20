@@ -96,6 +96,24 @@ public struct SettingsView: View {
     @State private var webhookProjects: [Project] = []
     @State private var webhookProjectIDCopiedToast: String?
 
+    // v1.1.0 — Vercel deploy webhook. Two pieces:
+    //   1. A user-editable Worker base URL (UserDefaults via
+    //      `WebhookWorkerBaseURLStore`) so the read-only "URL webhook
+    //      Vercel" row can show the resolved /v1/vercel-webhook URL
+    //      without prompting Mehdi to type a long URL into Vercel's
+    //      webhook form by hand.
+    //   2. A SHA-1 HMAC secret (Keychain via `VercelWebhookSecretStore`)
+    //      Vercel signs every event with under x-vercel-signature.
+    //      Distinct from the lead webhook secret because Vercel uses
+    //      SHA-1, not SHA-256, and rotating one shouldn't take the
+    //      other down.
+    @State private var workerBaseURL: String = ""
+    @State private var workerBaseURLSaved: Bool = false
+    @State private var vercelWebhookSecret: String = ""
+    @State private var vercelWebhookSecretSaved: Bool = false
+    @State private var showVercelWebhookSecret: Bool = false
+    @State private var vercelWebhookURLCopiedToast: Bool = false
+
     // Danger-zone confirmation alerts. Two-step UX so the user can't
     // accidentally wipe their second brain by misclicking — the alert
     // is the second tap.
@@ -502,6 +520,15 @@ public struct SettingsView: View {
             if let stored = WebhookSecretStore.read() {
                 webhookSecret = stored
                 webhookSecretSaved = true
+            }
+            // v1.1.0 — Hydrate the Vercel webhook URL + secret.
+            if let storedBase = WebhookWorkerBaseURLStore.read() {
+                workerBaseURL = storedBase
+                workerBaseURLSaved = true
+            }
+            if let storedSecret = VercelWebhookSecretStore.read() {
+                vercelWebhookSecret = storedSecret
+                vercelWebhookSecretSaved = true
             }
             if let stored = VercelTokenStore.read() {
                 vercelToken = stored
@@ -1191,6 +1218,12 @@ public struct SettingsView: View {
                         testVercelConnection()
                     }
                     .disabled(vercelToken.isEmpty || vercelBusy)
+
+                    // v1.1.0 — Vercel deploy webhook block. Sits inside
+                    // the Vercel sub-section so the operator pastes the
+                    // URL + the SHA-1 secret in the same visual area
+                    // they already configured the PAT in.
+                    vercelWebhookBlock
                 }
 
                 Divider().background(.white.opacity(0.2))
@@ -1438,6 +1471,217 @@ public struct SettingsView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Vercel deploy webhook (v1.1.0)
+
+    /// Inline block stacked under the Vercel PAT field. Two rows:
+    /// - **URL webhook Vercel** — derived from the configured Worker
+    ///   base URL; a copy button drops the resolved URL on the
+    ///   clipboard so Mehdi can paste it into Vercel's webhook form.
+    /// - **Secret webhook Vercel** — SecureField + save/clear pair
+    ///   stored via `VercelWebhookSecretStore` (Keychain).
+    @ViewBuilder
+    private var vercelWebhookBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Divider().background(.white.opacity(0.18))
+
+            Text("settings.vercel.webhook.header", bundle: .main)
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.6)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("settings.vercel.webhook.url.label", bundle: .main)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                vercelWebhookURLRow
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("settings.vercel.webhook.secret.label", bundle: .main)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                vercelWebhookSecretField
+
+                HStack(spacing: 8) {
+                    LiquidButton(
+                        title: vercelWebhookSecretSaved
+                            ? String(localized: "settings.button.saved", bundle: .main)
+                            : String(localized: "settings.vercel.webhook.secret.save", bundle: .main),
+                        systemImage: vercelWebhookSecretSaved ? "checkmark" : "key.fill"
+                    ) {
+                        saveVercelWebhookSecret()
+                    }
+                    .disabled(vercelWebhookSecret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    Button(String(localized: "settings.button.clear", bundle: .main)) {
+                        VercelWebhookSecretStore.clear()
+                        vercelWebhookSecret = ""
+                        vercelWebhookSecretSaved = false
+                        MINDTelemetry.info("vercel.webhook.secret.cleared")
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .alert(
+            String(localized: "settings.vercel.webhook.url.copied", bundle: .main),
+            isPresented: $vercelWebhookURLCopiedToast
+        ) {
+            Button("OK", role: .cancel) {}
+        }
+    }
+
+    /// Worker base URL field + resolved `/v1/vercel-webhook` URL +
+    /// copy CTA. The URL field is editable so Mehdi pastes his
+    /// Worker URL once; from then on every Vercel project just gets
+    /// the resolved URL through the copy button.
+    @ViewBuilder
+    private var vercelWebhookURLRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                TextField(
+                    String(localized: "settings.vercel.webhook.url.placeholder", bundle: .main),
+                    text: $workerBaseURL
+                )
+                .textFieldStyle(.plain)
+                .font(.system(.body, design: .monospaced))
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .keyboardType(.URL)
+                .onChange(of: workerBaseURL) { _, _ in
+                    workerBaseURLSaved = false
+                }
+                .onSubmit { saveWorkerBaseURL() }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule(style: .continuous)
+                            .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                    }
+            }
+
+            HStack(spacing: 8) {
+                LiquidButton(
+                    title: workerBaseURLSaved
+                        ? String(localized: "settings.button.saved", bundle: .main)
+                        : String(localized: "settings.button.save", bundle: .main),
+                    systemImage: workerBaseURLSaved ? "checkmark" : "globe"
+                ) {
+                    saveWorkerBaseURL()
+                }
+                .disabled(workerBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                if let resolved = resolvedVercelWebhookURL {
+                    Button {
+                        UIPasteboard.general.string = resolved
+                        vercelWebhookURLCopiedToast = true
+                        LiquidHaptics.success()
+                        MINDTelemetry.info(
+                            "vercel.webhook.url.copied",
+                            data: ["length": String(resolved.count)]
+                        )
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "doc.on.clipboard")
+                            Text("settings.vercel.webhook.url.copy", bundle: .main)
+                        }
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(LiquidPalette.iris)
+                    }
+                }
+            }
+
+            if let resolved = resolvedVercelWebhookURL {
+                Text(verbatim: resolved)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            } else {
+                Text("settings.vercel.webhook.url.empty", bundle: .main)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var vercelWebhookSecretField: some View {
+        HStack {
+            Group {
+                if showVercelWebhookSecret {
+                    TextField(
+                        String(localized: "settings.vercel.webhook.secret.placeholder", bundle: .main),
+                        text: $vercelWebhookSecret
+                    )
+                } else {
+                    SecureField(
+                        String(localized: "settings.vercel.webhook.secret.placeholder", bundle: .main),
+                        text: $vercelWebhookSecret
+                    )
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(.system(.body, design: .monospaced))
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: vercelWebhookSecret) { _, _ in vercelWebhookSecretSaved = false }
+
+            Button {
+                showVercelWebhookSecret.toggle()
+            } label: {
+                Image(systemName: showVercelWebhookSecret ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    private var resolvedVercelWebhookURL: String? {
+        let trimmed = workerBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        var base = trimmed
+        while base.hasSuffix("/") { base.removeLast() }
+        return "\(base)/v1/vercel-webhook"
+    }
+
+    private func saveWorkerBaseURL() {
+        let trimmed = workerBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        WebhookWorkerBaseURLStore.save(trimmed)
+        workerBaseURL = trimmed
+        workerBaseURLSaved = true
+        LiquidHaptics.success()
+        MINDTelemetry.info(
+            "vercel.webhook.url.saved",
+            data: ["length": String(trimmed.count)]
+        )
+    }
+
+    private func saveVercelWebhookSecret() {
+        let trimmed = vercelWebhookSecret.trimmingCharacters(in: .whitespacesAndNewlines)
+        VercelWebhookSecretStore.save(trimmed)
+        vercelWebhookSecretSaved = true
+        LiquidHaptics.success()
+        MINDTelemetry.info(
+            "vercel.webhook.secret.saved",
+            data: ["length": String(trimmed.count)]
+        )
     }
 
     // MARK: - Invoice billing (v0.31)

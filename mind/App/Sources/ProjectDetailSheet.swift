@@ -23,6 +23,13 @@ struct ProjectDetailSheet: View {
 
     @Bindable var project: Project
 
+    /// v1.1.0 — Optional auto-scroll anchor. When the sheet is
+    /// presented from the Vercel deep link (`mind://vercel/<id>`)
+    /// the host passes `.vercel`; the body wraps itself in a
+    /// `ScrollViewReader` and scrolls to the matching section on
+    /// appear.
+    let initialAnchor: SectionAnchor?
+
     @State private var notesDraft: String
     @State private var isAuditing: Bool = false
     @State private var isSwarming: Bool = false
@@ -70,26 +77,51 @@ struct ProjectDetailSheet: View {
     @State private var vercelError: String?
     @State private var githubError: String?
 
-    init(project: Project) {
+    init(project: Project, initialAnchor: SectionAnchor? = nil) {
         self.project = project
+        self.initialAnchor = initialAnchor
         _notesDraft = State(initialValue: project.notes)
     }
 
+    /// v1.1.0 — Section identifiers usable by `ScrollViewReader` so
+    /// the Vercel push deep link can land the user directly at the
+    /// Vercel block without scroll-hunting.
+    enum SectionAnchor: String, Hashable {
+        case vercel
+        case lighthouseTrend
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                header
-                overviewSection
-                vercelSection
-                githubSection
-                recentLeadsSection
-                deliverablesSection
-                actionsSection
-                notesSection
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    header
+                    overviewSection
+                    vercelSection.id(SectionAnchor.vercel)
+                    githubSection
+                    recentLeadsSection
+                    deliverablesSection
+                    actionsSection
+                    notesSection
+                }
+                .padding(20)
+                .padding(.top, 8)
+                .padding(.bottom, 80)
             }
-            .padding(20)
-            .padding(.top, 8)
-            .padding(.bottom, 80)
+            .onAppear {
+                guard let anchor = initialAnchor else { return }
+                // Defer the scroll by a tick so the layout completes
+                // before the scroll request lands.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation(.easeInOut(duration: 0.45)) {
+                        proxy.scrollTo(anchor, anchor: .top)
+                    }
+                }
+                MINDTelemetry.info(
+                    "project.detail.autoScroll",
+                    data: ["anchor": anchor.rawValue]
+                )
+            }
         }
         .background { LiquidBackground().ignoresSafeArea() }
         .onAppear {
@@ -384,6 +416,14 @@ struct ProjectDetailSheet: View {
                             .foregroundStyle(.secondary)
                     }
                     lighthouseGrid
+                    // v1.1.0 — 30-day Lighthouse trend sparkline grid.
+                    // Renders the same four metrics as `lighthouseGrid`
+                    // above, but as mini line charts pulled from the
+                    // `LighthouseSnapshot` @Query slice. Soft-fails to
+                    // an empty-state caption when no snapshot exists
+                    // yet — the first audit or pull-to-refresh fills it.
+                    LighthouseTrendView(projectID: project.id)
+                        .id(SectionAnchor.lighthouseTrend)
                     Link(destination: URL(string: "https://vercel.com/dashboard")!) {
                         HStack(spacing: 4) {
                             Text("project.vercel.openLink")
@@ -741,6 +781,16 @@ struct ProjectDetailSheet: View {
                     MINDTelemetry.info("lighthouse.probe.completed",
                                        data: ["projectID": project.id.uuidString,
                                               "perf": "\(score.performance)"])
+                    // v1.1.0 — Persist a `LighthouseSnapshot` row so
+                    // the 30-day trend sparkline below this section
+                    // has data to render. Soft-failing inside the
+                    // store keeps the cockpit alive if SwiftData
+                    // momentarily can't save.
+                    LighthouseSnapshotStore.persist(
+                        score: score,
+                        projectID: project.id,
+                        host: project.host
+                    )
                 }
                 await ProjectHealthCache.shared.update(project.id, keyPath: \.lighthouse, value: score)
             } catch {

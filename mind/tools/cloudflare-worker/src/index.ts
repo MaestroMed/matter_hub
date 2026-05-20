@@ -6,20 +6,28 @@
 // so the iOS app can pull-fallback in case a push was lost
 // (push delivery is best-effort by design).
 //
+// v1.1.0 — Adds a second ingest route for Vercel deployment
+// webhooks. Same APNs + KV shape, distinct payload + signature
+// scheme (Vercel signs with SHA-1 HMAC under x-vercel-signature).
+//
 // Routes:
 //   POST  /v1/leads             — ingest a signed lead
 //   GET   /v1/leads?since=ISO   — list KV-stored leads (capped 100)
 //   OPTIONS /v1/leads           — CORS preflight (204)
+//   POST  /v1/vercel-webhook    — ingest a Vercel deployment event
 //
 // Required Worker secrets / vars:
-//   WEBHOOK_SECRET, APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID,
-//   APNS_DEVICE_TOKEN, APNS_BUNDLE_ID, APNS_HOST, LEAD_TTL_SECONDS
+//   WEBHOOK_SECRET, VERCEL_WEBHOOK_SECRET, APNS_KEY_P8, APNS_KEY_ID,
+//   APNS_TEAM_ID, APNS_DEVICE_TOKEN, APNS_BUNDLE_ID, APNS_HOST,
+//   LEAD_TTL_SECONDS
 //
 // KV bindings:
-//   LEADS — keyed by `lead:<projectID>:<timestamp>:<uuid>`
+//   LEADS — keyed by `lead:<projectID>:<timestamp>:<uuid>` and
+//           `vercel:<projectID>:<timestamp>:<deploymentID>`.
 
 export interface Env {
   WEBHOOK_SECRET: string;
+  VERCEL_WEBHOOK_SECRET: string;
   APNS_KEY_P8: string;
   APNS_KEY_ID: string;
   APNS_TEAM_ID: string;
@@ -83,6 +91,17 @@ export default {
       }
       if (request.method === "GET") {
         return handleList(url, env);
+      }
+      return json({ error: "method_not_allowed" }, 405);
+    }
+
+    // v1.1.0 — Vercel deployment webhook ingest. Same APNs + KV
+    // pattern as /v1/leads but verifies a SHA-1 HMAC signature
+    // (Vercel's legacy signing scheme) under the x-vercel-signature
+    // header.
+    if (url.pathname === "/v1/vercel-webhook") {
+      if (request.method === "POST") {
+        return handleVercelWebhook(request, env, ctx);
       }
       return json({ error: "method_not_allowed" }, 405);
     }
@@ -337,6 +356,198 @@ function base64url(bytes: Uint8Array): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// MARK: - Vercel webhook (v1.1.0)
+
+/// Wire-format slice we read from a Vercel webhook event. Vercel
+/// ships a flat envelope with `type`, `createdAt`, and a `payload`
+/// dict carrying the deployment + project + commit metadata. We
+/// don't decode the entire envelope — only the fields the iOS
+/// notification + KV row needs.
+export interface VercelWebhookEvent {
+  type: string;
+  createdAt: number;
+  payload: {
+    deploymentId?: string;
+    projectId: string;
+    name?: string;
+    url?: string;
+    team?: { name?: string; id?: string };
+    meta?: {
+      githubCommitSha?: string;
+      githubCommitMessage?: string;
+      githubCommitAuthorName?: string;
+    };
+  };
+}
+
+/// Projection shipped to the iOS device under `userInfo["vercel"]`.
+/// Mirrors the Swift `PushPayloadParser.VercelPayload` value type
+/// so a careless rename surfaces as a divergent test failure on
+/// both sides.
+export interface VercelPushPayload {
+  type: string;
+  projectId: string;
+  deploymentId?: string;
+  url?: string;
+  commitSHA?: string;
+  commitMessage?: string;
+  authorEmail?: string;
+  occurredAt: string;
+}
+
+async function handleVercelWebhook(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext
+): Promise<Response> {
+  const rawBody = await request.text();
+  if (rawBody.length === 0) {
+    return json({ error: "empty_body" }, 400);
+  }
+
+  const sig = request.headers.get("x-vercel-signature") ?? "";
+  if (!env.VERCEL_WEBHOOK_SECRET) {
+    return json({ error: "secret_unset" }, 401);
+  }
+  const expected = await signBodySHA1(rawBody, env.VERCEL_WEBHOOK_SECRET);
+  if (!sig || !timingSafeEqual(sig.toLowerCase(), expected)) {
+    return json({ error: "unauthorized" }, 401);
+  }
+
+  let event: VercelWebhookEvent;
+  try {
+    event = JSON.parse(rawBody) as VercelWebhookEvent;
+  } catch {
+    return json({ error: "invalid_json" }, 400);
+  }
+  if (!event.payload || typeof event.payload.projectId !== "string" || event.payload.projectId.length === 0) {
+    return json({ error: "invalid_payload" }, 400);
+  }
+
+  const occurredAt = new Date(typeof event.createdAt === "number" ? event.createdAt : Date.now()).toISOString();
+  const vercelPayload: VercelPushPayload = {
+    type: event.type,
+    projectId: event.payload.projectId,
+    deploymentId: event.payload.deploymentId,
+    url: event.payload.url,
+    commitSHA: event.payload.meta?.githubCommitSha,
+    commitMessage: event.payload.meta?.githubCommitMessage,
+    authorEmail: event.payload.meta?.githubCommitAuthorName,
+    occurredAt,
+  };
+
+  const teamLabel = event.payload.team?.name?.trim();
+  const projectLabel = event.payload.name?.trim() || event.payload.projectId;
+  const titlePrefix = teamLabel && teamLabel.length > 0 ? teamLabel : "Vercel";
+  const statusLabel = vercelStatusLabel(event.type);
+  const commitMessage = (event.payload.meta?.githubCommitMessage ?? "").trim().slice(0, 80);
+  const bodyText = commitMessage.length > 0 ? `${statusLabel} · ${commitMessage}` : statusLabel;
+
+  const pushBody = JSON.stringify({
+    aps: {
+      alert: {
+        title: `${titlePrefix} — ${projectLabel}`,
+        body: bodyText,
+      },
+      sound: "default",
+      "thread-id": `vercel.${event.payload.projectId}`,
+    },
+    vercel: vercelPayload,
+  });
+
+  // KV write is the source of truth: even if APNs is down the iOS
+  // app's pull-fallback (future iteration) catches the event up.
+  const deploymentKeySegment = event.payload.deploymentId ?? "unknown";
+  try {
+    await env.LEADS.put(
+      `vercel:${event.payload.projectId}:${Date.now()}:${deploymentKeySegment}`,
+      JSON.stringify(vercelPayload),
+      { expirationTtl: 60 * 60 * 24 * 7 } // 7 days
+    );
+  } catch {
+    return json({ error: "kv_unavailable" }, 503);
+  }
+
+  // APNs is best-effort, same posture as the lead path.
+  ctx.waitUntil(sendVercelAPNs(env, pushBody).catch(() => undefined));
+
+  return json({ status: "queued" }, 200);
+}
+
+/// FR labels surfaced in the APNs body for every Vercel event type.
+/// Mirrored by the iOS-side strings catalog so a manual decode in
+/// the Lock Screen widget reads the same vocabulary.
+export function vercelStatusLabel(type: string): string {
+  switch (type) {
+    case "deployment.created":
+    case "deployment-created":
+    case "deployment":
+      return "Déploiement démarré";
+    case "deployment.succeeded":
+    case "deployment-succeeded":
+    case "deployment-ready":
+    case "deployment.ready":
+      return "✓ Déploiement réussi";
+    case "deployment.error":
+    case "deployment-error":
+      return "❌ Build échoué";
+    case "deployment.canceled":
+    case "deployment-canceled":
+      return "Annulé";
+    default:
+      return "Évènement Vercel";
+  }
+}
+
+/// Signs a UTF-8 body string with HMAC-SHA1 and returns the
+/// signature as a lowercase 64-char hex string. Vercel historically
+/// signs with SHA-1 (not SHA-256) — keeping a separate helper from
+/// `signBody` (which uses SHA-256 for the MIND lead path) means
+/// the two contracts never get accidentally mixed.
+export async function signBodySHA1(body: string, secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-1" },
+    false,
+    ["sign"]
+  );
+  const macBuffer = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(body)
+  );
+  const bytes = new Uint8Array(macBuffer);
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) {
+    out += bytes[i].toString(16).padStart(2, "0");
+  }
+  return out;
+}
+
+/// Pushes a pre-built APNs payload string to the configured device.
+/// Same APNs auth path as `sendPushNotification` for leads; the
+/// distinction is the JSON body (the alert wording + the `vercel`
+/// userInfo dict the NSE decorates).
+async function sendVercelAPNs(env: Env, body: string): Promise<void> {
+  if (!env.APNS_KEY_P8 || !env.APNS_KEY_ID || !env.APNS_TEAM_ID || !env.APNS_DEVICE_TOKEN) {
+    return;
+  }
+  const jwt = await mintAPNsJWT(env);
+  const url = `https://${env.APNS_HOST || "api.push.apple.com"}/3/device/${env.APNS_DEVICE_TOKEN}`;
+  await fetch(url, {
+    method: "POST",
+    headers: {
+      authorization: `bearer ${jwt}`,
+      "apns-topic": env.APNS_BUNDLE_ID || "app.mind.ios",
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "content-type": "application/json",
+    },
+    body,
+  });
 }
 
 // MARK: - Helpers

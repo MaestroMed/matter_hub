@@ -6,8 +6,9 @@
 #   npx wrangler kv:namespace create LEADS   # one-time, paste id below
 #   npm run deploy
 #
-# Set the four secrets after first deploy:
+# Set the six secrets after first deploy:
 #   npx wrangler secret put WEBHOOK_SECRET
+#   npx wrangler secret put VERCEL_WEBHOOK_SECRET   # v1.1.0 — Vercel deploy webhooks
 #   npx wrangler secret put APNS_KEY_P8
 #   npx wrangler secret put APNS_KEY_ID
 #   npx wrangler secret put APNS_TEAM_ID

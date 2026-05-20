@@ -84,6 +84,82 @@ patterns settle.
 
 ---
 
+## Shipped — 1.x series
+
+Post-1.0 quality-of-life iterations. Vercel real-time push, Lighthouse
+trend persistence, and other cinematic cockpit touch-ups.
+
+### v1.1.0 ✅ — Vercel deploy notifications + Lighthouse trend sparklines
+
+Shipped 2026-05-20: Real-time cockpit complete. (1) Cloudflare Worker
+gains a `POST /v1/vercel-webhook` route that verifies Vercel's
+SHA-1 HMAC under `x-vercel-signature`, builds a `{ aps + vercel }`
+push payload (FR status label via `vercelStatusLabel`), and stashes
+the event in KV with a 7-day TTL under `vercel:<projectId>:<ts>:<deploymentId>`.
+Four new Vitest cases lock the new route (full signed event → KV
+write, wrong-secret rejection, missing-projectId rejection, FR
+label table). (2) `NotificationService.swift` (NSE) + the App-side
+`PushPayloadParser` mirror gain a `parseVercel(userInfo:)` branch
+returning a `VercelPayload`/`VercelDecoration` value type; the NSE
+decorates Vercel banners with `MIND · <project>` titles + status +
+short-SHA + commit message + `vercel.<projectId>` threadIdentifier
+so iOS groups deploy events per project. (3) `RootView.onOpenURL`
+routes `mind://vercel/<projectID>` → posts `.mindOpenProjectVercel`;
+`ProjectsView` resolves the Vercel project ID against
+`Project.vercelProjectID` and presents `ProjectDetailSheet`
+auto-scrolled (`ScrollViewReader` + `SectionAnchor.vercel`) to the
+Vercel block. (4) `SettingsView` Vercel sub-section ships two new
+rows: a "URL webhook Vercel" field (Worker base URL via the new
+`WebhookWorkerBaseURLStore` App-Group UserDefaults + a Copy CTA
+that drops the resolved `/v1/vercel-webhook` URL on the clipboard)
+and a "Secret webhook Vercel" SecureField stored in Keychain via
+the new `VercelWebhookSecretStore` (service `app.mind.ios.vercel.webhook`).
+(5) New SwiftData `@Model` `LighthouseSnapshot` lands in GraphCore.schema
+with score clamping (0...100) + a `LighthouseMetric` enum + a pure
+`LighthouseTrendAggregator.last30Days(...)` helper that buckets
+snapshots per local-calendar day, fills missing days with nil, and
+returns sparkline points; 14 pure tests lock the value contract
+and the day-bucketing. (6) `LighthouseSnapshotStore` (host-side
+@MainActor bridge) persists a fresh snapshot every time
+`LighthouseProbe.score(for:)` resolves, both manually (the Vercel
+section's `refreshProjectHealth` fan-out) and on every `.active`
+scene phase via the new `MINDApp.refreshLighthouseSnapshotsIfNeeded`
+helper (capped at 5 projects per call, skips projects that already
+have today's row). (7) `ProjectDetailSheet` Vercel section gains a
+"Tendance 30 jours" block under the static score grid: four SwiftUI
+Charts mini-sparklines (60×24pt, Catmull-Rom interpolation, low-
+opacity gradient fill, iris/aqua/sky/orange per metric) plus a
+caption "X snapshots sur 30 jours · dernier {time ago}" reading
+from the `@Query<LighthouseSnapshot>` slice filtered by `projectID`.
+Empty-state copy: "Aucun snapshot — un audit ou un refresh portfolio
+lance la collecte." (8) 25 new keys land in `Localizable.xcstrings`
+(FR/EN): `settings.vercel.webhook.{header,url.label,url.placeholder,
+url.copy,url.empty,url.copied,secret.label,secret.placeholder,
+secret.save}`, `vercel.status.{started,succeeded,error,canceled}`,
+`vercel.notification.title.format`, `vercel.notification.body.format`,
+`project.lighthouse.trend.{title,empty,snapshotCount.format,lastSnapshot.format,
+metric.perf,metric.a11y,metric.bp,metric.seo}`, `lighthouse.snapshot.persisted`.
+(9) MINDTelemetry: `vercel.webhook.received`, `vercel.push.routed`,
+`vercel.push.routed.malformed`, `vercel.push.routed.notFound`,
+`vercel.deepLink.opened`, `vercel.webhook.{url,secret}.{saved,copied,
+cleared}`, `lighthouse.snapshot.persisted`, `lighthouse.snapshot.failed`,
+`lighthouse.trend.opened`, `lighthouse.daily.probe.failed`,
+`project.detail.autoScroll`. (10) 23 new iOS tests across
+`VercelWebhookPayloadTests` (9), `LighthouseSnapshotTests` (8),
+`LighthouseTrendAggregatorTests` (6), plus 4 new Vitest cases in
+`tests/index.test.ts` — Worker suite at 23/23 passing, iOS suite at
+1106 total, 24 skipped, 0 failures (was 1083 in v1.0.0). (11) iOS
+Simulator BUILD SUCCEEDED, vision verify at
+`mind/screenshots/v1.1.0.png` — host launches clean with the lead
+inbox (4 leads) + KPI bar (4 leads / 5 actifs / 0 builds / 0 erreurs
+/ 830 €/mo) — the same baseline as v1.0.0 with the new lifecycle hook
+silently active. (12) `INSTALL_LEAD_WEBHOOK.md` gains a "Bonus —
+Vercel deployment webhook (v1.1.0)" section walking through the
+four steps to wire each Vercel project. `wrangler.toml` +
+`.env.example` document the new `VERCEL_WEBHOOK_SECRET` secret.
+
+---
+
 ## Shipped — 1.0 series
 
 The α series rebuilt MIND from second-brain to Cockpit Studio,
