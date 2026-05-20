@@ -90,6 +90,19 @@ let appTarget: Target = .target(
         // into the app so iOS picks it up at install time and routes
         // every push payload through `NotificationService.didReceive`.
         .target(name: "MINDPushService", condition: .when([.ios])),
+        // v1.0-alpha.17 — Apple Watch companion app. NOT embedded as
+        // a dependency of the App target on this machine because the
+        // watchOS 26.5 simulator runtime isn't installed (Mac M5 Pro
+        // ships without it by default). The watchOS app is still part
+        // of the workspace (defined under `targets:` below) so Xcode
+        // can build & sign it separately for TestFlight, but pairing
+        // it via `condition: .when([.ios])` would force the iOS
+        // scheme to build the Watch app on every test run — which
+        // fails with "watchOS 26.5 must be installed". Once Mehdi
+        // installs the watchOS runtime (Xcode → Settings → Platforms),
+        // re-add the dependency below and the App will embed
+        // `MINDWatch.app` for TestFlight delivery to paired Watches.
+        // .target(name: "MINDWatch", condition: .when([.ios])),
         .external(name: "Sentry"),
     ],
     settings: .settings(base: [
@@ -339,6 +352,39 @@ let pushExtensionTarget: Target = .target(
     ])
 )
 
+// v1.0-alpha.17 — Apple Watch companion app. Single-target watchOS 11
+// layout (no separate WKExtension bundle — that legacy split was
+// retired with watchOS 9). The Watch app reads the `mind.watch.*`
+// columns the iPhone writes into the shared App Group
+// (`group.app.mind.ios`) and pushes `focus.start`/`focus.end`
+// messages back over WatchConnectivity. Watch-side sources are
+// self-contained under `Watch/Sources/**` — the watchOS target can't
+// link `GraphCore` (CloudKit + SwiftData reach makes no sense on the
+// wrist) so the bridge value types are duplicated there.
+let watchTarget: Target = .target(
+    name: "MINDWatch",
+    destinations: [.appleWatch],
+    product: .app,
+    bundleId: "\(appBundleId).watchkitapp",
+    deploymentTargets: .watchOS("11.0"),
+    infoPlist: .extendingDefault(with: [
+        "CFBundleDisplayName": "MIND",
+        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleVersion": "1",
+        "WKApplication": .boolean(true),
+        "WKWatchOnly": .boolean(false),
+        "WKCompanionAppBundleIdentifier": .string(appBundleId),
+    ]),
+    sources: ["Watch/Sources/**"],
+    resources: ["Watch/Resources/**"],
+    entitlements: .file(path: "Watch/MINDWatch.entitlements"),
+    dependencies: [],
+    settings: .settings(base: [
+        "SWIFT_VERSION": "6.0",
+        "TARGETED_DEVICE_FAMILY": "4",
+    ])
+)
+
 let project = Project(
     name: appName,
     organizationName: "MIND",
@@ -356,5 +402,5 @@ let project = Project(
             .release(name: "Release"),
         ]
     ),
-    targets: [appTarget, widgetTarget, shareExtensionTarget, pushExtensionTarget, testTarget] + Module.allCases.map { $0.target() }
+    targets: [appTarget, widgetTarget, shareExtensionTarget, pushExtensionTarget, watchTarget, testTarget] + Module.allCases.map { $0.target() }
 )

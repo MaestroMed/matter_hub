@@ -41,6 +41,15 @@ struct MINDApp: App {
     init() {
         bootstrapSentry()
         bootstrapBackgroundRefresh()
+        // v1.0-alpha.17 — Activate the WatchConnectivity bridge from
+        // the iPhone side. Soft-fails on unsupported platforms
+        // (Mac Catalyst, iPad without a paired Watch) so the call is
+        // always safe — `WCSession.isSupported()` returns false there
+        // and the bridge no-ops. The Watch-side `focus.start`/`focus.end`
+        // handlers stay nil for v1.0-alpha.17 (host-side focus surface
+        // is a follow-up); the bridge still receives the messages and
+        // routes them through the registered handlers when they land.
+        WatchConnectivityBridge.shared.activatePhoneSide()
         // v0.29 — Drain the persisted FollowUpStore and re-queue
         // every active sequence's pending touches. Covers the case
         // where the user granted notification permission after a
@@ -171,6 +180,31 @@ struct MINDApp: App {
                 "leads": String(newLeads.count),
                 "mrr": String(mrr),
             ]
+        )
+
+        // v1.0-alpha.17 — Hand the same numbers to the Apple Watch
+        // via `WatchConnectivityBridge`. Same offline-first contract
+        // as the widget refresh: pushes write to the shared App Group
+        // first (so the Watch surfaces the latest snapshot whether or
+        // not the session is reachable), then attempts a live
+        // sendMessage. Lead digests are clipped to the 5 most-recent
+        // new leads so the Watch payload stays under WCSession's
+        // ~64 KB envelope budget.
+        let digestLeads: [WatchLeadDigest] = newLeads.prefix(5).map { lead in
+            WatchLeadDigest(
+                id: lead.id,
+                contactName: lead.contactName,
+                messagePreview: lead.message,
+                receivedAtMillis: Int64(lead.receivedAt.timeIntervalSince1970 * 1_000)
+            )
+        }
+        WatchConnectivityBridge.shared.pushLeadsSnapshot(digestLeads)
+        WatchConnectivityBridge.shared.pushPortfolioKPI(
+            WatchPortfolioKPI(
+                leadsToday: newLeads.count,
+                mrrEUR: mrr,
+                buildErrors: 0
+            )
         )
     }
 
