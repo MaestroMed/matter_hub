@@ -7,6 +7,10 @@ import MINDIntents
 import OutreachKit
 import Sentry
 import Settings
+#if targetEnvironment(macCatalyst)
+import UIKit
+import UserNotifications
+#endif
 
 /// v1.0-alpha.1 — Cockpit Studio pivot. Stripped lifecycle to the
 /// hooks the rebuild keeps using: foreground CloudKit refresh,
@@ -129,7 +133,12 @@ struct MINDApp: App {
             switch newPhase {
             case .active:
                 MINDTelemetry.info("lifecycle.foreground")
+                MINDTelemetry.info("mac.scenePhase.active")
                 refreshGraphFromCloud()
+                // v1.0-alpha.12 — Refresh the Mac dock badge on every
+                // foreground so a lead that arrived while MIND was
+                // backgrounded surfaces immediately on the dock icon.
+                refreshDockBadge()
                 // v0.29 — Same idempotent reschedule pass for
                 // follow-up sequences: idempotent identifiers mean
                 // every active sequence's pending touches are
@@ -140,16 +149,39 @@ struct MINDApp: App {
                 }
             case .background:
                 MINDTelemetry.info("lifecycle.background")
+                MINDTelemetry.info("mac.scenePhase.background")
                 // Ask iOS to wake MIND in ~6h so the CloudKit mirror
                 // pulls any captures made on the user's other devices
                 // even if they don't reopen this app today.
                 BackgroundRefreshScheduler.scheduleNext()
             case .inactive:
-                break
+                MINDTelemetry.info("mac.scenePhase.inactive")
             @unknown default:
                 break
             }
         }
+    }
+
+    /// v1.0-alpha.12 — Updates the Mac Catalyst dock badge with the
+    /// count of new leads. On iPhone / iPad the dock badge concept
+    /// doesn't apply (the home-screen icon badge path goes through
+    /// `UNUserNotificationCenter.setBadgeCount` instead), so the
+    /// implementation is gated behind a Catalyst-only compile flag.
+    @MainActor
+    private func refreshDockBadge() {
+        #if targetEnvironment(macCatalyst)
+        let context = GraphCore.sharedContainer.mainContext
+        let descriptor = FetchDescriptor<Lead>(
+            predicate: #Predicate<Lead> { $0.status == "new" }
+        )
+        let leads = (try? context.fetch(descriptor)) ?? []
+        let count = MacDockBadge.displayCount(forNewLeads: leads.count)
+        UNUserNotificationCenter.current().setBadgeCount(count) { _ in }
+        MINDTelemetry.info(
+            "mac.dockBadge.updated",
+            data: ["count": String(count)]
+        )
+        #endif
     }
 
     /// Registers the `BGAppRefreshTask` handler with iOS so the system

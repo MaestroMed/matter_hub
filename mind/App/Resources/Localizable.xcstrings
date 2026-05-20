@@ -11179,6 +11179,166 @@
         "en": { "stringUnit": { "state": "translated", "value": "Add a GitHub personal token in Settings before importing." } },
         "fr": { "stringUnit": { "state": "translated", "value": "Ajoute un token personnel GitHub dans Réglages avant d'importer." } }
       }
+    },
+    "menu.project.menu": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu bar · title of the custom Project menu that groups ⌘⇧A/B/E/D shortcuts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Project" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Projet" } }
+      }
+    },
+    "menu.shortcuts.bootstrap": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘B opens the Bootstrap wizard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bootstrap Project" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bootstrap projet" } }
+      }
+    },
+    "menu.shortcuts.leadInbox": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘L opens the Lead inbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lead Inbox" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Boîte leads" } }
+      }
+    },
+    "menu.shortcuts.newInvoice": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘I opens the Invoice composer.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New Invoice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouvelle facture" } }
+      }
+    },
+    "menu.shortcuts.refresh": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘R refreshes portfolio health.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refresh Portfolio" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rafraîchir le portefeuille" } }
+      }
+    },
+    "menu.shortcuts.pipelineTab": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘P jumps to the Pipeline tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+      }
+    },
+    "menu.shortcuts.settingsTab": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘, jumps to the Settings tab (mac preferences convention).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Settings" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réglages" } }
+      }
+    },
+    "menu.shortcuts.focusSearch": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘F focuses the in-view search field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Search" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rechercher" } }
+      }
+    },
+    "menu.shortcuts.auditSource": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘⇧A audits the source code of the open project.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit Source Code" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Auditer le code source" } }
+      }
+    },
+    "menu.shortcuts.battleMode": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘⇧B opens Battle Mode (competitor comparison).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Battle Mode" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mode Battle" } }
+      }
+    },
+    "menu.shortcuts.outreach": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘⇧E opens the Reply assistant (OutreachSheet).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reply Assistant" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Assistant de réponse" } }
+      }
+    },
+    "menu.shortcuts.deploy": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst menu · ⌘⇧D redeploys the current project via Vercel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Redeploy" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Redéployer" } }
+      }
+    },
+    "toolbar.leads": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst toolbar · Lead inbox button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads" } }
+      }
+    },
+    "toolbar.audit": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst toolbar · Audit sheet button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Audit" } }
+      }
+    },
+    "toolbar.bootstrap": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst toolbar · Bootstrap wizard button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bootstrap" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bootstrap" } }
+      }
+    },
+    "toolbar.refresh": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst toolbar · Refresh portfolio health button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refresh" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rafraîchir" } }
+      }
+    },
+    "settings.mac.section.title": {
+      "comment": "v1.0-alpha.12 · Settings · 'Apparence Mac' section header — only shown when running on Mac Catalyst.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mac Appearance" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Apparence Mac" } }
+      }
+    },
+    "settings.mac.compact.title": {
+      "comment": "v1.0-alpha.12 · Settings · 'Compact Mode' toggle label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Compact Mode" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mode compact" } }
+      }
+    },
+    "settings.mac.sidebar.title": {
+      "comment": "v1.0-alpha.12 · Settings · 'Persistent Sidebar' toggle label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Persistent Sidebar" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Sidebar persistante" } }
+      }
+    },
+    "mac.dockBadge.leads.format": {
+      "comment": "v1.0-alpha.12 · Mac Catalyst · accessibility label for the dock badge showing the count of new leads. %d is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d new lead(s)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d nouveau(x) lead(s)" } }
+      }
     }
   }
 }

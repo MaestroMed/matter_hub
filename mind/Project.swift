@@ -4,6 +4,18 @@ import ProjectDescriptionHelpers
 let appBundleId = "app.mind.ios"
 let appName = "MIND"
 
+// v1.0-alpha.12 — Mac Catalyst polish. The App target stays
+// iOS-only for this iteration because `FocusKit` reaches into
+// ActivityKit (Live Activities) which is unavailable on Catalyst —
+// flipping the destinations would cascade compile errors through
+// every legacy module. The substrate (toolbar table, shortcut
+// catalog, scene-storage keys, dock-badge math) ships behind
+// `#if targetEnvironment(macCatalyst)` so flipping destinations to
+// `[.iPhone, .iPad, .macCatalyst]` in alpha.12.1 only needs the
+// FocusKit ActivityKit reach to be split off (or the legacy module
+// retired alongside its AmbientView caller). LSApplicationCategoryType
+// is set unconditionally so the Mac App Store bundle reads cleanly
+// the moment the destination flag flips.
 let appTarget: Target = .target(
     name: appName,
     destinations: .iOS,
@@ -15,6 +27,10 @@ let appTarget: Target = .target(
         "CFBundleDisplayName": "MIND",
         "CFBundleShortVersionString": "0.1.0",
         "CFBundleVersion": "1",
+        // v1.0-alpha.12 — Mac Catalyst category. Listed under
+        // "Productivity" on the Mac App Store + macOS About panel
+        // (`public.app-category.productivity` is the canonical UTI).
+        "LSApplicationCategoryType": "public.app-category.productivity",
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
         "NSMicrophoneUsageDescription": "MIND uses your microphone to capture voice notes and transcribe them on-device.",
         "NSSpeechRecognitionUsageDescription": "MIND transcribes your voice locally so you can capture thoughts hands-free.",

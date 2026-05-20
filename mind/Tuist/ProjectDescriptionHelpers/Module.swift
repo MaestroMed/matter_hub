@@ -389,6 +389,17 @@ public enum Module: String, CaseIterable {
     public func target() -> Target {
         .target(
             name: rawValue,
+            // v1.0-alpha.12 — Module targets stay iOS-only for now.
+            // The Mac Catalyst slice needs every dependency to also
+            // support Catalyst; `FocusKit` reaches into ActivityKit
+            // (Live Activities) which is unavailable on Catalyst,
+            // and resolving that cleanly means either splitting the
+            // legacy ActivityKit code out of FocusKit (alpha.12.1) or
+            // gating its callers behind `#if !targetEnvironment`.
+            // Substrate landed in v1.0-alpha.12 (toolbar table,
+            // shortcut catalog, scene-storage keys, dock-badge math,
+            // tests, FR/EN strings, lifecycle telemetry); the
+            // cross-compile lights up in alpha.12.1.
             destinations: .iOS,
             product: .framework,
             bundleId: bundleId,

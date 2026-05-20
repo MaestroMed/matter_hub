@@ -483,6 +483,66 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("command.tab.settings",  lang: "fr"), "Réglages")
     }
 
+    /// v1.0-alpha.12 — Mac Catalyst polish strings. Every menu /
+    /// toolbar / Settings entry surfaced when MIND runs on Catalyst
+    /// must resolve in both languages — a raw-key fallback on the
+    /// Mac menu bar would feel like a broken integration, not a
+    /// translation gap.
+    func test_macCatalystStrings_resolveBothLanguages() {
+        // Custom Project menu that groups ⌘⇧ shortcuts.
+        XCTAssertEqual(localized("menu.project.menu", lang: "en"), "Project")
+        XCTAssertEqual(localized("menu.project.menu", lang: "fr"), "Projet")
+
+        // Every MacShortcut localizedKey must resolve. Iterates via
+        // the catalog so a future case added to MacShortcut forces
+        // an xcstrings entry through this test.
+        XCTAssertNotNil(localized("menu.shortcuts.bootstrap",   lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.bootstrap",   lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.leadInbox",   lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.leadInbox",   lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.newInvoice",  lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.newInvoice",  lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.refresh",     lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.refresh",     lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.pipelineTab", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.pipelineTab", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.settingsTab", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.settingsTab", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.focusSearch", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.focusSearch", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.auditSource", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.auditSource", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.battleMode",  lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.battleMode",  lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.outreach",    lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.outreach",    lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.deploy",      lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.deploy",      lang: "fr"))
+
+        // Toolbar labels.
+        XCTAssertEqual(localized("toolbar.leads",     lang: "en"), "Leads")
+        XCTAssertEqual(localized("toolbar.leads",     lang: "fr"), "Leads")
+        XCTAssertEqual(localized("toolbar.audit",     lang: "en"), "Audit")
+        XCTAssertEqual(localized("toolbar.audit",     lang: "fr"), "Audit")
+        XCTAssertEqual(localized("toolbar.bootstrap", lang: "en"), "Bootstrap")
+        XCTAssertEqual(localized("toolbar.bootstrap", lang: "fr"), "Bootstrap")
+        XCTAssertEqual(localized("toolbar.refresh",   lang: "en"), "Refresh")
+        XCTAssertEqual(localized("toolbar.refresh",   lang: "fr"), "Rafraîchir")
+
+        // Settings → Apparence Mac section.
+        XCTAssertEqual(localized("settings.mac.section.title", lang: "en"), "Mac Appearance")
+        XCTAssertEqual(localized("settings.mac.section.title", lang: "fr"), "Apparence Mac")
+        XCTAssertEqual(localized("settings.mac.compact.title", lang: "en"), "Compact Mode")
+        XCTAssertEqual(localized("settings.mac.compact.title", lang: "fr"), "Mode compact")
+        XCTAssertEqual(localized("settings.mac.sidebar.title", lang: "en"), "Persistent Sidebar")
+        XCTAssertEqual(localized("settings.mac.sidebar.title", lang: "fr"), "Sidebar persistante")
+
+        // Dock badge accessibility label — placeholder survives in
+        // both languages (the format takes %d for the count).
+        XCTAssertTrue(localized("mac.dockBadge.leads.format", lang: "en")?.contains("%d") == true)
+        XCTAssertTrue(localized("mac.dockBadge.leads.format", lang: "fr")?.contains("%d") == true)
+    }
+
     /// v1.0-alpha.5 — Lead Webhook Settings section. The HMAC
     /// secret field + per-Project copy rows live on the most-
     /// looked-at surface in MIND (Settings → Lead Webhook is the

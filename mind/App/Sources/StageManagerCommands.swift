@@ -1,4 +1,5 @@
 import SwiftUI
+import GraphCore
 
 // v0.24.1 — iPad Stage Manager polish
 //
@@ -124,10 +125,79 @@ struct StageManagerCommands: Commands {
                     name: .mindCommandNewAudit,
                     object: nil
                 )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-n"])
             } label: {
                 Text("command.newAudit", bundle: .main)
             }
             .keyboardShortcut("n", modifiers: .command)
+
+            // v1.0-alpha.12 — ⌘B opens the Bootstrap wizard from
+            // anywhere. Sits in the .newItem group with ⌘N so both
+            // "fresh start" actions cluster under File on Catalyst.
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandBootstrap,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-b"])
+            } label: {
+                Text("menu.shortcuts.bootstrap", bundle: .main)
+            }
+            .keyboardShortcut("b", modifiers: .command)
+
+            // v1.0-alpha.12 — ⌘I opens the Invoice composer. Same
+            // .newItem cluster: every "create" action is a single
+            // ⌘<letter> away under File.
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandNewInvoice,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-i"])
+            } label: {
+                Text("menu.shortcuts.newInvoice", bundle: .main)
+            }
+            .keyboardShortcut("i", modifiers: .command)
+        }
+
+        // v1.0-alpha.12 — ⌘L (lead inbox) + ⌘R (refresh) folded into
+        // the standard "tool" command group so they sit under Edit on
+        // Catalyst — they're "look at / sync now" actions that mirror
+        // the pull-to-refresh + the toolbar items, not "create new".
+        CommandGroup(after: .pasteboard) {
+            Divider()
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandLeadInbox,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-l"])
+            } label: {
+                Text("menu.shortcuts.leadInbox", bundle: .main)
+            }
+            .keyboardShortcut("l", modifiers: .command)
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandRefresh,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-r"])
+            } label: {
+                Text("menu.shortcuts.refresh", bundle: .main)
+            }
+            .keyboardShortcut("r", modifiers: .command)
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandFocusSearch,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-f"])
+            } label: {
+                Text("menu.shortcuts.focusSearch", bundle: .main)
+            }
+            .keyboardShortcut("f", modifiers: .command)
         }
 
         // ⌘1...⌘4 — sidebar destinations, surfaced as a custom
@@ -142,6 +212,8 @@ struct StageManagerCommands: Commands {
                         object: nil,
                         userInfo: ["tab": shortcut.rawValue]
                     )
+                    MINDTelemetry.info("mac.shortcut.fired",
+                                       data: ["key": "cmd-\(shortcut.keyDigit)"])
                 } label: {
                     Text(LocalizedStringKey(shortcut.localizedKey), bundle: .main)
                 }
@@ -150,6 +222,86 @@ struct StageManagerCommands: Commands {
                     modifiers: .command
                 )
             }
+
+            Divider()
+
+            // v1.0-alpha.12 — ⌘P jumps to Pipeline (mnemonic) and
+            // ⌘, jumps to Settings (mac "preferences" convention).
+            // Both reuse the existing select-tab notification so the
+            // RootView listener stays single-source.
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandSelectTab,
+                    object: nil,
+                    userInfo: ["tab": "pipeline"]
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-p"])
+            } label: {
+                Text("menu.shortcuts.pipelineTab", bundle: .main)
+            }
+            .keyboardShortcut("p", modifiers: .command)
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandSelectTab,
+                    object: nil,
+                    userInfo: ["tab": "settings"]
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-comma"])
+            } label: {
+                Text("menu.shortcuts.settingsTab", bundle: .main)
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        }
+
+        // v1.0-alpha.12 — Project actions menu. The four ⌘⇧ shortcuts
+        // mirror the buttons inside ProjectDetailSheet so a user with
+        // a sheet open can fire them from the menu bar without
+        // hunting for the in-sheet CTA.
+        CommandMenu(Text("menu.project.menu", bundle: .main)) {
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandAuditSource,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-shift-a"])
+            } label: {
+                Text("menu.shortcuts.auditSource", bundle: .main)
+            }
+            .keyboardShortcut("a", modifiers: [.command, .shift])
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandBattleMode,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-shift-b"])
+            } label: {
+                Text("menu.shortcuts.battleMode", bundle: .main)
+            }
+            .keyboardShortcut("b", modifiers: [.command, .shift])
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandOutreach,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-shift-e"])
+            } label: {
+                Text("menu.shortcuts.outreach", bundle: .main)
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .mindCommandDeploy,
+                    object: nil
+                )
+                MINDTelemetry.info("mac.shortcut.fired", data: ["key": "cmd-shift-d"])
+            } label: {
+                Text("menu.shortcuts.deploy", bundle: .main)
+            }
+            .keyboardShortcut("d", modifiers: [.command, .shift])
         }
     }
 }

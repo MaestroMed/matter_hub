@@ -15,6 +15,139 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+## v1.0-alpha.13+ — Next ⏳
+
+- **v1.0-alpha.12.1** ⏳ — Mac Catalyst destination flip. Split
+  `FocusKit.ActivityKit` (Live Activities) off so the App target
+  can adopt `[.iPhone, .iPad, .macCatalyst]` cleanly, then turn on
+  the Catalyst toolbar wiring + Touch Bar + the "Apparence Mac"
+  Settings section the v1.0-alpha.12 substrate already locks.
+- **APNs Notification Service Extension** ⏳ — server-side push
+  decryption for the lead webhook so a webhook fired while MIND is
+  off-device still rings the dock badge.
+- **iOS 26 Lock Screen widgets** ⏳ — WidgetKit timeline reading
+  the same lead inbox + portfolio KPI surface HomeView shows, gated
+  on `WidgetFamily.accessoryRectangular` + `.accessoryInline`.
+- **Watch companion app** ⏳ — already has the
+  `WatchCaptureKit` substrate (v0.22.1); ship the
+  `MIND Watch.app` target + the SFSpeech transcription drain.
+- **AI Mehdi Voice clone (ElevenLabs)** ⏳ — voice-out for the
+  Daily Brief / Reply assistant via the consultant's own voice.
+- **Vision Pro spatial cockpit** ⏳ — already has the
+  `VisionSpatialKit` substrate (v0.25.1); ship the visionOS App
+  target + the RealityView spatial layout.
+
+## v1.0-alpha.12 — Mac Catalyst polish (substrate) ✅
+
+**What**: MIND has been iPhone-first. With the Cockpit Studio scope,
+Mehdi will want to operate it on his 27" Numelite workstation with a
+Magic Keyboard. This wave ships the pure substrate every Catalyst
+surface reads from — toolbar action table, expanded keyboard
+shortcut catalog (⌘B / ⌘L / ⌘I / ⌘R / ⌘P / ⌘, plus the ⌘⇧ project-
+action quartet), `@SceneStorage` key namespace, dock-badge math —
+together with the menu-bar wiring, `LSApplicationCategoryType`
+declaration, and lifecycle telemetry. iPhone / iPad still build
+clean and `host-launches-clean` on the iPhone 17 Pro simulator
+matches the v1.0-alpha.10/11 vision-verify bar. The Catalyst slice
+itself is deferred to v1.0-alpha.12.1 — `FocusKit.ActivityKit`
+(Live Activities) is unavailable on Catalyst, so flipping the App
+destinations to `[.iPhone, .iPad, .macCatalyst]` cascades compile
+errors through the legacy AmbientView / FocusController graph that
+needs splitting (or retiring alongside its Cockpit-pivot peers).
+The substrate is sized to make 12.1 a destination-flip + module-
+membership tweak, nothing more.
+
+Shipped 2026-05-20: new pure-data substrate `MacCatalystSupport.swift`
+in `mind/App/Sources/` ships three independently-testable Sendable
+types — `MacToolbarAction` (4 cases: leads / audit / bootstrap /
+refresh; each with stable rawValue used as Notification.Name,
+localizedKey under `toolbar.<rawCaseName>`, SF Symbol systemImage,
+FR/EN fallback title for unit-test bundles); `MacShortcut` (11
+cases: bootstrap/leadInbox/newInvoice/refresh/pipelineTab/
+settingsTab/focusSearch/auditSource/battleMode/outreach/deploy,
+each with key Character + `Modifiers` Sendable struct {command,
+shift}, dedicated `Notification.Name` under
+`app.mind.ios.command.*` namespace, `notificationUserInfo` payload
+for the ⌘P / ⌘, tab-switch entries that reuse `.mindCommandSelectTab`,
+`localizedKey` under `menu.shortcuts.<rawValue>`, fallback title);
+`MacSceneStorageKey` (4 namespaced string constants:
+`mind.scene.{selectedTab,selectedProjectID,selectedLeadID,sidebarVisibility}`
++ `allKeys` array for the namespace audit test);
+`MacDockBadge.displayCount(forNewLeads:)` (pure clamp, 0...99,
+prevents a 1247-lead webhook flood from rendering nonsense on the
+dock icon). Nine new Notification.Name file-scope constants added
+(`mindCommandLeadInbox`, `mindCommandAuditToolbar`,
+`mindCommandBootstrap`, `mindCommandRefresh`, `mindCommandNewInvoice`,
+`mindCommandFocusSearch`, `mindCommandAuditSource`,
+`mindCommandBattleMode`, `mindCommandOutreach`, `mindCommandDeploy`)
+— every channel is `app.mind.ios.command.*`-namespaced so a sweep
+test catches drift.
+
+`StageManagerCommands.swift` (the SwiftUI `Commands` builder
+mounted on `MINDApp.swift`'s WindowGroup) gains 11 new menu entries
+across three CommandGroup placements: `.newItem` cluster gets ⌘B
+(Bootstrap), ⌘I (New Invoice); a new `.pasteboard`-after group
+gets ⌘L (Lead inbox), ⌘R (Refresh), ⌘F (Focus search); the View
+`CommandMenu` keeps ⌘1...⌘4 + adds ⌘P (Pipeline), ⌘, (Settings —
+mac preferences convention); a new "Project" `CommandMenu` adds
+⌘⇧A (Audit source code), ⌘⇧B (Battle Mode), ⌘⇧E (Reply assistant),
+⌘⇧D (Redeploy). Every menu pick posts on a uniquely-namespaced
+Notification.Name AND fires a `mac.shortcut.fired` telemetry
+breadcrumb with the key-equivalent payload (e.g. `cmd-shift-a`),
+so we can read the menu-bar adoption rate per shortcut from Sentry
+without instrumenting each listener.
+
+`Project.swift` adds `LSApplicationCategoryType =
+"public.app-category.productivity"` to the App target's InfoPlist
+so the Mac App Store bundle reads cleanly the moment the Catalyst
+destination flag flips in 12.1. The App `destinations` itself
+stays `.iOS` — the file-level comment documents the FocusKit /
+ActivityKit blocker and what 12.1 needs to land.
+
+`MINDApp.swift` gains a `refreshDockBadge()` method gated by
+`#if targetEnvironment(macCatalyst)` that reads the new-Lead count
+via SwiftData FetchDescriptor + clamps through
+`MacDockBadge.displayCount(forNewLeads:)` + writes via
+`UNUserNotificationCenter.setBadgeCount(_:withCompletionHandler:)`
+(the iOS 16+ API that handles both the iPhone home-screen icon
+badge and the Catalyst dock badge cleanly). The
+`.onChange(of: scenePhase)` block emits the four new telemetry
+breadcrumbs (`mac.scenePhase.active/background/inactive` +
+`mac.dockBadge.updated` from the foreground path).
+
+Localizable.xcstrings adds 20 new FR/EN keys under three
+namespaces: `menu.project.menu` + 11 × `menu.shortcuts.*` (every
+MacShortcut case + 4 standalone tab-switch labels), 4 × `toolbar.*`
+(every MacToolbarAction case), 3 × `settings.mac.*` (the
+"Apparence Mac" section MINDPreferences ships behind in 12.1),
+1 × `mac.dockBadge.leads.format` (accessibility label for the
+dock badge with %d count placeholder).
+
+Tests: 18 new tests across three pure-substrate test files —
+9 `MacKeyboardShortcutsTests` (⌘B / ⌘L / ⌘I individual mapping
+locks, unique (key, modifier-set) tuple contract,
+`app.mind.ios.command.*` namespace prefix sweep, ⌘P / ⌘, payload
+contract, ⌘⇧ project-action modifier convention, NotificationCenter
+post round-trip, `menu.shortcuts.*` localizedKey namespace);
+5 `MacToolbarTests` (every action has title + systemImage +
+fallback, toolbar.* localizedKey namespace, `app.mind.ios.command.*`
+rawValue namespace, notification name ↔ rawValue alignment,
+uniqueness of notification names across the table);
+4 `MacSceneStorageTests` (allKeys count + membership locks,
+`mind.scene.*` namespace sweep, key uniqueness, dock-badge
+clamp range over -5/0/1/12/99/100/9999). `LocalizationTests`
+extended with `test_macCatalystStrings_resolveBothLanguages`
+(20+ FR + EN asserts including the `%d` placeholder survival
+in `mac.dockBadge.leads.format`). 933 tests total, 19 skipped,
+0 failures (was 916 in v1.0-alpha.11). Build SUCCEEDED on
+iPhone 17 Pro simulator. Vision verify at
+`mind/screenshots/v1.0-alpha.12.png` — host launches clean on
+the cockpit Home with greeting + KPI bar + Boîte leads (4 demo
+leads visible) + Projets actifs carousel + LiquidTabBar pinned.
+The Catalyst-only surfaces (menu bar, dock badge, toolbar) only
+render when running under Catalyst, matching the documented
+host-launches-clean vision-verify bar.
+
 ## v1.0-alpha.11 — Bulk Import GitHub repos ✅
 
 **What**: Today MIND seeds 5 hardcoded clients (`AZ Construction`,
