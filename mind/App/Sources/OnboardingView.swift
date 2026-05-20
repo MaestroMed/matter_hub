@@ -20,10 +20,26 @@ import Intelligence
 /// else works without it; we let the user skip it but flag it visually
 /// so they know the chat / audit will be inert until they paste one.
 struct OnboardingView: View {
+    /// v1.0-alpha.11 — Fires when the user taps "Connecter GitHub"
+    /// on the bulk-import step. RootView listens to this and flips
+    /// `showBulkImport = true`, presenting `BulkImportSheet` on top
+    /// of the onboarding cover. The wizard's own dismiss returns
+    /// the user to the onboarding flow; the user then taps "Suivant"
+    /// to advance to the Ready page.
+    let onPresentBulkImport: () -> Void
+
     /// Called by the final "Start" button. The owner of this view
     /// (RootView) flips the @AppStorage flag so the cover dismisses
     /// and never re-shows.
     let onFinish: () -> Void
+
+    init(
+        onPresentBulkImport: @escaping () -> Void = {},
+        onFinish: @escaping () -> Void
+    ) {
+        self.onPresentBulkImport = onPresentBulkImport
+        self.onFinish = onFinish
+    }
 
     @State private var stage: Stage = .welcome
     @State private var anthropicKey: String = ""
@@ -35,6 +51,7 @@ struct OnboardingView: View {
         case welcome
         case anthropicKey
         case notifications
+        case bulkImport
         case ready
     }
 
@@ -51,6 +68,7 @@ struct OnboardingView: View {
                     welcomePage.tag(Stage.welcome)
                     anthropicPage.tag(Stage.anthropicKey)
                     notificationsPage.tag(Stage.notifications)
+                    bulkImportPage.tag(Stage.bulkImport)
                     readyPage.tag(Stage.ready)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -289,6 +307,60 @@ struct OnboardingView: View {
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
+            }
+        }
+    }
+
+    /// v1.0-alpha.11 — Bulk Import GitHub repos. Replaces the
+    /// 5-hardcoded-client seed path with a real wizard. Skippable —
+    /// the user can still add projects manually later.
+    private var bulkImportPage: some View {
+        OnboardingCard {
+            VStack(spacing: 22) {
+                ZStack {
+                    Circle()
+                        .fill(LiquidPalette.iris.opacity(0.18))
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "sparkles.rectangle.stack")
+                        .font(.system(size: 34, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                }
+
+                VStack(spacing: 8) {
+                    Text("onboarding.bulkImport.title")
+                        .font(.system(.title, design: .rounded, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.8)
+                        .lineLimit(2)
+                    Text("onboarding.bulkImport.body")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 4)
+                }
+
+                LiquidButton(
+                    title: String(localized: "onboarding.bulkImport.connect"),
+                    systemImage: "sparkles.rectangle.stack"
+                ) {
+                    onPresentBulkImport()
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    bulletRow(icon: "wand.and.stars",
+                              tint: LiquidPalette.iris,
+                              title: "Auto-détection Next.js",
+                              detail: "MIND lit package.json, vercel.json et la tree GitHub pour identifier le framework.")
+                    bulletRow(icon: "globe",
+                              tint: LiquidPalette.aqua,
+                              title: "Suggestion host + slug",
+                              detail: "Slug nettoyé (sans _v0), host depuis le champ homepage du repo.")
+                    bulletRow(icon: "arrow.triangle.2.circlepath",
+                              tint: .orange,
+                              title: "Aucun double, idempotent",
+                              detail: "Une seconde exécution met à jour, ne duplique pas.")
+                }
+                .padding(.horizontal, 4)
             }
         }
     }

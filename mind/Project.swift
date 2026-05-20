@@ -193,6 +193,12 @@ let testTarget: Target = .target(
         // (`VercelTokenStore` + `GitHubTokenStore`) under a skip-on-
         // Simulator guard since the SImulator keychain is flaky.
         .target(name: Module.projectHealthKit.rawValue),
+        // v1.0-alpha.11 — Bulk Import tests reach into the new
+        // `BulkImportPlanner` (pure decision tree) + the
+        // `GitHubRepoSummary` / `RepoStackDetection` / `RepoMetadata`
+        // value types defined in ProjectHealthKit. The actor's
+        // HTTP path is exercised end-to-end via the simulator screenshot.
+        .target(name: Module.bootstrapKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

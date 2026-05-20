@@ -15,6 +15,119 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+## v1.0-alpha.11 — Bulk Import GitHub repos ✅
+
+**What**: Today MIND seeds 5 hardcoded clients (`AZ Construction`,
+`AZ Epoxy`, `AZ Concept`, `IEF & Co`, `Sconnect`) on first launch.
+Mehdi has 13+ real client repos on his GitHub. This wave replaces
+the seed path with a real wizard: GitHub API enumerates every repo
+the user owns, fans out parallel framework detections, surfaces a
+review step with default-accepted "Recommandés" (Next.js / WordPress
+/ Shopify / static) and default-off "Ignorés" rows with reasons,
+then loops the accepted rows through `Project.upsert(from:in:)` so
+re-running the wizard never duplicates a row.
+
+Shipped 2026-05-20: new value types `GitHubRepoSummary` /
+`RepoStackDetection` / `RepoMetadata` in
+`mind/Modules/ProjectHealthKit/Sources/GitHubClient.swift` carrying
+the slim columns the wizard needs (fullName, name, description,
+isPrivate, defaultBranch, pushedAt, homepageURL, stars, topics for
+the summary; framework + version + confidence + signals for the
+detection; slug + name + host + primary color + detection + summary
+for the metadata). Three new actor methods on the existing
+`GitHubClient`: `listMyRepos(limit:)` (`GET /user/repos?per_page=N
+&sort=pushed`), `detectStack(repo:)` (Contents API + recursive tree
+walk; decision tree: `next` in deps → nextjs/0.95, `composer.json`
++ `wp-content/` → wordpress/0.9, `wp-content/` alone → wordpress
+/0.7, `theme.liquid` → shopify/0.9, `_config.yml` or `mkdocs.yml` →
+static/0.8, else other/0.3), `extractMetadata(repo:)` (orchestrator
+that folds summary + detection + derived slug/name/host/color). New
+pure helper `nextDependencyVersion(in:)` strips `^/~/>=` from the
+`package.json` `next` dep so the version surfaces clean.
+
+New pure module-level decider `BulkImportPlanner.plan(repos:detections:)`
+in `mind/Modules/BootstrapKit/Sources/BulkImportPlanner.swift`
+(BootstrapKit gains a ProjectHealthKit dep — no circular dep,
+ProjectHealthKit doesn't import BootstrapKit). Output type
+`BulkImportPlan` has `recommendedImports: [PlannedImport]` (every
+row with `framework in {nextjs, shopify, wordpress, static}` AND
+`confidence >= 0.5`, sorted by stars desc, default-accepted true)
+and `skippedRepos: [SkippedRepo]` (everything else, each carrying
+a FR sentence `"Framework non supporté (other, confiance 0.32)"`).
+Duplicate input fullNames collapse to the first occurrence.
+
+New SwiftUI surface `BulkImportSheet.swift` in `mind/App/Sources/`:
+3-step wizard (scan / review / import), Liquid Glass tokens
+throughout. Step 1 loads `listMyRepos` then fans out `detectStack`
+with a 5-in-flight cap (manual TaskGroup gate). Step 2 renders two
+LiquidCard sections (recommended + skipped) with per-row toggles,
+framework badge tinted iris/aqua/green/orange/secondary, confidence
+percentage pill, expand-to-show-detail interaction. Step 3 loops
+the accepted rows through `Project.upsert(from:in:)` with a linear
+progress bar and a "%d projets importés ✓" success toast.
+
+New SwiftData helper `Project.upsert(from: BulkImportRecord, in:
+ModelContext) throws -> Project` in `mind/Modules/GraphCore/Sources/
+Project.swift`. Look-up by exact `githubRepo` match (`#Predicate`);
+existing row → updates host / primaryColor / stack / lastActivityAt
++ name-if-empty; not found → mints a new row with the suggested
+columns. Same-input re-run is a no-op apart from `lastActivityAt`.
+A new `BulkImportRecord` value type lives in GraphCore (mirrors
+`RepoMetadata`'s shipping columns without forcing GraphCore to
+depend on ProjectHealthKit).
+
+OnboardingView gains a 5th page between Notifications and Ready:
+"Tes projets" + "Connecte ton GitHub pour importer tous tes projets
+clients automatiquement." + a "Connecter GitHub" CTA that flips the
+host's `showBulkImport` state. Skip-able — the user can still add
+projects manually later. SettingsView gains an "Importer mes repos"
+button below the GitHub PAT row, disabled while the token field is
+empty.
+
+`Project.seedDemoProjects(in:)` gains a tighter guard: bails when
+ANY Project already exists (not just when its own previous run
+already inserted), so a user who imported via the new wizard never
+sees the 5 hardcoded clients reseeded on top of their portfolio.
+
+26 new FR/EN xcstrings keys under the `onboarding.bulkImport.*` /
+`bulkImport.*` / `settings.github.import.*` namespaces (title, step
+labels, scan loading format, empty state, recommended / skipped
+section titles, skip reason format, "Importer quand même" CTA,
+review CTA format, import progress format, success toast format,
+framework labels for the 5 buckets, confidence pill format, missing
+token error).
+
+9 new MINDTelemetry breadcrumbs: `bulkImport.opened`,
+`bulkImport.scan.started` (with `repoCount`), `bulkImport.scan.
+completed` (with `recommended` + `skipped` counts), `bulkImport.scan.
+failed` (with `reason` or `error`), `bulkImport.review.accepted.
+count`, `bulkImport.import.started` (with `count`),
+`bulkImport.project.created`, `bulkImport.project.updated`,
+`bulkImport.import.completed` (with imported + errors).
+
+Tests: 6 new `GitHubRepoSummaryTests` (Codable round-trip fully
+populated, Codable round-trip with nil description/homepage, equal
+on identical fields, unequal on diff stars, preserves private flag,
+preserves topics order). 5 new `RepoStackDetectionTests` (Codable
+round-trip, Codable nil version round-trip, `nextDependencyVersion`
+extracts + cleans caret prefix, returns nil when next absent,
+equatable on identical fields). 10 new `RepoMetadataDerivationTests`
+(`AZConstruction_v0` → `az-construction` slug, underscore →
+dash, trailing non-alnum trimmed, `IEFandCo_v0` → `ie-fand-co`
+slug, `AZConstruction_v0` → `AZ Construction` name, `IEFandCo_v0`
+→ `IE Fand Co` name, already-spaced preserved, host from
+homepage cleaned, host without homepage falls back to
+`<slug>.vercel.app`, hex in description surfaces unchanged, no
+hex → default iris). 12 new `BulkImportPlannerTests` (empty
+→ empty plan, confidence 0.5 inclusive boundary, below 0.5 skipped,
+all-nextjs high-confidence all-recommended, wordpress + static
+recommended, "other" skipped, skip reason includes framework +
+confidence, stars-desc ordering, deterministic for same input,
+mixed frameworks bucketed, duplicates collapse). 6 new
+`ProjectUpsertTests` (insert when missing, update when present,
+idempotent on identical input, returns live ref, distinct repos
+both insert, refreshes lastActivityAt).
+
 ## v1.0-alpha.10 — Repository-aware Audit (source code analysis) ✅
 
 **What**: Today AuditKit's 13 probes audit the deployed URL: PageSpeed,

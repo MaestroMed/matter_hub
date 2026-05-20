@@ -10979,6 +10979,206 @@
           }
         }
       }
+    },
+    "onboarding.bulkImport.title": {
+      "comment": "v1.0-alpha.11 · Onboarding bulk-import page title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your projects" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tes projets" } }
+      }
+    },
+    "onboarding.bulkImport.body": {
+      "comment": "v1.0-alpha.11 · Onboarding bulk-import page body copy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Connect GitHub to bulk-import every client project automatically." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connecte ton GitHub pour importer tous tes projets clients automatiquement." } }
+      }
+    },
+    "onboarding.bulkImport.connect": {
+      "comment": "v1.0-alpha.11 · Onboarding bulk-import page CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Connect GitHub" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connecter GitHub" } }
+      }
+    },
+    "onboarding.bulkImport.skip": {
+      "comment": "v1.0-alpha.11 · Onboarding bulk-import page skip label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add projects manually later" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ajouter mes projets manuellement plus tard" } }
+      }
+    },
+    "bulkImport.title": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet nav title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import GitHub repos" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer mes repos GitHub" } }
+      }
+    },
+    "bulkImport.step.scan": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · step 1 title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Scanning your repos…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Analyse de tes repos…" } }
+      }
+    },
+    "bulkImport.step.review": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · step 2 title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Review suggestions" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Revue des suggestions" } }
+      }
+    },
+    "bulkImport.step.import": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · step 3 title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Importing projects" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Import en cours" } }
+      }
+    },
+    "bulkImport.scan.loading.format": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · scan progress with repo count (single %d argument).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Found %d repos, analyzing…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Trouvé %d repos, analyse en cours…" } }
+      }
+    },
+    "bulkImport.scan.empty": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · empty result placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No repositories found on your GitHub account." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun dépôt trouvé sur ton compte GitHub." } }
+      }
+    },
+    "bulkImport.recommended.title": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · recommended section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recommended" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Recommandés" } }
+      }
+    },
+    "bulkImport.skipped.title": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · skipped section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Skipped (verify)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ignorés (vérifie)" } }
+      }
+    },
+    "bulkImport.skipped.reason.framework.format": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · skipped reason format. %1$@ framework name · %2$@ confidence.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Framework not supported (%1$@, confidence %2$@)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Framework non supporté (%1$@, confiance %2$@)" } }
+      }
+    },
+    "bulkImport.skipped.action.importAnyway": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · skipped row CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import anyway" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer quand même" } }
+      }
+    },
+    "bulkImport.review.cta.format": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · review CTA label with accepted count (%d).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import %d projects" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer %d projets" } }
+      }
+    },
+    "bulkImport.import.progress.format": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · per-project progress label. %1$d done / %2$d total.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$d / %2$d projects imported" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%1$d / %2$d projets importés" } }
+      }
+    },
+    "bulkImport.success.toast.format": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · success toast on import completion. %d count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d projects imported ✓" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d projets importés ✓" } }
+      }
+    },
+    "settings.github.import.cta": {
+      "comment": "v1.0-alpha.11 · Settings → Intégrations dev · Bulk-import GitHub CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import my repos" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer mes repos" } }
+      }
+    },
+    "bulkImport.row.framework.nextjs": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · framework label (Next.js).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next.js" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Next.js" } }
+      }
+    },
+    "bulkImport.row.framework.wordpress": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · framework label (WordPress).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "WordPress" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "WordPress" } }
+      }
+    },
+    "bulkImport.row.framework.shopify": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · framework label (Shopify).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Shopify" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Shopify" } }
+      }
+    },
+    "bulkImport.row.framework.static": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · framework label (static site).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Static" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Statique" } }
+      }
+    },
+    "bulkImport.row.framework.other": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · framework label (other / unknown).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Other" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Autre" } }
+      }
+    },
+    "bulkImport.row.confidence.format": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · confidence pill format. %d integer percentage.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d%%" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d %%" } }
+      }
+    },
+    "bulkImport.error.token.missing": {
+      "comment": "v1.0-alpha.11 · Bulk-import sheet · error shown when GitHub PAT isn't saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add a GitHub personal token in Settings before importing." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ajoute un token personnel GitHub dans Réglages avant d'importer." } }
+      }
     }
   }
 }

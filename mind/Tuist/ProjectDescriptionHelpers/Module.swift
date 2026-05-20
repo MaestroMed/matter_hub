@@ -272,9 +272,17 @@ public enum Module: String, CaseIterable {
             // the cockpit lists. Depends on DesignSystem so any in-
             // module SwiftUI helper (preview chip, color picker)
             // can reuse Liquid Glass tokens without re-rolling them.
+            //
+            // v1.0-alpha.11 — Adds ProjectHealthKit so the new
+            // `BulkImportPlanner` can consume `GitHubRepoSummary` /
+            // `RepoStackDetection` / `RepoMetadata` value types
+            // (which live with GitHubClient in ProjectHealthKit).
+            // No circular dep: ProjectHealthKit doesn't reach back
+            // into BootstrapKit.
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.designSystem.rawValue),
+                .target(name: Module.projectHealthKit.rawValue),
             ]
         case .outreachKit:
             // v0.26 — AI Sales Email Generator. Generates 5 cold

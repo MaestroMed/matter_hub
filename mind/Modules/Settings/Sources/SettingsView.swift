@@ -111,7 +111,17 @@ public struct SettingsView: View {
         ("claude-haiku-4-5-20251001", "Claude Haiku 4.5"),
     ]
 
-    public init() {}
+    /// v1.0-alpha.11 — Bulk Import. Closure the host wires up so the
+    /// "Importer mes repos" CTA can present `BulkImportSheet`. The
+    /// sheet itself lives in the App target (it depends on SwiftData
+    /// + GraphCore + ProjectHealthKit + BootstrapKit at once);
+    /// SettingsView only needs to know when to invoke it. Optional
+    /// so non-cockpit hosts (tests, previews) skip the row entirely.
+    private let onPresentBulkImport: (() -> Void)?
+
+    public init(onPresentBulkImport: (() -> Void)? = nil) {
+        self.onPresentBulkImport = onPresentBulkImport
+    }
 
     public var body: some View {
         ScrollView {
@@ -1094,6 +1104,23 @@ public struct SettingsView: View {
                         testGitHubConnection()
                     }
                     .disabled(githubToken.isEmpty || githubBusy)
+
+                    // v1.0-alpha.11 — Bulk Import GitHub repos. Lives
+                    // directly under the GitHub PAT field because the
+                    // wizard fails fast without a saved token. The
+                    // host (App target) presents the actual
+                    // `BulkImportSheet` via `onPresentBulkImport`; the
+                    // Settings module never imports the sheet directly
+                    // (which would pull SwiftData into the module).
+                    if onPresentBulkImport != nil {
+                        LiquidButton(
+                            title: String(localized: "settings.github.import.cta", bundle: .main),
+                            systemImage: "sparkles.rectangle.stack"
+                        ) {
+                            onPresentBulkImport?()
+                        }
+                        .disabled(githubToken.isEmpty)
+                    }
                 }
             }
         }

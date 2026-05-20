@@ -255,6 +255,60 @@ public final class Project {
         return output
     }
 
+    // MARK: - Bulk Import (v1.0-alpha.11)
+
+    /// Idempotent insert-or-update of a `Project` from a bulk-import
+    /// `BulkImportRecord` payload (slug + name + host + GitHub
+    /// repo + primary color + stack). Looks up an existing Project
+    /// by exact `githubRepo` match; if found, updates the columns
+    /// the import path knows about (`host`, `primaryColor`, `stack`,
+    /// `lastActivityAt`, `name` if currently blank). If not found,
+    /// inserts a fresh row carrying those columns.
+    ///
+    /// Returns the (newly inserted or updated) Project so the caller
+    /// can chain UI updates without re-fetching. Touches
+    /// `lastActivityAt` on every call so the cockpit "Récent" sort
+    /// floats freshly-imported projects to the top.
+    ///
+    /// Why this lives here rather than in BootstrapKit: the upsert
+    /// reads + writes a SwiftData `@Model`, which means it has to be
+    /// on `Project`'s host module. BootstrapKit's `BulkImportPlanner`
+    /// stays pure (no SwiftData), and the wizard hands the matching
+    /// `BulkImportRecord` to this method one row at a time.
+    @MainActor
+    @discardableResult
+    public static func upsert(
+        from record: BulkImportRecord,
+        in context: ModelContext
+    ) throws -> Project {
+        let needle = record.githubRepo
+        let descriptor = FetchDescriptor<Project>(
+            predicate: #Predicate<Project> { project in
+                project.githubRepo == needle
+            }
+        )
+        if let existing = try context.fetch(descriptor).first {
+            if existing.name.isEmpty { existing.name = record.suggestedName }
+            existing.host = record.suggestedHost
+            existing.primaryColor = record.suggestedPrimaryColor
+            existing.stack = record.stack.rawValue
+            existing.lastActivityAt = .now
+            try context.save()
+            return existing
+        }
+        let project = Project(
+            name: record.suggestedName,
+            host: record.suggestedHost,
+            slug: record.suggestedSlug,
+            githubRepo: record.githubRepo,
+            stack: record.stack,
+            primaryColor: record.suggestedPrimaryColor
+        )
+        context.insert(project)
+        try context.save()
+        return project
+    }
+
     // MARK: - Demo seeding
 
     /// Idempotently seeds the 5 real Numelite projects so a fresh
@@ -263,13 +317,19 @@ public final class Project {
     /// `@AppStorage("mind.demo.seeded")` to avoid re-seeding after
     /// a wipe — this method does not write the flag itself.
     ///
+    /// v1.0-alpha.11 — Also bails when any Project already exists
+    /// (not just newly-seeded ones), so a user who imported via the
+    /// new wizard never gets the 5 hardcoded clients reseeded on top
+    /// of their own portfolio.
+    ///
     /// Returns the number of projects inserted (0 when the seed has
-    /// already run and rows already exist).
+    /// already run, projects already exist, or the wizard imported
+    /// some).
     @discardableResult
     public static func seedDemoProjects(in context: ModelContext) -> Int {
         // Idempotency: bail if any Project already exists. The user
-        // may have already wiped + re-imported manually; we never
-        // duplicate-seed.
+        // may have already wiped + re-imported manually OR ran the
+        // bulk import wizard already; we never duplicate-seed.
         let descriptor = FetchDescriptor<Project>()
         if let existing = try? context.fetch(descriptor), !existing.isEmpty {
             return 0
@@ -341,6 +401,40 @@ public final class Project {
         }
         try? context.save()
         return seeds.count
+    }
+}
+
+/// v1.0-alpha.11 — Bulk Import. Slim DTO the iOS bulk-import wizard
+/// hands to `Project.upsert(from:in:)`. Mirrors the columns of
+/// `ProjectHealthKit.RepoMetadata` without forcing GraphCore to
+/// import ProjectHealthKit (which would create a circular dep —
+/// ProjectHealthKit already imports GraphCore).
+///
+/// The wizard maps a `RepoMetadata` to a `BulkImportRecord` before
+/// calling `upsert`. Anyone who wants to test `upsert` without
+/// touching the network can construct a `BulkImportRecord` directly.
+public struct BulkImportRecord: Sendable, Equatable {
+    public let githubRepo: String          // "MaestroMed/AZConstruction_v0"
+    public let suggestedSlug: String       // "az-construction"
+    public let suggestedName: String       // "AZ Construction"
+    public let suggestedHost: String       // "www.azconstruction.fr"
+    public let suggestedPrimaryColor: String  // "#5E5BD8" default iris
+    public let stack: ProjectStack
+
+    public init(
+        githubRepo: String,
+        suggestedSlug: String,
+        suggestedName: String,
+        suggestedHost: String,
+        suggestedPrimaryColor: String,
+        stack: ProjectStack
+    ) {
+        self.githubRepo = githubRepo
+        self.suggestedSlug = suggestedSlug
+        self.suggestedName = suggestedName
+        self.suggestedHost = suggestedHost
+        self.suggestedPrimaryColor = suggestedPrimaryColor
+        self.stack = stack
     }
 }
 

@@ -28,6 +28,10 @@ struct RootView: View {
 
     @State private var selection: MINDTab = .home
     @State private var selectedNode: Node?
+    /// v1.0-alpha.11 — Drives the Bulk Import GitHub repos wizard.
+    /// Settings's "Importer mes repos" CTA flips this true; the
+    /// fullScreenCover renders `BulkImportSheet` over the cockpit.
+    @State private var showBulkImport: Bool = false
     /// Sidebar visibility on regular-width layouts. SwiftUI manages it
     /// but binding lets us collapse the sidebar after the user picks
     /// a row on iPad portrait, where the auto behaviour can leave the
@@ -59,9 +63,16 @@ struct RootView: View {
                 if !newValue { onboardingDone = true }
             }
         )) {
-            OnboardingView {
-                onboardingDone = true
-            }
+            OnboardingView(
+                onPresentBulkImport: { showBulkImport = true },
+                onFinish: { onboardingDone = true }
+            )
+        }
+        .sheet(isPresented: $showBulkImport) {
+            BulkImportSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .onAppear {
             SpotlightIndexer.indexAll(allNodes)
@@ -283,7 +294,7 @@ struct RootView: View {
         case .pipeline:
             PipelineView()
         case .settings:
-            SettingsView()
+            SettingsView(onPresentBulkImport: { showBulkImport = true })
         }
     }
 }
