@@ -8,14 +8,9 @@ import Intelligence
 import Settings
 import OutreachKit
 
-/// v1.0-alpha.1 — Cockpit Studio pivot. Stripped down to the four
-/// tabs the freelance studio cockpit ships against today: Home (Top
-/// leads + Pipeline summary + Audit), Clients (client list), Pipeline
-/// (kanban), Settings (API keys, sync, invoice identity). Everything
-/// from the pre-pivot "second brain" era (Notes, Graph, Capture,
-/// Focus, Health, Reminders, Calendar, Chat, Daily/Weekly digests,
-/// Ambient, Goals, Habits, Journal) has been removed alongside the
-/// modules that produced it.
+/// v1.0-alpha.3 — Cockpit Studio. Four tabs:
+/// Home (Aujourd'hui lead inbox + Projets actifs + Pipeline +
+/// Audit), Clients (now Projects), Pipeline (kanban), Settings.
 enum MINDTab: String, Hashable {
     case home
     case clients
@@ -43,10 +38,6 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            // iPad (and iPhone Plus landscape) get a proper two-column
-            // NavigationSplitView so the sidebar is always visible and
-            // the central pane has more breathing room. iPhone portrait
-            // keeps the Liquid Glass tab bar that defines the brand.
             if hSizeClass == .regular {
                 regularBody
             } else {
@@ -59,9 +50,6 @@ struct RootView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
         }
-        // First-launch onboarding. `isPresented` is bound to !onboardingDone
-        // so the cover opens automatically the very first time RootView
-        // renders, and dismisses the moment the user hits "Start".
         .fullScreenCover(isPresented: Binding(
             get: { !onboardingDone },
             set: { newValue in
@@ -73,16 +61,8 @@ struct RootView: View {
             }
         }
         .onAppear {
-            // Backfill the Spotlight index every launch. CSSearchableIndex
-            // dedupes by uniqueIdentifier, so re-indexing existing rows is
-            // a no-op overwrite — cheap, and keeps us correct even after
-            // the user adds nodes from App Intents while the app wasn't
-            // running.
             SpotlightIndexer.indexAll(allNodes)
         }
-        // Spotlight deep link. When the user taps a MIND row in iOS
-        // Spotlight, the system hands us a userActivity carrying the
-        // Node's UUID under CSSearchableItemActivityIdentifier.
         .onContinueUserActivity(CSSearchableItemActionType) { activity in
             guard
                 let idString = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
@@ -91,10 +71,6 @@ struct RootView: View {
             else { return }
             selectedNode = match
         }
-        // v1.0-alpha.1 — Cockpit deep-link surface narrowed to two
-        // routes: `mind://pipeline` lands on the kanban, and
-        // `mind://comparison` lands on Home + posts the comparison-
-        // sheet notification HomeView listens for.
         .onOpenURL { url in
             guard let scheme = url.scheme, scheme.lowercased() == "mind" else { return }
             if url.host?.lowercased() == "pipeline" {
@@ -112,15 +88,6 @@ struct RootView: View {
                 return
             }
         }
-        // v0.24.1 — Stage Manager / Mac Catalyst keyboard shortcuts.
-        // `StageManagerCommands` (mounted on `WindowGroup` in
-        // `MINDApp`) posts on these names whenever the user picks the
-        // matching menu item or hits the key equivalent. RootView is
-        // the natural owner of `selection`, so the tab-switch
-        // listener lives here. The ⌘N "New Audit" listener flips the
-        // selection to .home AND lets HomeView's own `.onReceive`
-        // observer flip its `isAuditing` sheet bool, so the audit
-        // form actually presents.
         .onReceive(NotificationCenter.default.publisher(for: .mindCommandSelectTab)) { notif in
             guard let raw = notif.userInfo?["tab"] as? String,
                   let tab = MINDTab(rawValue: raw) else {
@@ -134,17 +101,12 @@ struct RootView: View {
             selection = tab
         }
         .onReceive(NotificationCenter.default.publisher(for: .mindCommandNewAudit)) { _ in
-            // Land the user on Home (where the audit sheet is hosted)
-            // before HomeView flips its own bool — otherwise the user
-            // could be on Pipeline / Settings when ⌘N fires and the
-            // sheet would present-then-vanish as soon as selection
-            // moved.
             MINDTelemetry.info("command.newAudit.fired")
             selection = .home
         }
     }
 
-    // MARK: - Compact (iPhone portrait, the brand-defining layout)
+    // MARK: - Compact (iPhone portrait)
 
     private var compactBody: some View {
         ZStack {
@@ -200,9 +162,6 @@ struct RootView: View {
         .navigationSplitViewStyle(.balanced)
     }
 
-    /// Liquid Glass sidebar — 4 destinations + a section header that
-    /// doubles as the app's wordmark + a footer with live counts so
-    /// the user has a cockpit-health view at a glance.
     private var sidebar: some View {
         VStack(spacing: 0) {
             List(selection: sidebarBinding) {
@@ -254,8 +213,6 @@ struct RootView: View {
     }
 
     /// Footer pinned at the bottom of the iPad sidebar with live counts.
-    /// Read straight from the @Query so the numbers update the moment
-    /// the user finishes an audit or adds a client.
     private var sidebarFooter: some View {
         let clientCount = allNodes.filter { $0.kindRaw == "client" }.count
         let auditCount  = allNodes.filter { $0.kindRaw == "audit"  }.count
@@ -294,10 +251,6 @@ struct RootView: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// Bridges the optional-Tab selection NavigationSplitView wants
-    /// (nil = nothing selected on cold start) with our non-optional
-    /// `@State selection`. We default back to `.home` if the user
-    /// somehow lands on nil.
     private var sidebarBinding: Binding<MINDTab?> {
         Binding(
             get: { selection },
@@ -314,9 +267,16 @@ struct RootView: View {
     private var content: some View {
         switch selection {
         case .home:
-            HomeView(onOpenPipeline: { selection = .pipeline })
+            HomeView(
+                onOpenPipeline: { selection = .pipeline },
+                onOpenProjects: { selection = .clients }
+            )
         case .clients:
-            ClientsView()
+            // v1.0-alpha.3 — Tab routes to ProjectsView (project-
+            // backed). Legacy ClientsView (Node-backed) stays
+            // compiled for the daemon-resurrection edge case but
+            // no longer owns the tab.
+            ProjectsView()
         case .pipeline:
             PipelineView()
         case .settings:
@@ -326,7 +286,6 @@ struct RootView: View {
 }
 
 extension MINDTab {
-    /// Stable ordering used by the regular-width sidebar.
     static var allCasesOrdered: [MINDTab] {
         [.home, .clients, .pipeline, .settings]
     }
@@ -334,7 +293,7 @@ extension MINDTab {
     var title: String {
         switch self {
         case .home:     return "Home"
-        case .clients:  return "Clients"
+        case .clients:  return "Projets"
         case .pipeline: return "Pipeline"
         case .settings: return "Settings"
         }
@@ -361,52 +320,65 @@ extension MINDTab {
 
 // MARK: - HomeView
 
-/// Cockpit Numelite home: greeting + audit card stack + pipeline
-/// summary + top leads.
+/// v1.0-alpha.3 — Aujourd'hui-first cockpit home. From top:
+/// 1. Greeting (FR, time-based) + subtitle with lead/project/MRR
+///    counts.
+/// 2. "Boîte leads" — `@Query var newLeads: [Lead]` filtered by
+///    `status == "new"`, sorted desc, capped at 10.
+/// 3. "Projets actifs" — horizontal carousel of active projects.
+/// 4. Pipeline summary card (legacy, kept).
+/// 5. Audit card stack (legacy, kept).
 private struct HomeView: View {
-    /// Closure forwarded from `RootView` so the pipeline summary card
-    /// on Home can route the user straight into the Pipeline Kanban
-    /// tab.
     let onOpenPipeline: () -> Void
+    let onOpenProjects: () -> Void
 
-    init(onOpenPipeline: @escaping () -> Void = {}) {
+    init(
+        onOpenPipeline: @escaping () -> Void = {},
+        onOpenProjects: @escaping () -> Void = {}
+    ) {
         self.onOpenPipeline = onOpenPipeline
+        self.onOpenProjects = onOpenProjects
     }
 
     @Environment(\.modelContext) private var context
     @Query(sort: \Node.updatedAt, order: .reverse) private var allNodes: [Node]
+    // v1.0-alpha.3 — Pull every Lead with status == "new" so the new
+    // HomeView "Aujourd'hui" inbox lands populated. We sort the slice
+    // through `LeadInboxSorter` rather than via the @Query sort
+    // descriptor so the same projection used in tests + the per-
+    // project sheet drives the iPhone card.
+    @Query(filter: #Predicate<Lead> { $0.status == "new" })
+    private var newLeads: [Lead]
+    @Query private var allProjects: [Project]
 
     @State private var isAuditing: Bool = false
     @State private var isBattling: Bool = false
     @State private var isOutreaching: Bool = false
     @State private var isComparing: Bool = false
-    @State private var selectedClient: Node?
+    @State private var selectedLead: Lead?
+    @State private var selectedProject: Project?
 
-    private var clients: [Node] {
-        allNodes.filter { $0.kindRaw == "client" }
+    private var sortedNewLeads: [Lead] {
+        Array(LeadInboxSorter.sort(newLeads, by: .dateDescending).prefix(10))
     }
 
-    private var topLeads: [(node: Node, score: LeadScore)] {
-        return clients
-            .map { ($0, LeadScorer.heuristic(node: $0)) }
-            .sorted { $0.1.total > $1.1.total }
-            .prefix(3)
-            .map { ($0.0, $0.1) }
+    private var activeProjects: [Project] {
+        ProjectSorter.sort(
+            allProjects.filter {
+                $0.lifecycleStageEnum == .active ||
+                $0.lifecycleStageEnum == .maintenance
+            },
+            by: .activityDescending
+        )
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 greeting
-
-                if clients.isEmpty {
-                    emptyStateCard
-                } else {
-                    topLeadsCard
-                }
-
+                leadInboxCard
+                projectsCarouselCard
                 pipelineSummaryCard
-
                 auditCardStack
             }
             .padding(20)
@@ -433,20 +405,29 @@ private struct HomeView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
-        .sheet(item: $selectedClient) { client in
-            NodeDetailView(node: client)
+        .sheet(item: $selectedLead) { lead in
+            LeadDetailSheet(lead: lead)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(item: $selectedProject) { project in
+            ProjectDetailSheet(project: project)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .onAppear {
+            MINDTelemetry.info(
+                "home.leads.opened",
+                data: ["count": String(sortedNewLeads.count)]
+            )
         }
         .onReceive(
             NotificationCenter.default.publisher(for: .mindOpenComparison)
         ) { _ in
             isComparing = true
         }
-        // v0.24.1 — Bridges the ⌘N keyboard shortcut posted by
-        // `StageManagerCommands` into the audit-sheet bool. RootView
-        // already flipped `selection` to `.home` so this card is on
-        // screen by the time the sheet presents.
         .onReceive(
             NotificationCenter.default.publisher(for: .mindCommandNewAudit)
         ) { _ in
@@ -458,11 +439,11 @@ private struct HomeView: View {
 
     private var greeting: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: "\(Self.timeBasedGreeting), Mehdi 👋")
+            Text(verbatim: "Bonjour Mehdi 👋")
                 .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                 .minimumScaleFactor(0.7)
                 .lineLimit(2)
-            Text(verbatim: Self.timeBasedSubtitle)
+            Text(verbatim: subtitle)
                 .font(.system(.body, design: .rounded))
                 .foregroundStyle(.secondary)
                 .minimumScaleFactor(0.85)
@@ -470,52 +451,17 @@ private struct HomeView: View {
         }
     }
 
-    private static var timeBasedGreeting: String {
-        let hour = Calendar.current.component(.hour, from: .now)
-        switch hour {
-        case 5..<12:  return "Bonjour"
-        case 12..<18: return "Bel après-midi"
-        case 18..<23: return "Bonsoir"
-        default:      return "Salut"
-        }
+    private var subtitle: String {
+        let leadCount = newLeads.count
+        let projectCount = ProjectMRR.activeCount(in: allProjects)
+        let mrr = ProjectMRR.total(of: allProjects)
+        let format = String(localized: "home.greeting.subtitle.format")
+        return String(format: format, leadCount, projectCount, mrr)
     }
 
-    private static var timeBasedSubtitle: String {
-        "Pilote tes sites, tes leads et tes factures depuis un seul endroit."
-    }
+    // MARK: - Lead inbox card
 
-    // MARK: - Empty state
-
-    private var emptyStateCard: some View {
-        LiquidCard(cornerRadius: 22) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(LiquidPalette.iris.opacity(0.18))
-                            .frame(width: 40, height: 40)
-                        Image(systemName: "sparkles")
-                            .font(.system(.headline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(LiquidPalette.iris)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: "Bienvenue dans ton cockpit Numelite")
-                            .font(.system(.headline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        Text(verbatim: "Lance un premier audit sur un de tes sites clients pour amorcer le cockpit.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    // MARK: - Top leads card
-
-    private var topLeadsCard: some View {
+    private var leadInboxCard: some View {
         LiquidCard(cornerRadius: 22) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 10) {
@@ -523,27 +469,32 @@ private struct HomeView: View {
                         Circle()
                             .fill(LiquidPalette.iris.opacity(0.18))
                             .frame(width: 32, height: 32)
-                        Text(verbatim: "🔥")
-                            .font(.system(.subheadline, design: .rounded))
+                        Image(systemName: "tray.full.fill")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.iris)
                     }
-                    Text(verbatim: "Top leads")
+                    Text("home.aujourdhui.title")
                         .font(.system(.headline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
                     Spacer()
-                    Text("\(topLeads.count)")
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
+                    if !sortedNewLeads.isEmpty {
+                        Text("\(sortedNewLeads.count)")
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background {
+                                Capsule().fill(LiquidPalette.iris.opacity(0.92))
+                            }
+                    }
                 }
-
-                if topLeads.isEmpty {
-                    Text(verbatim: "Aucun lead pour le moment.")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.secondary)
+                if sortedNewLeads.isEmpty {
+                    leadInboxEmptyState
                 } else {
                     VStack(spacing: 10) {
-                        ForEach(topLeads, id: \.node.id) { entry in
-                            topLeadRow(entry.node, score: entry.score)
+                        ForEach(sortedNewLeads) { lead in
+                            leadRow(lead)
                         }
                     }
                 }
@@ -553,45 +504,245 @@ private struct HomeView: View {
         }
     }
 
-    private func topLeadRow(_ client: Node, score: LeadScore) -> some View {
-        Button {
-            selectedClient = client
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(client.title)
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .lineLimit(1)
-                        .foregroundStyle(.primary)
-                    if let host = Self.topLeadHost(of: client) {
-                        Text(host)
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Text("\(score.total)")
-                    .font(.system(.subheadline, design: .rounded, weight: .bold))
-                    .monospacedDigit()
-                    .foregroundStyle(LiquidPalette.iris)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background {
-                        Capsule().fill(LiquidPalette.iris.opacity(0.16))
-                    }
+    private var leadInboxEmptyState: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "envelope.open.fill")
+                .font(.system(.title3, design: .rounded, weight: .semibold))
+                .foregroundStyle(LiquidPalette.iris.opacity(0.6))
+                .symbolEffect(.pulse.byLayer, options: .repeating)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("home.leads.empty.title")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text("home.leads.empty.detail")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
             }
         }
+        .padding(.vertical, 6)
+    }
+
+    @ViewBuilder
+    private func leadRow(_ lead: Lead) -> some View {
+        Button {
+            selectedLead = lead
+        } label: {
+            HStack(spacing: 10) {
+                avatarCircle(for: lead)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(verbatim: lead.contactName.isEmpty ? lead.contactEmail : lead.contactName)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        if let projectName = lead.project?.name {
+                            Circle()
+                                .fill(projectAccent(for: lead))
+                                .frame(width: 6, height: 6)
+                            Text(verbatim: projectName)
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    Text(verbatim: lead.message)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 4)
+                Text(lead.receivedAt.formatted(.relative(presentation: .named)))
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, 4)
+        }
         .buttonStyle(.plain)
+        .swipeActions(edge: .trailing) {
+            Button {
+                LiquidHaptics.select()
+                selectedLead = lead
+            } label: {
+                Label(
+                    String(localized: "lead.action.respond"),
+                    systemImage: "arrowshape.turn.up.left.fill"
+                )
+            }
+            .tint(LiquidPalette.iris)
+        }
+        .contextMenu {
+            Button {
+                applyStatus(.qualified, on: lead)
+            } label: {
+                Label(String(localized: "lead.action.qualified"), systemImage: "checkmark.circle")
+            }
+            Button(role: .destructive) {
+                applyStatus(.spam, on: lead)
+            } label: {
+                Label(String(localized: "lead.action.spam"), systemImage: "trash.slash")
+            }
+        }
     }
 
-    private static func topLeadHost(of node: Node) -> String? {
-        guard let url = URL(string: node.content),
-              let host = url.host(percentEncoded: false) else { return nil }
-        return host.replacingOccurrences(of: "www.", with: "")
+    private func avatarCircle(for lead: Lead) -> some View {
+        ZStack {
+            Circle()
+                .fill(projectAccent(for: lead).opacity(0.20))
+                .frame(width: 32, height: 32)
+            Text(LeadDetailSheet.initials(of: lead.contactName.isEmpty ? lead.contactEmail : lead.contactName))
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(projectAccent(for: lead))
+        }
     }
 
-    // MARK: - Pipeline summary card
+    private func projectAccent(for lead: Lead) -> Color {
+        if let hex = lead.project?.primaryColor, let color = Color(hex: hex) {
+            return color
+        }
+        return LiquidPalette.iris
+    }
+
+    private func applyStatus(_ status: LeadStatus, on lead: Lead) {
+        let from = lead.status
+        lead.statusEnum = status
+        lead.project?.touchActivity()
+        try? context.save()
+        MINDTelemetry.info(
+            "lead.status.changed",
+            data: [
+                "leadID": lead.id.uuidString,
+                "from": from,
+                "to": status.rawValue,
+            ]
+        )
+    }
+
+    // MARK: - Projects carousel
+
+    private var projectsCarouselCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(LiquidPalette.aqua.opacity(0.18))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "shippingbox.fill")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(LiquidPalette.aqua)
+                    }
+                    Text("home.projects.title")
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Button {
+                        onOpenProjects()
+                    } label: {
+                        HStack(spacing: 2) {
+                            Text("\(activeProjects.count)")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                if activeProjects.isEmpty {
+                    Text("home.projects.empty")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(activeProjects) { project in
+                                Button {
+                                    LiquidHaptics.select()
+                                    selectedProject = project
+                                } label: {
+                                    miniProjectCard(project)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .scrollTargetLayout()
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func miniProjectCard(_ project: Project) -> some View {
+        let accent = Color(hex: project.primaryColor) ?? LiquidPalette.iris
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Circle().fill(accent).frame(width: 8, height: 8)
+                Text(verbatim: project.name)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+            Text(verbatim: project.host)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 4)
+            HStack {
+                Text(verbatim: mrrLabel(for: project))
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background { Capsule().fill(accent.opacity(0.92)) }
+                Spacer()
+                Text(verbatim: stackShort(for: project))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(accent)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background { Capsule().fill(accent.opacity(0.14)) }
+            }
+        }
+        .padding(12)
+        .frame(width: 200, height: 130, alignment: .topLeading)
+        .background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(accent.opacity(0.20), lineWidth: 1)
+                }
+        }
+    }
+
+    private func mrrLabel(for project: Project) -> String {
+        if project.contractTypeEnum == .retainer {
+            return ProjectMRR.formatEUR(project.monthlyRecurringRevenueEUR)
+        }
+        let format = String(localized: "project.list.oneshot.format")
+        return String(format: format, project.oneShotRevenueEUR)
+    }
+
+    private func stackShort(for project: Project) -> String {
+        switch project.stackEnum {
+        case .nextjs:     return "Next"
+        case .wordpress:  return "WP"
+        case .shopify:    return "Shop"
+        case .staticSite: return "Static"
+        case .other:      return "Custom"
+        }
+    }
+
+    // MARK: - Pipeline summary card (kept from v1.0-alpha.1)
+
+    private var clients: [Node] { allNodes.filter { $0.kindRaw == "client" } }
 
     private var pipelineSummaryCard: some View {
         let buckets = HomeView.pipelineCounts(in: clients)
@@ -668,8 +819,7 @@ private struct HomeView: View {
         }
     }
 
-    /// Pure helper aggregating client-Node pipeline stages into a flat
-    /// per-stage count tuple. Nil pipelineStage rolls into Prospect.
+    /// Pure helper aggregating client-Node pipeline stages.
     static func pipelineCounts(in clients: [Node]) -> PipelineBuckets {
         var buckets = PipelineBuckets()
         for client in clients {
@@ -696,7 +846,7 @@ private struct HomeView: View {
         var lost: Int = 0
     }
 
-    // MARK: - Audit card stack
+    // MARK: - Audit card stack (kept)
 
     private var auditCardStack: some View {
         LiquidCard(cornerRadius: 22) {

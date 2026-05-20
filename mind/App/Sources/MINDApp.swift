@@ -47,6 +47,11 @@ struct MINDApp: App {
         // reference to an escaping closure.
         Task { @MainActor in
             MINDApp.seedDemoProjectsIfNeeded()
+            // v1.0-alpha.3 — Seed demo Leads right after Projects so
+            // HomeView's "Aujourd'hui" inbox lands populated on first
+            // launch. Order matters: the lead seed looks up its
+            // owning Project by exact name.
+            MINDApp.seedDemoLeadsIfNeeded()
         }
     }
 
@@ -67,6 +72,30 @@ struct MINDApp: App {
         if inserted > 0 {
             MINDTelemetry.info(
                 "project.demo.seeded",
+                data: ["count": String(inserted)]
+            )
+        }
+    }
+
+    /// v1.0-alpha.3 — Seeds 4 demo Lead rows on first launch so the
+    /// new HomeView inbox isn't empty before any real webhook lands.
+    /// Idempotent + gated on `mind.demoLeads.seeded`. Skips silently
+    /// when the projects aren't there yet (e.g. seeding disabled in
+    /// debug) — `Lead.seedDemoLeads(in:)` itself guards on Project
+    /// presence.
+    @MainActor
+    static func seedDemoLeadsIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: "mind.demoLeads.seeded") == false else { return }
+        let context = GraphCore.sharedContainer.mainContext
+        let inserted = Lead.seedDemoLeads(in: context)
+        // Only set the flag when the seed actually inserted rows. A
+        // 0-row return (no projects yet, or leads already present)
+        // leaves the flag unset so the next cold launch retries.
+        if inserted > 0 {
+            defaults.set(true, forKey: "mind.demoLeads.seeded")
+            MINDTelemetry.info(
+                "lead.demo.seeded",
                 data: ["count": String(inserted)]
             )
         }

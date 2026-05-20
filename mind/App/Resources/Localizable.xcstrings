@@ -4500,1248 +4500,4140 @@
       "comment": "v0.30 · Tab bar title for the Pipeline Kanban CRM tab.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipeline"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipeline"
+          }
+        }
       }
     },
     "pipeline.stage.prospect": {
       "comment": "v0.30 · Pipeline Kanban stage label — first column, untouched leads.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Prospect" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Prospect" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prospect"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prospect"
+          }
+        }
       }
     },
     "pipeline.stage.contacted": {
       "comment": "v0.30 · Pipeline Kanban stage label — outreach sent.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Contacted" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Contacté" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacted"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacté"
+          }
+        }
       }
     },
     "pipeline.stage.qualified": {
       "comment": "v0.30 · Pipeline Kanban stage label — reply received, fit confirmed.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Qualified" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Qualifié" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualified"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualifié"
+          }
+        }
       }
     },
     "pipeline.stage.audit": {
       "comment": "v0.30 · Pipeline Kanban stage label — audit in progress.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Audit" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Audit" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit"
+          }
+        }
       }
     },
     "pipeline.stage.pitch": {
       "comment": "v0.30 · Pipeline Kanban stage label — pitch in progress.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pitch" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Pitch" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pitch"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pitch"
+          }
+        }
       }
     },
     "pipeline.stage.won": {
       "comment": "v0.30 · Pipeline Kanban stage label — deal closed.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Won" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Signé" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Won"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signé"
+          }
+        }
       }
     },
     "pipeline.stage.lost": {
       "comment": "v0.30 · Pipeline Kanban stage label — deal closed-lost.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Lost" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Perdu" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lost"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perdu"
+          }
+        }
       }
     },
     "pipeline.empty.column": {
       "comment": "v0.30 · Empty-state copy inside a pipeline column with no clients.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Drop a client here" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Glisse un client ici" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop a client here"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glisse un client ici"
+          }
+        }
       }
     },
     "pipeline.action.dropped": {
       "comment": "v0.30 · Toast confirming a client card landed in a new stage.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Moved to %@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Déplacé vers %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacé vers %@"
+          }
+        }
       }
     },
     "pipeline.lost.alert.title": {
       "comment": "v0.30 · Alert title shown when a client is dropped into the Lost column.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Why was this deal lost?" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Pourquoi ce client est-il perdu ?" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why was this deal lost?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pourquoi ce client est-il perdu ?"
+          }
+        }
       }
     },
     "pipeline.lost.alert.placeholder": {
       "comment": "v0.30 · Placeholder in the Lost reason text field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Reason (kept for analytics)" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Raison (gardée pour les stats)" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason (kept for analytics)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raison (gardée pour les stats)"
+          }
+        }
       }
     },
     "pipeline.won.toast.title": {
       "comment": "v0.30 · Toast title shown when a client is dropped into the Won column.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bravo!" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Bravo !" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bravo!"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bravo !"
+          }
+        }
       }
     },
     "pipeline.won.invoice.title": {
       "comment": "v0.30 · Sheet title for the placeholder Stripe invoice helper opened on Won.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stripe invoice" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Facture Stripe" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe invoice"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facture Stripe"
+          }
+        }
       }
     },
     "pipeline.won.invoice.amount.placeholder": {
       "comment": "v0.30 · Placeholder inside the Stripe invoice amount field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Amount in €" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Montant en €" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount in €"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montant en €"
+          }
+        }
       }
     },
     "pipeline.won.invoice.copy": {
       "comment": "v0.30 · CTA on the Stripe invoice sheet — copies a placeholder Payment Link to clipboard.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Copy Stripe Payment Link" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Copier le lien Stripe Payment Link" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Stripe Payment Link"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le lien Stripe Payment Link"
+          }
+        }
       }
     },
     "home.pipeline.title": {
       "comment": "v0.30 · HomeView card headline above the 6-pill pipeline summary row.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipeline"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipeline"
+          }
+        }
       }
     },
     "home.pipeline.empty": {
       "comment": "v0.30 · HomeView pipeline summary card empty-state line.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Drop a client on the Pipeline tab to get started." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Glisse un client sur l'onglet Pipeline pour commencer." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop a client on the Pipeline tab to get started."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glisse un client sur l'onglet Pipeline pour commencer."
+          }
+        }
       }
     },
     "battle.title": {
       "comment": "v0.24 · BattleSheet title — the headline shown at the top of the Audit Battle Mode sheet.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Battle Mode" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Mode Battle" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battle Mode"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode Battle"
+          }
+        }
       }
     },
     "battle.subtitle": {
       "comment": "v0.24 · BattleSheet subtitle — the one-liner that introduces the 4-way audit comparison.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Audit a client against three competitors in parallel." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Audite un client face à trois concurrents en parallèle." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit a client against three competitors in parallel."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audite un client face à trois concurrents en parallèle."
+          }
+        }
       }
     },
     "battle.form.primary.label": {
       "comment": "v0.24 · BattleSheet form — label above the primary URL field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Primary client" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Client principal" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primary client"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client principal"
+          }
+        }
       }
     },
     "battle.form.primary.placeholder": {
       "comment": "v0.24 · BattleSheet form — placeholder inside the primary URL field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "https://stripe.com" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "https://stripe.com" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "https://stripe.com"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "https://stripe.com"
+          }
+        }
       }
     },
     "battle.form.competitors.label": {
       "comment": "v0.24 · BattleSheet form — label above the competitor chips row.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Competitors" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Concurrents" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Competitors"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concurrents"
+          }
+        }
       }
     },
     "battle.form.competitors.empty": {
       "comment": "v0.24 · BattleSheet form — empty-state hint shown under the competitors label when the chips list is empty.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Type a primary URL — suggestions will appear here." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Saisis une URL principale — les suggestions apparaissent ici." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type a primary URL — suggestions will appear here."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis une URL principale — les suggestions apparaissent ici."
+          }
+        }
       }
     },
     "battle.form.add.competitor": {
       "comment": "v0.24 · BattleSheet form — placeholder inside the field used to add a competitor by hand.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Add a competitor (host)…" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ajouter un concurrent (host)…" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a competitor (host)…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un concurrent (host)…"
+          }
+        }
       }
     },
     "battle.form.validation.invalidURL": {
       "comment": "v0.24 · BattleSheet form — validation error shown under the primary field when the URL can't be parsed.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Enter a valid URL (e.g. stripe.com)." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Saisis une URL valide (ex. stripe.com)." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid URL (e.g. stripe.com)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis une URL valide (ex. stripe.com)."
+          }
+        }
       }
     },
     "battle.cta.start": {
       "comment": "v0.24 · BattleSheet form — primary CTA that kicks off the parallel audits.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Start the battle" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Lancer la battle" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the battle"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer la battle"
+          }
+        }
       }
     },
     "battle.running.label": {
       "comment": "v0.24 · BattleSheet running state — header above the horizontal probe-card row.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Probes running in parallel…" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Sondes en parallèle…" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probes running in parallel…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sondes en parallèle…"
+          }
+        }
       }
     },
     "battle.radar.title": {
       "comment": "v0.24 · BattleSheet completed state — header above the radar chart card.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Six axes, four contenders" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Six axes, quatre prétendants" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Six axes, four contenders"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Six axes, quatre prétendants"
+          }
+        }
       }
     },
     "battle.podium.title": {
       "comment": "v0.24 · BattleSheet completed state — header above the per-metric podium row.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Who wins what" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Qui gagne quoi" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who wins what"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qui gagne quoi"
+          }
+        }
       }
     },
     "battle.winner.badge": {
       "comment": "v0.24 · BattleSheet podium — short capsule label next to the winning client on each metric row.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Wins" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Gagne" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wins"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gagne"
+          }
+        }
       }
     },
     "battle.legend.failed": {
       "comment": "v0.24 · BattleSheet legend — fallback text shown next to a participant whose audit failed.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Failed" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Échec" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec"
+          }
+        }
       }
     },
     "battle.metric.overall": {
       "comment": "v0.24 · BattleSheet podium — metric label, overall weighted score.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Overall" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Global" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overall"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Global"
+          }
+        }
       }
     },
     "battle.metric.performance": {
       "comment": "v0.24 · BattleSheet podium — metric label, Lighthouse performance.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Performance" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Performance" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performance"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performance"
+          }
+        }
       }
     },
     "battle.metric.seo": {
       "comment": "v0.24 · BattleSheet podium — metric label, SEO axis.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "SEO" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "SEO" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEO"
+          }
+        }
       }
     },
     "battle.metric.security": {
       "comment": "v0.24 · BattleSheet podium — metric label, security headers + TLS.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Security" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Sécurité" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sécurité"
+          }
+        }
       }
     },
     "battle.metric.brand": {
       "comment": "v0.24 · BattleSheet podium — metric label, brand / OpenGraph axis.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Brand" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Brand" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand"
+          }
+        }
       }
     },
     "battle.metric.mobile": {
       "comment": "v0.24 · BattleSheet podium — metric label, mobile / responsive axis.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Mobile" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Mobile" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mobile"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mobile"
+          }
+        }
       }
     },
     "home.battleCard.title": {
       "comment": "v0.24 · HomeView audit card — secondary CTA title that opens BattleSheet.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Battle Mode" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Mode Battle" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battle Mode"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode Battle"
+          }
+        }
       }
     },
     "home.battleCard.subtitle": {
       "comment": "v0.24 · HomeView audit card — secondary CTA subtitle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Audit 4 sites side-by-side. Radar + podium." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Audit 4 sites côte à côte. Radar + podium." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit 4 sites side-by-side. Radar + podium."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit 4 sites côte à côte. Radar + podium."
+          }
+        }
       }
     },
     "roi.hero.total.label": {
       "comment": "v0.25 · Eyebrow above the giant ROI total on the AuditSheet hero card.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "ESTIMATED MONTHLY ROI" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "ROI MENSUEL ESTIMÉ" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESTIMATED MONTHLY ROI"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ROI MENSUEL ESTIMÉ"
+          }
+        }
       }
     },
     "roi.hero.annualized.label": {
       "comment": "v0.25 · Subtitle under the ROI hero amount. %@ = FR-formatted annualised total.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Projected over 12 months: %@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Projeté sur 12 mois : %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projected over 12 months: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeté sur 12 mois : %@"
+          }
+        }
       }
     },
     "roi.confidence.low": {
       "comment": "v0.25 · Confidence pill label on the ROI hero card — low confidence (zero grounded signals).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "low confidence" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "confiance faible" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "low confidence"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "confiance faible"
+          }
+        }
       }
     },
     "roi.confidence.medium": {
       "comment": "v0.25 · Confidence pill label on the ROI hero card — medium confidence (one grounded signal).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "moderate confidence" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "confiance modérée" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "moderate confidence"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "confiance modérée"
+          }
+        }
       }
     },
     "roi.confidence.high": {
       "comment": "v0.25 · Confidence pill label on the ROI hero card — high confidence (two+ grounded signals).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "high confidence" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "confiance élevée" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "high confidence"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "confiance élevée"
+          }
+        }
       }
     },
     "roi.per.month.suffix": {
       "comment": "v0.25 · Suffix appended after every ROI amount (hero card + per-QW badge).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "/mo" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "/mois" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/mo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/mois"
+          }
+        }
       }
     },
     "roi.methodology.button": {
       "comment": "v0.25 · CTA on the ROI hero card that opens the methodology modal.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Methodology" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Méthodologie" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Methodology"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Méthodologie"
+          }
+        }
       }
     },
     "roi.methodology.body": {
       "comment": "v0.25 · Body copy inside the ROI methodology modal — explains the formula.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Each Quick Win is estimated as conversion lift × estimated monthly traffic × estimated ARPU, capped at €30 000 per win. Confidence reflects how many signals (industry, traffic, ARPU) are grounded vs. inferred from industry priors." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Chaque Quick Win est estimé via levier de conversion × trafic mensuel estimé × ARPU estimé, plafonné à 30 000 € par win. Le niveau de confiance reflète combien de signaux (industrie, trafic, ARPU) sont avérés vs. extrapolés des moyennes du secteur." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each Quick Win is estimated as conversion lift × estimated monthly traffic × estimated ARPU, capped at €30 000 per win. Confidence reflects how many signals (industry, traffic, ARPU) are grounded vs. inferred from industry priors."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque Quick Win est estimé via levier de conversion × trafic mensuel estimé × ARPU estimé, plafonné à 30 000 € par win. Le niveau de confiance reflète combien de signaux (industrie, trafic, ARPU) sont avérés vs. extrapolés des moyennes du secteur."
+          }
+        }
       }
     },
     "roi.qw.badge.format": {
       "comment": "v0.25 · Format string for the per-QW ROI inline badge. %1$@ = formatted amount, %2$@ = per-month suffix.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "+%1$@ %2$@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "+%1$@ %2$@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ %2$@"
+          }
+        }
       }
     },
     "outreach.title": {
       "comment": "v0.26 · OutreachSheet large header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Outreach engine" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Moteur d'outreach" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outreach engine"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moteur d'outreach"
+          }
+        }
       }
     },
     "outreach.subtitle": {
       "comment": "v0.26 · OutreachSheet subtitle under the large header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "5 cold email variants in your voice, grounded in the audit." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "5 variantes d'email à froid dans ta voix, ancrées dans l'audit." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 cold email variants in your voice, grounded in the audit."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 variantes d'email à froid dans ta voix, ancrées dans l'audit."
+          }
+        }
       }
     },
     "outreach.field.recipientName": {
       "comment": "v0.26 · Placeholder for the recipient name field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recipient name" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Nom du destinataire" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient name"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom du destinataire"
+          }
+        }
       }
     },
     "outreach.field.recipientEmail": {
       "comment": "v0.26 · Placeholder for the recipient email field.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recipient email" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Email du destinataire" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email du destinataire"
+          }
+        }
       }
     },
     "outreach.voice.friendly": {
       "comment": "v0.26 · Voice tone pill — friendly / amical.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Friendly" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Amical" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friendly"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amical"
+          }
+        }
       }
     },
     "outreach.voice.direct": {
       "comment": "v0.26 · Voice tone pill — direct, no fluff.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Direct" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Direct" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct"
+          }
+        }
       }
     },
     "outreach.voice.formal": {
       "comment": "v0.26 · Voice tone pill — formal business register.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Formal" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Formel" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formel"
+          }
+        }
       }
     },
     "outreach.field.trigger": {
       "comment": "v0.26 · Label for the optional recent-trigger text field (funding, hire, launch).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recent trigger (optional)" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Trigger récent (facultatif)" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent trigger (optional)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trigger récent (facultatif)"
+          }
+        }
       }
     },
     "outreach.cta.generate": {
       "comment": "v0.26 · Primary CTA on the OutreachSheet form — generates the 5 variants.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generate 5 variants" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Générer 5 variantes" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate 5 variants"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer 5 variantes"
+          }
+        }
       }
     },
     "outreach.generating.label": {
       "comment": "v0.26 · Inline status text while the 5 shimmer skeleton cards are visible.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Drafting in your voice…" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Rédaction dans ta voix…" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drafting in your voice…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédaction dans ta voix…"
+          }
+        }
       }
     },
     "outreach.variant.angle.roi": {
       "comment": "v0.26 · Angle pill — leads with a € ROI number.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "ROI" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "ROI" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ROI"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ROI"
+          }
+        }
       }
     },
     "outreach.variant.angle.quickWin": {
       "comment": "v0.26 · Angle pill — names a concrete fix the prospect could ship this week.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Quick win" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Quick win" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick win"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick win"
+          }
+        }
       }
     },
     "outreach.variant.angle.competitor": {
       "comment": "v0.26 · Angle pill — contrasts the prospect with a named competitor.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Competitor" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Concurrent" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Competitor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concurrent"
+          }
+        }
       }
     },
     "outreach.variant.angle.funding": {
       "comment": "v0.26 · Angle pill — references a recent trigger (funding round, hire, launch).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Funding" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Funding" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funding"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funding"
+          }
+        }
       }
     },
     "outreach.variant.angle.question": {
       "comment": "v0.26 · Angle pill — opens with a sharp question, no pitch in the first paragraph.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Question" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Question" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        }
       }
     },
     "outreach.action.copy": {
       "comment": "v0.26 · Per-variant card action — copies subject + body to UIPasteboard.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Copy" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Copier" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier"
+          }
+        }
       }
     },
     "outreach.action.openInMail": {
       "comment": "v0.26 · Per-variant card action — opens iOS Mail via mailto: URL.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Open in Mail" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir dans Mail" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Mail"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir dans Mail"
+          }
+        }
       }
     },
     "outreach.action.like": {
       "comment": "v0.26 · Per-variant heart toggle accessibility label — marks the winning variant.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Like variant" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aimer la variante" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Like variant"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aimer la variante"
+          }
+        }
       }
     },
     "outreach.regenerate": {
       "comment": "v0.26 · Footer button — regenerates the 5 variants with the same form values.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Regenerate" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Régénérer" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regenerate"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Régénérer"
+          }
+        }
       }
     },
     "outreach.new": {
       "comment": "v0.26 · Footer button — resets the form for a new prospect.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "New prospect" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Nouveau prospect" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New prospect"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau prospect"
+          }
+        }
       }
     },
     "outreach.action.expand": {
       "comment": "v0.26 · Per-variant CTA to expand the collapsed body preview.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "See full email" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Voir l'email entier" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See full email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir l'email entier"
+          }
+        }
       }
     },
     "outreach.action.collapse": {
       "comment": "v0.26 · Per-variant CTA to collapse the expanded body back to 3 lines.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Collapse" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Réduire" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réduire"
+          }
+        }
       }
     },
     "outreach.error.noProspect": {
       "comment": "v0.26 · Inline error on the form when no client name + no host are provided.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Add a prospect name or URL first." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ajoute un nom de prospect ou une URL d'abord." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a prospect name or URL first."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute un nom de prospect ou une URL d'abord."
+          }
+        }
       }
     },
     "outreach.error.emptyResponse": {
       "comment": "v0.26 · Inline error when the LLM round-trip returns zero parseable variants.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No variants could be parsed — try regenerating." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aucune variante exploitable — essaie de régénérer." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No variants could be parsed — try regenerating."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune variante exploitable — essaie de régénérer."
+          }
+        }
       }
     },
     "home.outreachCard.title": {
       "comment": "v0.26 · HomeView audit card — tertiary row title for the outreach engine.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Outreach engine" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Moteur d'outreach" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outreach engine"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moteur d'outreach"
+          }
+        }
       }
     },
     "home.outreachCard.subtitle": {
       "comment": "v0.26 · HomeView audit card — tertiary row subtitle for the outreach engine.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "5 cold email variants in your voice from any prospect." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "5 variantes d'email à froid à partir de n'importe quel prospect." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 cold email variants in your voice from any prospect."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 variantes d'email à froid à partir de n'importe quel prospect."
+          }
+        }
       }
     },
     "home.comparisonCard.title": {
       "comment": "v0.32 · HomeView audit card — quaternary row title that opens ComparisonSheet.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Compare audits" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Comparer mes audits" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare audits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparer mes audits"
+          }
+        }
       }
     },
     "home.comparisonCard.subtitle": {
       "comment": "v0.32 · HomeView audit card — quaternary row subtitle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Side-by-side scoreboard, overlap and risk deltas across 2–4 clients." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Tableau de scores, recoupements et risques uniques sur 2 à 4 clients." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Side-by-side scoreboard, overlap and risk deltas across 2–4 clients."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tableau de scores, recoupements et risques uniques sur 2 à 4 clients."
+          }
+        }
       }
     },
     "comparison.title": {
       "comment": "v0.32 · ComparisonSheet navigation title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Audit comparison" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Comparaison d'audits" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audit comparison"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparaison d'audits"
+          }
+        }
       }
     },
     "comparison.close": {
       "comment": "v0.32 · ComparisonSheet toolbar close button.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Close" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Fermer" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        }
       }
     },
     "comparison.picker.headline": {
       "comment": "v0.32 · ComparisonSheet picker phase headline.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pick 2–4 audits" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Choisis 2 à 4 audits" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick 2–4 audits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisis 2 à 4 audits"
+          }
+        }
       }
     },
     "comparison.picker.subtitle": {
       "comment": "v0.32 · ComparisonSheet picker phase subtitle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Each audit ever run is archived locally. Pick at least two to compare them side by side." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Chaque audit lancé est archivé en local. Sélectionne-en au moins deux pour les comparer côte à côte." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each audit ever run is archived locally. Pick at least two to compare them side by side."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque audit lancé est archivé en local. Sélectionne-en au moins deux pour les comparer côte à côte."
+          }
+        }
       }
     },
     "comparison.empty.title": {
       "comment": "v0.32 · ComparisonSheet empty-archive card title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No audits archived yet" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aucun audit archivé pour l'instant" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No audits archived yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun audit archivé pour l'instant"
+          }
+        }
       }
     },
     "comparison.empty.subtitle": {
       "comment": "v0.32 · ComparisonSheet empty-archive card subtitle.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Run a couple of audits first, then come back here to benchmark them." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Lance d'abord quelques audits, puis reviens ici pour les comparer." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run a couple of audits first, then come back here to benchmark them."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lance d'abord quelques audits, puis reviens ici pour les comparer."
+          }
+        }
       }
     },
     "comparison.compare.cta": {
       "comment": "v0.32 · ComparisonSheet primary CTA when N ≥ 2 audits selected. %d = count.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Compare %d audits" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Comparer %d audits" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare %d audits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparer %d audits"
+          }
+        }
       }
     },
     "comparison.compare.cta.disabled": {
       "comment": "v0.32 · ComparisonSheet CTA when fewer than 2 selected. %d = count so far.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select at least 2 (currently %d)" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Choisis-en au moins 2 (actuellement %d)" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select at least 2 (currently %d)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisis-en au moins 2 (actuellement %d)"
+          }
+        }
       }
     },
     "comparison.results.headline": {
       "comment": "v0.32 · ComparisonSheet results phase headline.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Side-by-side" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Côte à côte" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Side-by-side"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Côte à côte"
+          }
+        }
       }
     },
     "comparison.results.subtitle": {
       "comment": "v0.32 · ComparisonSheet results phase subtitle. %d = number of reports.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Comparing %d clients across 6 axes." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Comparaison de %d clients sur 6 axes." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparing %d clients across 6 axes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparaison de %d clients sur 6 axes."
+          }
+        }
       }
     },
     "comparison.legend.title": {
       "comment": "v0.32 · ComparisonSheet legend card title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Legend" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Légende" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legend"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Légende"
+          }
+        }
       }
     },
     "comparison.scoreboard.title": {
       "comment": "v0.32 · ComparisonSheet metric scoreboard title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Scoreboard" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Tableau des scores" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoreboard"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tableau des scores"
+          }
+        }
       }
     },
     "comparison.leader.label": {
       "comment": "v0.32 · ComparisonSheet per-metric leader badge. %d = client index (1-based).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Leader: #%d" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Tête : #%d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leader: #%d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tête : #%d"
+          }
+        }
       }
     },
     "comparison.overlap.title": {
       "comment": "v0.32 · ComparisonSheet quick-wins overlap section title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Shared quick wins" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Quick wins partagés" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared quick wins"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick wins partagés"
+          }
+        }
       }
     },
     "comparison.overlap.empty": {
       "comment": "v0.32 · ComparisonSheet overlap section empty state.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No quick win appears in two or more of these audits." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aucun quick win ne se retrouve dans plusieurs audits sélectionnés." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No quick win appears in two or more of these audits."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun quick win ne se retrouve dans plusieurs audits sélectionnés."
+          }
+        }
       }
     },
     "comparison.overlap.count": {
       "comment": "v0.32 · ComparisonSheet overlap count suffix. %d = occurrences.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%d audits" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "%d audits" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d audits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d audits"
+          }
+        }
       }
     },
     "comparison.differences.title": {
       "comment": "v0.32 · ComparisonSheet unique hidden risks section title.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Unique hidden risks" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Risques propres à un seul client" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unique hidden risks"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risques propres à un seul client"
+          }
+        }
       }
     },
     "comparison.differences.empty": {
       "comment": "v0.32 · ComparisonSheet differences section empty state.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Every hidden risk is shared across these audits." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Tous les risques cachés se retrouvent dans plusieurs audits." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every hidden risk is shared across these audits."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les risques cachés se retrouvent dans plusieurs audits."
+          }
+        }
       }
     },
     "comparison.back.cta": {
       "comment": "v0.32 · ComparisonSheet back-to-picker CTA.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Change selection" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Modifier la sélection" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change selection"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier la sélection"
+          }
+        }
       }
     },
     "comparison.severity.low": {
       "comment": "v0.32 · Hidden risk severity label — low.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "low" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "faible" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "low"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "faible"
+          }
+        }
       }
     },
     "comparison.severity.medium": {
       "comment": "v0.32 · Hidden risk severity label — medium.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "medium" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "moyen" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "medium"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "moyen"
+          }
+        }
       }
     },
     "comparison.severity.high": {
       "comment": "v0.32 · Hidden risk severity label — high.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "high" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "élevé" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "high"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "élevé"
+          }
+        }
       }
     },
     "comparison.severity.critical": {
       "comment": "v0.32 · Hidden risk severity label — critical.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "critical" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "critique" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "critical"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "critique"
+          }
+        }
       }
     },
     "node.action.outreach": {
       "comment": "v0.26 · NodeDetailView client body — CTA to generate outreach.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generate outreach" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Générer outreach" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate outreach"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer outreach"
+          }
+        }
       }
     },
     "followUp.toggle.title": {
       "comment": "v0.29 · OutreachSheet — title of the inline toggle that arms a 4-touch follow-up sequence.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Schedule 4-touch follow-up" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Programmer la suite (4 touches)" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule 4-touch follow-up"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programmer la suite (4 touches)"
+          }
+        }
       }
     },
     "followUp.toggle.subtitle": {
       "comment": "v0.29 · OutreachSheet — subtitle under the toggle explaining the cadence.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "J+3 LinkedIn · J+7 value-add · J+14 break-up" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "J+3 LinkedIn · J+7 value-add · J+14 break-up" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J+3 LinkedIn · J+7 value-add · J+14 break-up"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J+3 LinkedIn · J+7 value-add · J+14 break-up"
+          }
+        }
       }
     },
     "followUp.home.title": {
       "comment": "v0.29 · HomeView card title — today's follow-up touches to send.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Follow-ups today" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Relances du jour" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow-ups today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relances du jour"
+          }
+        }
       }
     },
     "followUp.home.empty": {
       "comment": "v0.29 · HomeView card empty state — nothing to send today.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Nothing to send today. Stay sharp." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Rien à envoyer aujourd'hui. Reste affûté." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to send today. Stay sharp."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien à envoyer aujourd'hui. Reste affûté."
+          }
+        }
       }
     },
     "followUp.action.markDone": {
       "comment": "v0.29 · HomeView card row action — mark the touch as sent.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Mark done" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Marquer fait" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark done"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer fait"
+          }
+        }
       }
     },
     "followUp.action.snooze": {
       "comment": "v0.29 · HomeView card row action — push the touch to tomorrow.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Snooze" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Reporter" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snooze"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporter"
+          }
+        }
       }
     },
     "followUp.action.stop": {
       "comment": "v0.29 · HomeView card row action — stop the whole sequence for this prospect.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stop" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Stop" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        }
       }
     },
     "followUp.channel.email": {
       "comment": "v0.29 · Channel pill — email touch.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Email" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Email" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        }
       }
     },
     "followUp.channel.linkedIn": {
       "comment": "v0.29 · Channel pill — LinkedIn touch.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "LinkedIn" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "LinkedIn" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LinkedIn"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LinkedIn"
+          }
+        }
       }
     },
     "followUp.angle.initial": {
       "comment": "v0.29 · Angle pill — Day 0 initial email touch.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Initial" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Initial" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initial"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initial"
+          }
+        }
       }
     },
     "followUp.angle.reminder": {
       "comment": "v0.29 · Angle pill — Day 3 reminder touch.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Reminder" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Relance" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relance"
+          }
+        }
       }
     },
     "followUp.angle.valueAdd": {
       "comment": "v0.29 · Angle pill — Day 7 value-add touch.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Value add" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Apport" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Value add"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apport"
+          }
+        }
       }
     },
     "followUp.angle.breakUp": {
       "comment": "v0.29 · Angle pill — Day 14 break-up touch.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Break-up" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Break-up" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break-up"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break-up"
+          }
+        }
       }
     },
     "followUp.markReplied": {
       "comment": "v0.29 · NodeDetailView client body — CTA that pauses the active sequence as 'replied'.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Mark as replied" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Marquer comme répondu" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as replied"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer comme répondu"
+          }
+        }
       }
     },
     "followUp.notification.title": {
       "comment": "v0.29 · Local notification title fired by FollowUpScheduler.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "MIND · follow-up" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "MIND · relance" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIND · follow-up"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIND · relance"
+          }
+        }
       }
     },
     "followUp.notification.body.format": {
       "comment": "v0.29 · Local notification body — '%1$d / %2$d'. Touch index out of total.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Today: touch %1$d of %2$d ready to send." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aujourd'hui : touche %1$d/%2$d à envoyer." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today: touch %1$d of %2$d ready to send."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd'hui : touche %1$d/%2$d à envoyer."
+          }
+        }
       }
     },
     "followUp.step.label.format": {
       "comment": "v0.29 · NodeDetailView step indicator — '%1$d / %2$d'. Current touch out of total.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Touch %1$d of %2$d" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Touche %1$d / %2$d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch %1$d of %2$d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche %1$d / %2$d"
+          }
+        }
       }
     },
     "lead.score.label": {
       "comment": "v0.27 · Accessibility label for the LeadScoreBadge on ClientCard / Top leads row.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Lead score" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Score de lead" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead score"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score de lead"
+          }
+        }
       }
     },
     "lead.temperature.hot": {
       "comment": "v0.27 · Lead temperature label — call today. 80+.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Hot — call today" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Chaud — à appeler aujourd'hui" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hot — call today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaud — à appeler aujourd'hui"
+          }
+        }
       }
     },
     "lead.temperature.warm": {
       "comment": "v0.27 · Lead temperature label — call this week. 50–79.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Warm — call this week" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Tiède — à relancer cette semaine" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm — call this week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiède — à relancer cette semaine"
+          }
+        }
       }
     },
     "lead.temperature.cold": {
       "comment": "v0.27 · Lead temperature label — let cool. <50.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cold — let cool" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Froid — à laisser reposer" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cold — let cool"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Froid — à laisser reposer"
+          }
+        }
       }
     },
     "lead.sort.label": {
       "comment": "v0.27 · Accessibility label for the ClientsView sort segmented control.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sort by" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Trier par" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort by"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trier par"
+          }
+        }
       }
     },
     "lead.sort.score": {
       "comment": "v0.27 · ClientsView sort segmented control — by lead score, default.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Score" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Score" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score"
+          }
+        }
       }
     },
     "lead.sort.recent": {
       "comment": "v0.27 · ClientsView sort segmented control — by lastAccessedAt desc.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recent" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Récent" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récent"
+          }
+        }
       }
     },
     "lead.sort.alphabetical": {
       "comment": "v0.27 · ClientsView sort segmented control — alphabetical asc.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "A→Z" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Alpha" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A→Z"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alpha"
+          }
+        }
       }
     },
     "lead.breakdown.title": {
       "comment": "v0.27 · LeadScoreBreakdownSheet — subtitle below the client name.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Lead score breakdown" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Décomposition du score" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead score breakdown"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décomposition du score"
+          }
+        }
       }
     },
     "lead.breakdown.icpFit": {
       "comment": "v0.27 · Breakdown row — ICP fit (0–40).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "ICP fit" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Fit ICP" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ICP fit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fit ICP"
+          }
+        }
       }
     },
     "lead.breakdown.buyingSignals": {
       "comment": "v0.27 · Breakdown row — buying signals (0–40).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Buying signals" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Signaux d'achat" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buying signals"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaux d'achat"
+          }
+        }
       }
     },
     "lead.breakdown.engagement": {
       "comment": "v0.27 · Breakdown row — engagement (0–20).",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Engagement" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Engagement" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engagement"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engagement"
+          }
+        }
       }
     },
     "home.topLeads.title": {
       "comment": "v0.27 · HomeView Top leads card header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Top leads" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Top leads" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top leads"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top leads"
+          }
+        }
       }
     },
     "home.topLeads.empty": {
       "comment": "v0.27 · HomeView Top leads card empty-state message.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No prospect to call right now." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aucun prospect à appeler pour l'instant." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No prospect to call right now."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun prospect à appeler pour l'instant."
+          }
+        }
       }
     },
     "invoice.sheet.title": {
       "comment": "v0.31 · InvoiceSheet header — shown on .won drop and from ClientDetailView +Facture button.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "New invoice" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Nouvelle facture" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New invoice"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvelle facture"
+          }
+        }
       }
     },
     "invoice.field.amount": {
       "comment": "v0.31 · InvoiceSheet large amount input label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Amount" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Montant" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montant"
+          }
+        }
       }
     },
     "invoice.field.amount.placeholder": {
       "comment": "v0.31 · InvoiceSheet amount placeholder.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "0.00 €" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "0,00 €" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.00 €"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0,00 €"
+          }
+        }
       }
     },
     "invoice.field.vat": {
       "comment": "v0.31 · InvoiceSheet VAT toggle label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "VAT 20% (FR)" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "TVA 20% (FR)" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VAT 20% (FR)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TVA 20% (FR)"
+          }
+        }
       }
     },
     "invoice.field.description": {
       "comment": "v0.31 · InvoiceSheet description text field label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Description" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Description" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description"
+          }
+        }
       }
     },
     "invoice.field.clientEmail": {
       "comment": "v0.31 · InvoiceSheet client email field label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Client email" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Email du client" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email du client"
+          }
+        }
       }
     },
     "invoice.action.preview": {
       "comment": "v0.31 · InvoiceSheet primary CTA — opens QuickLook with the rendered PDF.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Preview PDF" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Aperçu PDF" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview PDF"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu PDF"
+          }
+        }
       }
     },
     "invoice.action.share": {
       "comment": "v0.31 · InvoiceSheet CTA — opens the share sheet (Mail / Messages) with the PDF attached.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Send by email" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Envoyer par mail" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send by email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer par mail"
+          }
+        }
       }
     },
     "invoice.action.markPaid": {
       "comment": "v0.31 · InvoiceSheet CTA — flips the invoice status to .paid.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Mark as paid" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Marquer payé" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as paid"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer payé"
+          }
+        }
       }
     },
     "invoice.status.draft": {
       "comment": "v0.31 · Invoice status badge — freshly generated, not sent yet.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Draft" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Brouillon" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brouillon"
+          }
+        }
       }
     },
     "invoice.status.sent": {
       "comment": "v0.31 · Invoice status badge — handed to the client, waiting for payment.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sent" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Envoyée" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyée"
+          }
+        }
       }
     },
     "invoice.status.paid": {
       "comment": "v0.31 · Invoice status badge — payment received.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Paid" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Payée" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payée"
+          }
+        }
       }
     },
     "invoice.status.overdue": {
       "comment": "v0.31 · Invoice status badge — past due date.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Overdue" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "En retard" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overdue"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En retard"
+          }
+        }
       }
     },
     "invoice.stripe.missing": {
       "comment": "v0.31 · InvoiceSheet inline hint — no Stripe Payment Link configured in Settings yet.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Paste a Stripe Payment Link in Settings → Billing to attach a one-tap pay link." } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Colle un lien Stripe Payment Link dans Réglages → Facturation pour attacher un paiement en un tap." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a Stripe Payment Link in Settings → Billing to attach a one-tap pay link."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colle un lien Stripe Payment Link dans Réglages → Facturation pour attacher un paiement en un tap."
+          }
+        }
       }
     },
     "settings.invoice.section": {
       "comment": "v0.31 · Settings — Billing section header.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Billing" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Facturation" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facturation"
+          }
+        }
       }
     },
     "settings.invoice.stripeLink": {
       "comment": "v0.31 · Settings — Stripe Payment Link prefix field label.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Stripe Payment Link base URL" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "URL de base Stripe Payment Link" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe Payment Link base URL"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL de base Stripe Payment Link"
+          }
+        }
       }
     },
     "settings.invoice.test": {
       "comment": "v0.31 · Settings — Test invoice CTA, opens a share sheet with a sample PDF.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generate test invoice" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Générer une facture test" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate test invoice"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer une facture test"
+          }
+        }
       }
     },
     "home.invoices.title": {
       "comment": "v0.31 · HomeView card header for overdue / outstanding invoices to chase.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Invoices to chase" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Factures à relancer" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invoices to chase"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factures à relancer"
+          }
+        }
       }
     },
     "command.newAudit": {
       "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘N action label, opens a fresh audit form on the Home tab.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "New Audit" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Nouvel audit" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Audit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvel audit"
+          }
+        }
       }
     },
     "command.view.menu": {
       "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — title of the custom View menu that groups the ⌘1...⌘4 tab-switch shortcuts.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "View" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Affichage" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affichage"
+          }
+        }
       }
     },
     "command.tab.home": {
       "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘1 entry, jumps to the Home tab.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Home" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Accueil" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accueil"
+          }
+        }
       }
     },
     "command.tab.clients": {
       "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘2 entry, jumps to the Clients tab.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Clients" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Clients" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clients"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clients"
+          }
+        }
       }
     },
     "command.tab.pipeline": {
       "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘3 entry, jumps to the Pipeline kanban tab.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipeline"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipeline"
+          }
+        }
       }
     },
     "command.tab.settings": {
       "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘4 entry, jumps to the Settings tab.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Settings" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Réglages" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages"
+          }
+        }
+      }
+    },
+    "home.aujourdhui.title": {
+      "comment": "v1.0-alpha.3 — Header of the HomeView lead inbox card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today inbox"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boîte leads"
+          }
+        }
+      }
+    },
+    "home.leads.empty.title": {
+      "comment": "v1.0-alpha.3 — Empty state title when no leads have status new.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 leads today."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 leads aujourd’hui."
+          }
+        }
+      }
+    },
+    "home.leads.empty.detail": {
+      "comment": "v1.0-alpha.3 — Empty state subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your webhooks are waiting."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes webhooks sont en attente."
+          }
+        }
+      }
+    },
+    "home.greeting.subtitle.format": {
+      "comment": "v1.0-alpha.3 — HomeView greeting subtitle. %1d leads · %2d projets actifs · %3d€/mois",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1d leads · %2d active projects · €%3d/mo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1d leads · %2d projets actifs · %3d€/mois"
+          }
+        }
+      }
+    },
+    "home.projects.title": {
+      "comment": "v1.0-alpha.3 — HomeView active projects carousel header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active projects"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projets actifs"
+          }
+        }
+      }
+    },
+    "home.projects.empty": {
+      "comment": "v1.0-alpha.3 — Empty state when no active projects exist.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active projects yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun projet actif pour le moment."
+          }
+        }
+      }
+    },
+    "lead.action.respond": {
+      "comment": "v1.0-alpha.3 — Swipe action to open the reply draft on a lead row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre"
+          }
+        }
+      }
+    },
+    "lead.action.qualified": {
+      "comment": "v1.0-alpha.3 — Mark a lead as qualified.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as qualified"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer qualifié"
+          }
+        }
+      }
+    },
+    "lead.action.spam": {
+      "comment": "v1.0-alpha.3 — Mark a lead as spam.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as spam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer spam"
+          }
+        }
+      }
+    },
+    "lead.action.won": {
+      "comment": "v1.0-alpha.3 — Mark a lead as won (opens InvoiceSheet).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as won"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer gagné"
+          }
+        }
+      }
+    },
+    "lead.action.lost": {
+      "comment": "v1.0-alpha.3 — Mark a lead as lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as lost"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer perdu"
+          }
+        }
+      }
+    },
+    "lead.action.markRead": {
+      "comment": "v1.0-alpha.3 — Mark a lead as read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer lu"
+          }
+        }
+      }
+    },
+    "lead.action.lost.reasonTitle": {
+      "comment": "v1.0-alpha.3 — Alert title when prompting for a lost reason.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lost reason"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raison de la perte"
+          }
+        }
+      }
+    },
+    "lead.action.lost.reasonPlaceholder": {
+      "comment": "v1.0-alpha.3 — Placeholder in the lost-reason text field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budget, competitor signed…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budget, concurrent signé…"
+          }
+        }
+      }
+    },
+    "lead.action.lost.confirm": {
+      "comment": "v1.0-alpha.3 — Confirm button for the lost-reason alert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as lost"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer perdu"
+          }
+        }
+      }
+    },
+    "lead.detail.message": {
+      "comment": "v1.0-alpha.3 — Section title in LeadDetailSheet for the original message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original message"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message original"
+          }
+        }
+      }
+    },
+    "lead.detail.draftReply": {
+      "comment": "v1.0-alpha.3 — Section title for the draft reply editor.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft reply"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brouillon de réponse"
+          }
+        }
+      }
+    },
+    "lead.detail.generateDraft": {
+      "comment": "v1.0-alpha.3 — CTA to generate a draft reply via Claude.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate draft"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer brouillon"
+          }
+        }
+      }
+    },
+    "lead.detail.generate.failed": {
+      "comment": "v1.0-alpha.3 — Error message when generation returns no variants.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generation failed. Try again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La génération a échoué. Réessaie."
+          }
+        }
+      }
+    },
+    "lead.detail.metadata": {
+      "comment": "v1.0-alpha.3 — Disclosure section for raw lead metadata.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metadata"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métadonnées"
+          }
+        }
+      }
+    },
+    "lead.status.new": {
+      "comment": "v1.0-alpha.3 — Lead status label: new.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau"
+          }
+        }
+      }
+    },
+    "lead.status.qualified": {
+      "comment": "v1.0-alpha.3 — Lead status label: qualified.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualified"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualifié"
+          }
+        }
+      }
+    },
+    "lead.status.contacted": {
+      "comment": "v1.0-alpha.3 — Lead status label: contacted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacted"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacté"
+          }
+        }
+      }
+    },
+    "lead.status.won": {
+      "comment": "v1.0-alpha.3 — Lead status label: won.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Won"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gagné"
+          }
+        }
+      }
+    },
+    "lead.status.lost": {
+      "comment": "v1.0-alpha.3 — Lead status label: lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lost"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perdu"
+          }
+        }
+      }
+    },
+    "lead.status.spam": {
+      "comment": "v1.0-alpha.3 — Lead status label: spam.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
+        }
+      }
+    },
+    "lead.formType.contact": {
+      "comment": "v1.0-alpha.3 — Lead form type pill.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact"
+          }
+        }
+      }
+    },
+    "lead.formType.devis": {
+      "comment": "v1.0-alpha.3 — Lead form type pill.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quote"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devis"
+          }
+        }
+      }
+    },
+    "lead.formType.newsletter": {
+      "comment": "v1.0-alpha.3 — Lead form type pill.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newsletter"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newsletter"
+          }
+        }
+      }
+    },
+    "lead.formType.other": {
+      "comment": "v1.0-alpha.3 — Lead form type pill.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autre"
+          }
+        }
+      }
+    },
+    "lead.metadata.sourceURL": {
+      "comment": "v1.0-alpha.3 — Metadata row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source URL"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL source"
+          }
+        }
+      }
+    },
+    "lead.metadata.receivedAt": {
+      "comment": "v1.0-alpha.3 — Metadata row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received at"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reçu le"
+          }
+        }
+      }
+    },
+    "lead.metadata.formType": {
+      "comment": "v1.0-alpha.3 — Metadata row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Form type"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type de formulaire"
+          }
+        }
+      }
+    },
+    "lead.metadata.userAgent": {
+      "comment": "v1.0-alpha.3 — Metadata row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User agent"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User agent"
+          }
+        }
+      }
+    },
+    "lead.metadata.ipHash": {
+      "comment": "v1.0-alpha.3 — Metadata row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP hash"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empreinte IP"
+          }
+        }
+      }
+    },
+    "lead.sort.status": {
+      "comment": "v1.0-alpha.3 — Sort segmented control: by status priority.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut"
+          }
+        }
+      }
+    },
+    "project.list.title": {
+      "comment": "v1.0-alpha.3 — ProjectsView header title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projets"
+          }
+        }
+      }
+    },
+    "project.list.subtitle.empty": {
+      "comment": "v1.0-alpha.3 — Subtitle when no projects exist.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your first project to bootstrap the cockpit."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute ton premier projet pour amorcer le cockpit."
+          }
+        }
+      }
+    },
+    "project.list.subtitle.format": {
+      "comment": "v1.0-alpha.3 — Subtitle format: %1d projects · %2d active · %3d EUR MRR.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1d projects · %2d active · €%3d MRR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1d projets · %2d actifs · %3d€ MRR"
+          }
+        }
+      }
+    },
+    "project.list.search.placeholder": {
+      "comment": "v1.0-alpha.3 — Search field placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search a project…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher un projet…"
+          }
+        }
+      }
+    },
+    "project.list.sort.label": {
+      "comment": "v1.0-alpha.3 — Accessibility label for the project sort picker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort projects"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trier les projets"
+          }
+        }
+      }
+    },
+    "project.list.sort.activity": {
+      "comment": "v1.0-alpha.3 — Sort segmented control: by last activity.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activité"
+          }
+        }
+      }
+    },
+    "project.list.sort.mrr": {
+      "comment": "v1.0-alpha.3 — Sort segmented control: by MRR.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MRR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MRR"
+          }
+        }
+      }
+    },
+    "project.list.sort.alpha": {
+      "comment": "v1.0-alpha.3 — Sort segmented control: alphabetical.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A-Z"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A-Z"
+          }
+        }
+      }
+    },
+    "project.list.empty.title": {
+      "comment": "v1.0-alpha.3 — Empty state title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No projects yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun projet pour le moment."
+          }
+        }
+      }
+    },
+    "project.list.empty.detail": {
+      "comment": "v1.0-alpha.3 — Empty state detail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap + to create your first one."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche + pour créer le premier."
+          }
+        }
+      }
+    },
+    "project.list.oneshot.format": {
+      "comment": "v1.0-alpha.3 — Oneshot revenue pill format.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flat €%1d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forfait %1d€"
+          }
+        }
+      }
+    },
+    "project.contract.retainer": {
+      "comment": "v1.0-alpha.3 — Contract pill: retainer.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retainer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récurrent"
+          }
+        }
+      }
+    },
+    "project.contract.oneshot": {
+      "comment": "v1.0-alpha.3 — Contract pill: one-shot.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-shot"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forfait"
+          }
+        }
+      }
+    },
+    "project.action.audit": {
+      "comment": "v1.0-alpha.3 — Project action: launch audit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch an audit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer un audit"
+          }
+        }
+      }
+    },
+    "project.action.leads": {
+      "comment": "v1.0-alpha.3 — Project action: view all leads.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View all leads"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir tous les leads"
+          }
+        }
+      }
+    },
+    "project.action.view": {
+      "comment": "v1.0-alpha.3 — Project action: view project.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View project"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir le projet"
+          }
+        }
+      }
+    },
+    "project.action.archive": {
+      "comment": "v1.0-alpha.3 — Project action: archive.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archiver"
+          }
+        }
+      }
+    },
+    "project.action.archive.confirm": {
+      "comment": "v1.0-alpha.3 — Confirm archive alert title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive this project?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archiver ce projet ?"
+          }
+        }
+      }
+    },
+    "project.detail.overview": {
+      "comment": "v1.0-alpha.3 — Detail section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overview"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu"
+          }
+        }
+      }
+    },
+    "project.detail.host": {
+      "comment": "v1.0-alpha.3 — Detail row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôte"
+          }
+        }
+      }
+    },
+    "project.detail.lastActivity": {
+      "comment": "v1.0-alpha.3 — Detail row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last activity"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière activité"
+          }
+        }
+      }
+    },
+    "project.detail.leads.recent": {
+      "comment": "v1.0-alpha.3 — Detail section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent leads"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leads récents"
+          }
+        }
+      }
+    },
+    "project.detail.leads.empty": {
+      "comment": "v1.0-alpha.3 — Empty leads state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No leads yet for this project."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun lead pour ce projet pour le moment."
+          }
+        }
+      }
+    },
+    "project.detail.deliverables": {
+      "comment": "v1.0-alpha.3 — Detail section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deliverables"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livrables"
+          }
+        }
+      }
+    },
+    "project.detail.deliverables.empty": {
+      "comment": "v1.0-alpha.3 — Empty deliverables state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No deliverables yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun livrable pour le moment."
+          }
+        }
+      }
+    },
+    "project.detail.notes": {
+      "comment": "v1.0-alpha.3 — Notes section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        }
+      }
+    },
+    "project.new.title": {
+      "comment": "v1.0-alpha.3 — NewProjectSheet navigation title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New project"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau projet"
+          }
+        }
+      }
+    },
+    "project.new.section.identity": {
+      "comment": "v1.0-alpha.3 — Form section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identity"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identité"
+          }
+        }
+      }
+    },
+    "project.new.section.stack": {
+      "comment": "v1.0-alpha.3 — Form section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        }
+      }
+    },
+    "project.new.section.revenue": {
+      "comment": "v1.0-alpha.3 — Form section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revenue"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revenu"
+          }
+        }
+      }
+    },
+    "project.new.name": {
+      "comment": "v1.0-alpha.3 — Form field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project name"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom du projet"
+          }
+        }
+      }
+    },
+    "project.new.host": {
+      "comment": "v1.0-alpha.3 — Form field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host (e.g. www.acme.fr)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôte (ex. www.acme.fr)"
+          }
+        }
+      }
+    },
+    "project.new.repo": {
+      "comment": "v1.0-alpha.3 — Form field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub repo (owner/repo)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repo GitHub (owner/repo)"
+          }
+        }
+      }
+    },
+    "project.new.stack": {
+      "comment": "v1.0-alpha.3 — Picker label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stack"
+          }
+        }
+      }
+    },
+    "project.new.contract": {
+      "comment": "v1.0-alpha.3 — Picker label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contract"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrat"
+          }
+        }
+      }
+    },
+    "project.new.mrr": {
+      "comment": "v1.0-alpha.3 — Form field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly recurring revenue (EUR)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MRR (€)"
+          }
+        }
+      }
+    },
+    "project.new.oneshot": {
+      "comment": "v1.0-alpha.3 — Form field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-shot amount (EUR)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forfait (€)"
+          }
+        }
+      }
+    },
+    "project.new.save": {
+      "comment": "v1.0-alpha.3 — Save button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        }
       }
     }
   }

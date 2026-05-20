@@ -42,15 +42,59 @@ normalisation, MRR aggregation, HMAC sign/verify happy path + every
 documented failure mode (wrong secret, tampered payload, empty / wrong-
 length signature, case-insensitive accept).
 
-### v1.0-alpha.3 — HomeView "Aujourd'hui" lead inbox ⏳
+### v1.0-alpha.3 — HomeView "Aujourd'hui" lead inbox ✅
 **What**: Rewrite HomeView to surface the `@Query var leads: [Lead]`
 sorted `receivedAt` descending, replacing the greeting-only layout
 from alpha.1. New `LeadRowCard` (LiquidCard tokens), tap → detail
 sheet with status pill + Claude-drafted reply editor. **Acceptance**:
 unanswered leads from today float to the top, status chip lets Mehdi
 mark `.contacted` / `.qualified` / `.spam` from the row swipe action.
+Shipped 2026-05-20: rewrote `HomeView` top-to-bottom around the
+`@Query<Lead>` filtered by `status == "new"`, sorted through the new
+pure `LeadInboxSorter.sort(_:by:)` projection (lives in GraphCore so
+tests + ProjectDetailSheet share the same code path). HomeView now
+opens with greeting "Bonjour Mehdi 👋" + a live subtitle
+("X leads · Y projets actifs · Z€/mois" — bound to
+`ProjectMRR.total(of:)` + `ProjectMRR.activeCount(in:)` which sum only
+active retainers per the documented FR locale convention). Below it
+ride three new cards: Boîte leads (top-10 new leads, avatar circles
+tinted to each parent Project's `primaryColor`, name + project chip +
+2-line preview + relative time, swipe → Répondre, context menu →
+Qualifié / Spam, tap → LeadDetailSheet); Projets actifs (horizontal
+scroll-snap of 200×130 mini-cards, MRR/Forfait pill in the project
+accent color, stack chip, tap → ProjectDetailSheet); the legacy
+Pipeline summary + Audit card stack stayed. New
+`LeadDetailSheet.swift` carries the avatar header, contact name,
+project chip, form-type pill, status pill with relative timestamp,
+selectable original message, editable draft reply with a "Générer
+brouillon" CTA that fires `OutreachEmailGenerator.shared.generate(...,
+variantCount: 1)` and writes the first variant straight back into
+`lead.draftReply` via `@Bindable`. Action stack covers Qualifié /
+Gagné (opens InvoiceSheet pre-seeded with `clientNodeID: lead.id` +
+contact name/email) / Perdu (alert prompts for a one-shot reason
+persisted on `lead.statusReason`) / Spam — every transition saves
+via `try? context.save()`, touches the parent Project's
+`lastActivityAt`, and emits `lead.status.changed` with from→to
+breadcrumb. Metadata disclosure surfaces sourceURL, receivedAt,
+formType, userAgent, IP hash. New `LeadDemoSeed.swift` extension
+idempotently injects 4 demo leads (Sarah Bensalem + Marc Petitjean +
+Pierre Loison → AZ Construction, Lucie Aubry → IEF & Co) on first
+launch behind the `mind.demoLeads.seeded` flag — vision verify shows
+the HomeView card stack lands populated. 8 new
+`LeadInboxSortingTests` lock date-desc, status priority (`.new` →
+`.qualified` → `.contacted` → `.won` → `.lost` → `.spam`), tie-
+break by date inside a bucket, empty + single + determinism. Plus
+~25 FR/EN xcstrings keys (`home.aujourdhui.title`,
+`home.leads.empty.{title,detail}`, `home.greeting.subtitle.format`,
+`lead.action.{respond,qualified,won,lost,spam}`,
+`lead.detail.{message,draftReply,generateDraft,metadata}`,
+`lead.status.*`, `lead.formType.*`, `lead.metadata.*`,
+`lead.action.lost.{reasonTitle,reasonPlaceholder,confirm}`) +
+2 telemetry breadcrumbs (`home.leads.opened`, `lead.detail.opened`,
+`lead.status.changed`, `lead.demo.seeded`). 619 tests total
+(was 553), 12 skipped, 0 failures.
 
-### v1.0-alpha.4 — ProjectsView replaces ClientsView ⏳
+### v1.0-alpha.4 — ProjectsView replaces ClientsView ✅
 **What**: Replace the legacy `ClientsView` with `ProjectsView`
 backed by `@Query var projects: [Project]`. Columns: name + host,
 stack chip (`nextjs` / `wordpress` / …), MRR (formatted EUR), last-
@@ -58,6 +102,45 @@ activity relative date. Sort: `lastActivityAt` desc. Add detail
 sheet showing per-Project leads + deliverables. **Acceptance**:
 seeded portfolio renders 5 rows, MRR total card sums retainer rows
 correctly, tap → detail sheet shows AZ Construction's leads.
+Shipped 2026-05-20: new `ProjectsView.swift` swap into the `.clients`
+tab via `RootView.content` — legacy `ClientsView` stays compiled for
+the cron-resurrection edge case but no longer owns the tab. Header
+(title + count + "+" CTA opening `NewProjectSheet`), search field
+(case-insensitive substring match against name + host through pure
+`ProjectSorter.filter(_:query:)`), 3-key segmented control
+(Activité / MRR / A-Z, default `.activityDescending`) that posts
+`project.list.sortChanged` with the rawValue, then a LazyVStack of
+88pt `ProjectCard`s: 48pt avatar circle with the first letter on a
+`Project.primaryColor`-tinted background, name + monospaced host,
+stack badge + lifecycle dot row (green active / orange maintenance /
+sky discovery / gray archived), right-aligned MRR pill (`€X/mo` for
+retainer, `Forfait X€` for oneshot). Tap → `ProjectDetailSheet.swift`:
+header with avatar + name + host + MRR pill + stack/contract pills,
+Aperçu (host link, GitHub repo link `https://github.com/{repo}`,
+last-activity relative date), Leads récents (top-5 via
+`LeadInboxSorter.sort(_:by: .dateDescending)`, tap → LeadDetailSheet,
+empty-state copy), Livrables (kind-iconed deliverable rows: page →
+doc.text, screenshot → photo, audit → speedometer, invoice → doc.
+richtext, asset → shippingbox), Actions (Lancer un audit pre-seeds
+AuditSheet with `https://{host}`; Voir tous les leads opens
+`ProjectLeadsListSheet` with a date/status sort picker; Archiver
+fires a confirm alert that sets `lifecycleStageEnum = .archived` +
+`touchActivity()`), Notes section is a markdown TextEditor bound via
+@Bindable that persists into `project.notes` on every keystroke.
+`NewProjectSheet` is a 3-section Form (Identity: name + host + repo,
+Stack picker spanning every `ProjectStack`, Revenue: contract type
+picker + amount field — switches between MRR EUR and forfait EUR per
+contract) that on save inserts the Project and emits
+`project.new.created`. New pure helpers — `ProjectSorter` (8 tests:
+activity desc, MRR desc, alphabetical FR locale-aware,
+archived bottom-pin, internal-bucket sort, empty + single,
+filter() name + host case-insensitive) + `ProjectMRR` (5 tests:
+total sums active retainers only, empty = 0, single retainer,
+`formatEUR(_:)` shape, active counts split retainer from total).
+8 new telemetry breadcrumbs: `project.list.sortChanged`,
+`project.detail.opened`, `project.new.created`. Plus ~30 FR/EN
+xcstrings keys (`project.list.*`, `project.detail.*`,
+`project.action.*`, `project.new.*`, `project.contract.*`).
 
 ### v1.0-alpha.5 — Cloudflare Worker template + `@mind/lead-webhook` SDK ⏳
 **What**: Ship a Cloudflare Worker template under
