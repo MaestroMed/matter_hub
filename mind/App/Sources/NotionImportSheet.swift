@@ -153,7 +153,7 @@ struct NotionImportSheet: View {
             } else {
                 selectedDatabaseIDs.insert(database.id)
             }
-            LiquidHaptics.selection()
+            LiquidHaptics.select()
         } label: {
             HStack(spacing: 12) {
                 Text(database.icon ?? "🗂️")
