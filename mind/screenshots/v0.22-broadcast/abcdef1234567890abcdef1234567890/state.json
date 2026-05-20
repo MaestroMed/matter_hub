@@ -1,0 +1,26 @@
+{
+  "clientName": "Stripe",
+  "host": "stripe.com",
+  "phase": "synthesizing",
+  "pitch": "Hi team,\n\nFollowing my audit of stripe.com I noticed three high-impact gaps you can close in the next two weeks. Let's chat — Mehdi.",
+  "probes": [
+    {"durationMs": 312, "kind": "pageSpeed", "state": "ok"},
+    {"durationMs": 188, "kind": "security", "state": "ok"},
+    {"durationMs": 156, "kind": "email", "state": "ok"},
+    {"durationMs": 421, "kind": "domain", "state": "ok"},
+    {"durationMs": 670, "kind": "mobile", "state": "ok"},
+    {"durationMs": 244, "kind": "schema", "state": "ok"},
+    {"durationMs": 198, "kind": "openGraph", "state": "ok"},
+    {"durationMs": 333, "kind": "crawlability", "state": "ok"},
+    {"durationMs": 287, "kind": "compliance", "state": "ok"},
+    {"durationMs": 401, "kind": "analytics", "state": "ok"},
+    {"durationMs": 524, "kind": "payment", "state": "ok"},
+    {"error": "Timed out after 5s", "durationMs": 5012, "kind": "cdn", "state": "failed"},
+    {"kind": "trust", "state": "running"}
+  ],
+  "scoring": {"brand": 88, "mobile": 79, "overall": 87, "performance": 92, "security": 95, "seo": 84},
+  "startedAt": "2026-05-19T18:02:14.000Z",
+  "synthesis": "## Identité\nStripe is the world-leading payments infrastructure. Their brand is built around the developer experience: terse copy, dense documentation, strong typography.\n\n## Maturité digitale\nMature on every axis. The mobile experience lags slightly — the Dashboard app is solid but the marketing site's mobile LCP could drop another 600 ms.\n\n## Opportunités principales\n1. **Mobile LCP** — pre-load the hero image, ship AVIF over WebP.\n2. **Schema.org** — add `BreadcrumbList` to the developer docs.\n3. **CDN** — Cloudflare front the marketing site for a +12 PSI bump.",
+  "token": "abcdef1234567890abcdef1234567890",
+  "updatedAt": "2026-05-19T18:04:51.000Z"
+}

@@ -1,0 +1,34 @@
+# Tuist
+Derived/
+*.xcodeproj
+*.xcworkspace
+.build/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Build artifacts
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Ruby
+vendor/bundle/
+.bundle/
+
+# macOS
+.DS_Store
+
+# Secrets
+*.p12
+*.cer
+*.mobileprovision
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output

@@ -1,0 +1,37 @@
+# v1.0-alpha.5 — MIND lead-webhook Cloudflare Worker.
+#
+# Deploy with:
+#   npm install
+#   npx wrangler login                       # one-time
+#   npx wrangler kv:namespace create LEADS   # one-time, paste id below
+#   npm run deploy
+#
+# Set the six secrets after first deploy:
+#   npx wrangler secret put WEBHOOK_SECRET
+#   npx wrangler secret put VERCEL_WEBHOOK_SECRET   # v1.1.0 — Vercel deploy webhooks
+#   npx wrangler secret put APNS_KEY_P8
+#   npx wrangler secret put APNS_KEY_ID
+#   npx wrangler secret put APNS_TEAM_ID
+#   npx wrangler secret put APNS_DEVICE_TOKEN
+#
+# The bundle id is hard-coded to app.mind.ios — the iOS app's
+# CFBundleIdentifier — so the APNs push topic always matches the
+# binary that's actually listening.
+
+name = "mind-lead-webhook"
+main = "src/index.ts"
+compatibility_date = "2026-05-19"
+compatibility_flags = ["nodejs_compat"]
+
+# Default vars — overridable per-environment.
+[vars]
+APNS_BUNDLE_ID = "app.mind.ios"
+APNS_HOST = "api.push.apple.com"
+LEAD_TTL_SECONDS = "2592000"   # 30 days
+
+# KV namespace binding. Run `wrangler kv:namespace create LEADS`
+# and paste the generated id + preview_id below.
+[[kv_namespaces]]
+binding = "LEADS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"

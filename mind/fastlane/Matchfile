@@ -1,0 +1,18 @@
+storage_mode("git")
+git_url(ENV["MATCH_GIT_URL"]) if ENV["MATCH_GIT_URL"]
+type("appstore")
+# v1.0.0 — Match must provision the host app + every embedded
+# extension bundle, otherwise `gym` fails at the codesign step with
+# "no profiles for 'app.mind.ios.widgets' were found". The list
+# mirrors `Project.swift`'s targets: the host app, the three iOS
+# extensions (Widgets, ShareExtension, PushService) and the watchOS
+# companion (which TestFlight bundles even when the watchOS slice
+# isn't installed locally).
+app_identifier([
+  "app.mind.ios",
+  "app.mind.ios.widgets",
+  "app.mind.ios.shareextension",
+  "app.mind.ios.pushservice",
+  "app.mind.ios.watchkitapp"
+])
+username(ENV["APPLE_ID"])

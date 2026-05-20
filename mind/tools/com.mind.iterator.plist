@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.mind.iterator.plist — launchd user agent for the autonomous
+  MIND iteration loop.
+
+  Drop this in ~/Library/LaunchAgents/ and load it once:
+
+      cp mind/tools/com.mind.iterator.plist ~/Library/LaunchAgents/
+      launchctl load -w ~/Library/LaunchAgents/com.mind.iterator.plist
+
+  Then it fires every 2 hours (StartInterval = 7200s). Logs land in
+  /tmp/mind-iterator.{out,err}.log so you can `tail -f /tmp/mind-iterator.out.log`
+  to watch it work.
+
+  To pause:
+      launchctl unload ~/Library/LaunchAgents/com.mind.iterator.plist
+
+  To kick a run manually any time:
+      mind/tools/mind-iterate.sh
+
+  RunAtLoad = false: don't fire the instant launchctl loads (you'd be
+  on a Mac with no Xcode session open and the agent would crash).
+  ProcessType = Background: tells macOS this is not user-interactive,
+  so it survives sleep / lid close without spawning a focus-stealing
+  Terminal window.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mind.iterator</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>/Users/mehdinafaa/Developer/matter_hub/mind/tools/mind-iterate.sh</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>7200</integer>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/mind-iterator.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/mind-iterator.err.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/mehdinafaa/Developer/matter_hub</string>
+</dict>
+</plist>

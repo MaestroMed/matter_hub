@@ -1,0 +1,658 @@
+import XCTest
+import Foundation
+
+/// Locks the i18n contract shipped in v0.7. The .xcstrings catalog
+/// is the source of truth for every visible string — these tests make
+/// sure both FR and EN sides resolve to known values at runtime via
+/// the actual iOS bundle lookup path (not just JSON parsing) so we
+/// catch the case where Xcode's catalog compiler drops a translation.
+///
+/// Strategy: locate the main app bundle from inside the test bundle
+/// (host application bundle), then load its localized .lproj
+/// directories (en, fr) and resolve known keys against each. If
+/// either side returns the raw key, the test fails — that's the
+/// fallback iOS uses when a key has no translation, and it's exactly
+/// the bug we never want to ship.
+final class LocalizationTests: XCTestCase {
+    /// The host app bundle (MIND.app). Falls back to the test bundle's
+    /// own bundle if the host isn't set, but the unit-test scheme always
+    /// has the app as test host so this should never trigger in CI.
+    private func appBundle() -> Bundle {
+        if let host = Bundle.main.object(forInfoDictionaryKey: "NSExtensionPointIdentifier") as? String,
+           !host.isEmpty {
+            return Bundle.main
+        }
+        // Bundle.main here is the test runner; for hosted tests the
+        // host app is loaded into the same process so Bundle.main IS
+        // the app bundle. That's the path we exercise in CI.
+        return Bundle.main
+    }
+
+    /// Returns the per-language bundle for `lang` (en or fr), or nil
+    /// if the .lproj directory isn't present. iOS lazily packs each
+    /// .xcstrings region into a .lproj of its own at compile-time.
+    private func localizedBundle(for lang: String) -> Bundle? {
+        let app = appBundle()
+        guard let path = app.path(forResource: lang, ofType: "lproj"),
+              let bundle = Bundle(path: path)
+        else { return nil }
+        return bundle
+    }
+
+    /// Resolve a key in a specific language by loading the appropriate
+    /// .lproj bundle. Returns the localized string, or nil if the key
+    /// is missing / the bundle isn't there.
+    private func localized(_ key: String, lang: String) -> String? {
+        guard let bundle = localizedBundle(for: lang) else { return nil }
+        let value = bundle.localizedString(forKey: key, value: nil, table: nil)
+        // Bundle returns the key itself when the entry is missing. That
+        // counts as "not localized" for our purposes.
+        return value == key ? nil : value
+    }
+
+    // MARK: - Bundle / .lproj contract
+
+    /// The app bundle must contain en.lproj AND fr.lproj. If a
+    /// build-config change drops one, every Text() in that region
+    /// falls back to the source-language value silently. This test
+    /// makes the regression loud.
+    func test_appBundle_hasEnAndFrLproj() {
+        let app = appBundle()
+        XCTAssertNotNil(app.path(forResource: "en", ofType: "lproj"),
+                        "App bundle must contain en.lproj")
+        XCTAssertNotNil(app.path(forResource: "fr", ofType: "lproj"),
+                        "App bundle must contain fr.lproj")
+    }
+
+    // MARK: - Anchor keys
+
+    /// Welcome-flow empty-state title — the first FR string the user
+    /// sees on a fresh install. Locks both translations.
+    func test_homeEmptyTitle_resolvesBothLanguages() {
+        XCTAssertEqual(localized("home.empty.title", lang: "en"), "Welcome to MIND")
+        XCTAssertEqual(localized("home.empty.title", lang: "fr"), "Bienvenue dans MIND")
+    }
+
+    /// Onboarding final CTA — the user's first commit-action. Locking
+    /// both translations makes sure the button never reads "Start" in
+    /// the FR build by accident.
+    func test_onboardingStart_resolvesBothLanguages() {
+        XCTAssertEqual(localized("onboarding.start", lang: "en"), "Start")
+        XCTAssertEqual(localized("onboarding.start", lang: "fr"), "Commencer")
+    }
+
+    /// Audit-running labels are on screen for ~2 minutes per audit —
+    /// the most-visible "running" copy in the app. Lock the contract.
+    func test_auditPhases_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.phase.probing",      lang: "en"), "Probes")
+        XCTAssertEqual(localized("audit.phase.probing",      lang: "fr"), "Sondes")
+        XCTAssertEqual(localized("audit.phase.synthesizing", lang: "en"), "Synthesis")
+        XCTAssertEqual(localized("audit.phase.synthesizing", lang: "fr"), "Synthèse")
+        XCTAssertEqual(localized("audit.phase.ready",        lang: "en"), "Ready")
+        XCTAssertEqual(localized("audit.phase.ready",        lang: "fr"), "Prêt")
+    }
+
+    /// Settings header — the user's gateway to every preference.
+    /// If "Settings" / "Réglages" drifts, the danger-zone alerts (which
+    /// reference Settings) also drift. Lock it.
+    func test_settingsHeader_resolvesBothLanguages() {
+        XCTAssertEqual(localized("settings.header.title", lang: "en"), "Settings")
+        XCTAssertEqual(localized("settings.header.title", lang: "fr"), "Réglages")
+    }
+
+    /// Capture sheet title — every Quick Capture starts here.
+    func test_captureTitle_resolvesBothLanguages() {
+        XCTAssertEqual(localized("capture.title", lang: "en"), "Capture")
+        XCTAssertEqual(localized("capture.title", lang: "fr"), "Capture")
+    }
+
+    /// Greeting line (greeting.morning) — on every Home open between
+    /// 5am and noon. Anchor the FR side so a future merge doesn't
+    /// regress it to a leftover French phrase.
+    func test_greetingMorning_resolvesBothLanguages() {
+        XCTAssertEqual(localized("greeting.morning", lang: "en"), "Good morning")
+        XCTAssertEqual(localized("greeting.morning", lang: "fr"), "Bonjour")
+    }
+
+    /// v0.13 — Contacts integration surfaces a toast on the next
+    /// foreground after a vCard share lands in the graph. Make sure
+    /// both translations exist so the FR build doesn't fall back to
+    /// the EN string.
+    func test_shareContactStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("share.contact.added.toast", lang: "en"), "Contact added to MIND")
+        XCTAssertEqual(localized("share.contact.added.toast", lang: "fr"), "Contact ajouté à MIND")
+        XCTAssertEqual(localized("share.contact.empty.fallback", lang: "en"), "Untitled contact")
+        XCTAssertEqual(localized("share.contact.empty.fallback", lang: "fr"), "Contact sans nom")
+    }
+
+    /// v0.14 — Mail capture surfaces a toast on the next foreground
+    /// after an email share lands in the graph, and uses a localized
+    /// fallback when the email has no Subject header. Both
+    /// translations must exist so the FR build doesn't fall back to
+    /// the EN string.
+    func test_shareMailStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("share.mail.added.toast", lang: "en"), "Email added to MIND")
+        XCTAssertEqual(localized("share.mail.added.toast", lang: "fr"), "E-mail ajouté à MIND")
+        XCTAssertEqual(localized("share.mail.empty.fallback", lang: "en"), "Untitled email")
+        XCTAssertEqual(localized("share.mail.empty.fallback", lang: "fr"), "E-mail sans sujet")
+    }
+
+    /// v0.15 — Knowledge graph tab. Lock both translations of the tab
+    /// title and the empty-state copy so the FR build never falls back
+    /// to the EN string on a fresh install where the graph is empty.
+    func test_graphStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("tab.graph",          lang: "en"), "Graph")
+        XCTAssertEqual(localized("tab.graph",          lang: "fr"), "Graphe")
+        XCTAssertEqual(localized("graph.empty.title",  lang: "en"), "Your graph is empty")
+        XCTAssertEqual(localized("graph.empty.title",  lang: "fr"), "Ton graphe est vide")
+    }
+
+    /// v0.16 — Weekly digest card on HomeView. Lock the title + the
+    /// narrative fallback in both languages so a missing model
+    /// response on Sunday night never falls back to the EN copy on
+    /// a FR device. The detail-sheet title is locked too — it's the
+    /// only string visible after the user taps the card.
+    func test_weeklyDigestStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("home.weekly.title",                lang: "en"), "Weekly digest")
+        XCTAssertEqual(localized("home.weekly.title",                lang: "fr"), "Bilan de la semaine")
+        XCTAssertEqual(localized("home.weekly.narrative.fallback",   lang: "en"), "A solid week.")
+        XCTAssertEqual(localized("home.weekly.narrative.fallback",   lang: "fr"), "Une semaine bien remplie.")
+        XCTAssertEqual(localized("home.weekly.detail.title",         lang: "en"), "Your week, in detail")
+        XCTAssertEqual(localized("home.weekly.detail.title",         lang: "fr"), "Ta semaine, en détail")
+    }
+
+    /// v0.19 — Photo OCR strings. The Photo button + the spinner + the
+    /// "no text found" empty-state all live in the QuickCaptureSheet,
+    /// which is the first surface every user touches once they install
+    /// MIND. Lock both translations so the FR build never falls back
+    /// to the EN copy on a non-trivial path.
+    func test_capturePhotoStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("capture.photo.button",         lang: "en"), "Capture a photo")
+        XCTAssertEqual(localized("capture.photo.button",         lang: "fr"), "Capturer une photo")
+        XCTAssertEqual(localized("capture.photo.ocrInProgress",  lang: "en"), "Reading the photo…")
+        XCTAssertEqual(localized("capture.photo.ocrInProgress",  lang: "fr"), "Lecture de la photo…")
+        XCTAssertEqual(localized("capture.photo.ocrComplete",    lang: "en"), "Text extracted from the photo")
+        XCTAssertEqual(localized("capture.photo.ocrComplete",    lang: "fr"), "Texte extrait de la photo")
+        XCTAssertEqual(localized("capture.photo.empty.fallback", lang: "en"), "No text recognised on this photo.")
+        XCTAssertEqual(localized("capture.photo.empty.fallback", lang: "fr"), "Aucun texte reconnu sur cette photo.")
+    }
+
+    /// v0.20 — TestFlight beta strings. The BETA badge in Settings →
+    /// About, the Beta-section rows that open the TestFlight feedback
+    /// + public join URLs, and the dismissible HomeView welcome banner
+    /// all ship to external testers via TestFlight. Lock both
+    /// translations so the FR build never silently regresses to the
+    /// EN copy on the most public surface MIND has.
+    func test_betaStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("about.beta.badge",              lang: "en"), "BETA")
+        XCTAssertEqual(localized("about.beta.badge",              lang: "fr"), "BÊTA")
+
+        XCTAssertEqual(localized("settings.beta.section",         lang: "en"), "Beta")
+        XCTAssertEqual(localized("settings.beta.section",         lang: "fr"), "Beta")
+        XCTAssertEqual(localized("settings.beta.feedback.button", lang: "en"), "Send feedback via TestFlight")
+        XCTAssertEqual(localized("settings.beta.feedback.button", lang: "fr"), "Envoyer un feedback via TestFlight")
+        XCTAssertEqual(localized("settings.beta.join.button",     lang: "en"), "Join the beta")
+        XCTAssertEqual(localized("settings.beta.join.button",     lang: "fr"), "Rejoindre la beta")
+
+        XCTAssertEqual(localized("home.beta.banner.title",        lang: "en"), "You're in the MIND beta")
+        XCTAssertEqual(localized("home.beta.banner.title",        lang: "fr"), "Tu es dans la beta de MIND")
+        XCTAssertEqual(localized("home.beta.banner.cta",          lang: "en"), "Send feedback")
+        XCTAssertEqual(localized("home.beta.banner.cta",          lang: "fr"), "Donner ton feedback")
+        XCTAssertEqual(localized("home.beta.banner.dismiss",      lang: "en"), "Later")
+        XCTAssertEqual(localized("home.beta.banner.dismiss",      lang: "fr"), "Plus tard")
+    }
+
+    /// v0.21 — Client Portal generator strings. Locks every FR + EN
+    /// key surfaced by the ExportSheet row + the success bottom
+    /// sheet so a careless catalogue edit can't ship a portal flow
+    /// where half the labels fall back to raw keys.
+    func test_clientPortalStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.export.portal.title",                lang: "en"), "Generate client portal")
+        XCTAssertEqual(localized("audit.export.portal.title",                lang: "fr"), "Générer le portail client")
+
+        XCTAssertEqual(localized("audit.export.portal.subtitle",             lang: "en"), "Self-contained HTML site, ready to drop on Vercel.")
+        XCTAssertEqual(localized("audit.export.portal.subtitle",             lang: "fr"), "Site HTML autonome, prêt à déposer sur Vercel.")
+
+        XCTAssertEqual(localized("audit.export.portal.error.title",          lang: "en"), "Client portal failed")
+        XCTAssertEqual(localized("audit.export.portal.error.title",          lang: "fr"), "Échec du portail client")
+
+        XCTAssertEqual(localized("audit.export.portal.success.title",        lang: "en"), "Client portal generated")
+        XCTAssertEqual(localized("audit.export.portal.success.title",        lang: "fr"), "Portail client généré")
+        XCTAssertEqual(localized("audit.export.portal.success.openInFiles",  lang: "en"), "Open in Files")
+        XCTAssertEqual(localized("audit.export.portal.success.openInFiles",  lang: "fr"), "Ouvrir dans Fichiers")
+        XCTAssertEqual(localized("audit.export.portal.success.share",        lang: "en"), "Share folder")
+        XCTAssertEqual(localized("audit.export.portal.success.share",        lang: "fr"), "Partager le dossier")
+    }
+
+    /// v0.22 — Live broadcast strings. Locks every FR + EN key
+    /// surfaced by the AuditSheet toggle + the broadcast share sheet
+    /// so a careless catalogue edit can't ship a broadcast flow where
+    /// half the labels fall back to raw keys.
+    func test_liveBroadcastStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.broadcast.toggle.title",    lang: "en"), "Broadcast live")
+        XCTAssertEqual(localized("audit.broadcast.toggle.title",    lang: "fr"), "Diffuser en direct")
+
+        XCTAssertEqual(localized("audit.broadcast.toggle.subtitle", lang: "en"),
+                       "Your client can follow the audit live in their browser.")
+        XCTAssertEqual(localized("audit.broadcast.toggle.subtitle", lang: "fr"),
+                       "Le client peut suivre l'audit en temps réel sur son navigateur.")
+
+        XCTAssertEqual(localized("audit.broadcast.sheet.title",     lang: "en"), "Live broadcast ready")
+        XCTAssertEqual(localized("audit.broadcast.sheet.title",     lang: "fr"), "Diffusion en direct prête")
+
+        XCTAssertEqual(localized("audit.broadcast.url.copy",        lang: "en"), "Copy link")
+        XCTAssertEqual(localized("audit.broadcast.url.copy",        lang: "fr"), "Copier le lien")
+
+        XCTAssertEqual(localized("audit.broadcast.url.copied",      lang: "en"), "Link copied")
+        XCTAssertEqual(localized("audit.broadcast.url.copied",      lang: "fr"), "Lien copié")
+
+        XCTAssertEqual(localized("audit.broadcast.qr.title",        lang: "en"), "Scan to open")
+        XCTAssertEqual(localized("audit.broadcast.qr.title",        lang: "fr"), "Scanner pour ouvrir")
+
+        XCTAssertEqual(localized("audit.broadcast.error.title",     lang: "en"), "Broadcast failed")
+        XCTAssertEqual(localized("audit.broadcast.error.title",     lang: "fr"), "Échec de la diffusion")
+    }
+
+    /// v0.23 — Generative redesign mockup strings. Locks every FR +
+    /// EN key surfaced by the AuditSheet Vision section + the
+    /// portal HTML Vision gallery so a careless catalogue edit
+    /// can't ship a redesign-vision flow where the carousel
+    /// caption silently falls back to a raw key.
+    func test_redesignVisionStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("audit.vision.section.title",    lang: "en"), "Vision: your site, redrawn")
+        XCTAssertEqual(localized("audit.vision.section.title",    lang: "fr"), "Vision : votre site, refait")
+
+        XCTAssertEqual(localized("audit.vision.generating",       lang: "en"), "Generating…")
+        XCTAssertEqual(localized("audit.vision.generating",       lang: "fr"), "Génération en cours…")
+
+        XCTAssertEqual(localized("audit.vision.empty.keyMissing", lang: "en"),
+                       "Connect your OpenAI key in Settings to see redesign visions.")
+        XCTAssertEqual(localized("audit.vision.empty.keyMissing", lang: "fr"),
+                       "Connecte ta clé OpenAI dans Réglages pour voir les visions de redesign.")
+
+        XCTAssertEqual(localized("audit.vision.tap.detail",       lang: "en"), "BASED ON")
+        XCTAssertEqual(localized("audit.vision.tap.detail",       lang: "fr"), "BASÉ SUR")
+
+        XCTAssertEqual(localized("portal.vision.section.title",   lang: "en"), "Your site, redrawn")
+        XCTAssertEqual(localized("portal.vision.section.title",   lang: "fr"), "Votre site, refait")
+
+        XCTAssertEqual(localized("portal.vision.caption.prefix",  lang: "en"), "Recommendation")
+        XCTAssertEqual(localized("portal.vision.caption.prefix",  lang: "fr"), "Recommandation")
+    }
+
+    /// v0.24 — Battle Mode strings. Locks every FR + EN key
+    /// surfaced by the BattleSheet form / running / completed
+    /// states + the HomeView secondary CTA so a careless
+    /// catalogue edit can't ship the cinematic 4-way comparison
+    /// with half its labels falling back to raw keys on FR.
+    func test_battleModeStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("battle.title",                    lang: "en"), "Battle Mode")
+        XCTAssertEqual(localized("battle.title",                    lang: "fr"), "Mode Battle")
+
+        XCTAssertEqual(localized("battle.cta.start",                lang: "en"), "Start the battle")
+        XCTAssertEqual(localized("battle.cta.start",                lang: "fr"), "Lancer la battle")
+
+        XCTAssertEqual(localized("battle.podium.title",             lang: "en"), "Who wins what")
+        XCTAssertEqual(localized("battle.podium.title",             lang: "fr"), "Qui gagne quoi")
+
+        XCTAssertEqual(localized("battle.winner.badge",             lang: "en"), "Wins")
+        XCTAssertEqual(localized("battle.winner.badge",             lang: "fr"), "Gagne")
+
+        XCTAssertEqual(localized("battle.metric.overall",           lang: "en"), "Overall")
+        XCTAssertEqual(localized("battle.metric.overall",           lang: "fr"), "Global")
+        XCTAssertEqual(localized("battle.metric.security",          lang: "en"), "Security")
+        XCTAssertEqual(localized("battle.metric.security",          lang: "fr"), "Sécurité")
+
+        XCTAssertEqual(localized("home.battleCard.title",           lang: "en"), "Battle Mode")
+        XCTAssertEqual(localized("home.battleCard.title",           lang: "fr"), "Mode Battle")
+    }
+
+    /// v0.25 — ROI Calculator strings. Locks every FR + EN key
+    /// surfaced by the AuditSheet hero card + the per-QW inline
+    /// ROI badge + the methodology modal so a careless catalogue
+    /// edit can't ship a portal where the "+€18 700/mo" hero falls
+    /// back to a raw key on FR. The 8 keys map 1:1 to the v0.25
+    /// task list in ULTRAPLAN.
+    func test_roiCalculatorStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("roi.hero.total.label",      lang: "en"), "ESTIMATED MONTHLY ROI")
+        XCTAssertEqual(localized("roi.hero.total.label",      lang: "fr"), "ROI MENSUEL ESTIMÉ")
+
+        XCTAssertEqual(localized("roi.hero.annualized.label", lang: "en"), "Projected over 12 months: %@")
+        XCTAssertEqual(localized("roi.hero.annualized.label", lang: "fr"), "Projeté sur 12 mois : %@")
+
+        XCTAssertEqual(localized("roi.confidence.low",        lang: "en"), "low confidence")
+        XCTAssertEqual(localized("roi.confidence.low",        lang: "fr"), "confiance faible")
+        XCTAssertEqual(localized("roi.confidence.medium",     lang: "en"), "moderate confidence")
+        XCTAssertEqual(localized("roi.confidence.medium",     lang: "fr"), "confiance modérée")
+        XCTAssertEqual(localized("roi.confidence.high",       lang: "en"), "high confidence")
+        XCTAssertEqual(localized("roi.confidence.high",       lang: "fr"), "confiance élevée")
+
+        XCTAssertEqual(localized("roi.per.month.suffix",      lang: "en"), "/mo")
+        XCTAssertEqual(localized("roi.per.month.suffix",      lang: "fr"), "/mois")
+
+        XCTAssertEqual(localized("roi.methodology.button",    lang: "en"), "Methodology")
+        XCTAssertEqual(localized("roi.methodology.button",    lang: "fr"), "Méthodologie")
+
+        XCTAssertEqual(localized("roi.qw.badge.format",       lang: "en"), "+%1$@ %2$@")
+        XCTAssertEqual(localized("roi.qw.badge.format",       lang: "fr"), "+%1$@ %2$@")
+
+        XCTAssertNotNil(localized("roi.methodology.body", lang: "en"))
+        XCTAssertNotNil(localized("roi.methodology.body", lang: "fr"))
+    }
+
+    /// v0.28 — Discovery Call Prep Dossier strings. Locks every
+    /// FR + EN key surfaced by the HomeView "Briefs à venir" card,
+    /// the MeetingBriefSheet sections, the copy buttons, and the
+    /// morning-of notification body. The 15 keys map 1:1 to the
+    /// v0.28 spec — a careless catalogue edit can't ship a brief
+    /// where the section header falls back to the raw key on FR.
+    func test_meetingBriefStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("home.meetingBriefs.title",         lang: "en"), "Upcoming briefs")
+        XCTAssertEqual(localized("home.meetingBriefs.title",         lang: "fr"), "Briefs à venir")
+        XCTAssertNotNil(localized("home.meetingBriefs.subtitle",     lang: "en"))
+        XCTAssertNotNil(localized("home.meetingBriefs.subtitle",     lang: "fr"))
+
+        XCTAssertEqual(localized("meetingBrief.detail.title",        lang: "en"), "Discovery brief")
+        XCTAssertEqual(localized("meetingBrief.detail.title",        lang: "fr"), "Brief discovery")
+        XCTAssertEqual(localized("meetingBrief.detail.noClient",     lang: "en"), "No linked client")
+        XCTAssertEqual(localized("meetingBrief.detail.noClient",     lang: "fr"), "Aucun client lié")
+
+        XCTAssertEqual(localized("meetingBrief.section.opening",     lang: "en"), "Opening line")
+        XCTAssertEqual(localized("meetingBrief.section.opening",     lang: "fr"), "Ouverture")
+        XCTAssertEqual(localized("meetingBrief.section.news",        lang: "en"), "Recent news")
+        XCTAssertEqual(localized("meetingBrief.section.news",        lang: "fr"), "Actualité récente")
+        XCTAssertEqual(localized("meetingBrief.section.audit",       lang: "en"), "Audit highlights")
+        XCTAssertEqual(localized("meetingBrief.section.audit",       lang: "fr"), "Points clés de l'audit")
+        XCTAssertEqual(localized("meetingBrief.section.attendees",   lang: "en"), "Your attendees")
+        XCTAssertEqual(localized("meetingBrief.section.attendees",   lang: "fr"), "Vos interlocuteurs")
+        XCTAssertEqual(localized("meetingBrief.section.questions",   lang: "en"), "Discovery questions")
+        XCTAssertEqual(localized("meetingBrief.section.questions",   lang: "fr"), "Questions discovery")
+
+        XCTAssertEqual(localized("meetingBrief.copy.action",         lang: "en"), "Copy")
+        XCTAssertEqual(localized("meetingBrief.copy.action",         lang: "fr"), "Copier")
+        XCTAssertEqual(localized("meetingBrief.copy.done",           lang: "en"), "Copied")
+        XCTAssertEqual(localized("meetingBrief.copy.done",           lang: "fr"), "Copié")
+
+        XCTAssertEqual(localized("meetingBrief.bullet.source",       lang: "en"), "Open source")
+        XCTAssertEqual(localized("meetingBrief.bullet.source",       lang: "fr"), "Voir la source")
+        XCTAssertEqual(localized("meetingBrief.bullet.auditSource",  lang: "en"), "From your MIND audit")
+        XCTAssertEqual(localized("meetingBrief.bullet.auditSource",  lang: "fr"), "Depuis votre audit MIND")
+
+        XCTAssertEqual(localized("meetingBrief.notification.title",  lang: "en"), "Your discovery brief is ready")
+        XCTAssertEqual(localized("meetingBrief.notification.title",  lang: "fr"), "Ton brief discovery est prêt")
+        XCTAssertNotNil(localized("meetingBrief.notification.body.format", lang: "en"))
+        XCTAssertNotNil(localized("meetingBrief.notification.body.format", lang: "fr"))
+        XCTAssertNotNil(localized("meetingBrief.notification.body.generic", lang: "en"))
+        XCTAssertNotNil(localized("meetingBrief.notification.body.generic", lang: "fr"))
+    }
+
+    /// v0.32 — Audit comparisons (multi-target) strings. Locks every
+    /// FR + EN key surfaced by the HomeView "Comparer mes audits"
+    /// row, the ComparisonSheet picker phase, results phase, scoring
+    /// table, overlap section, hidden-risk differences section, and
+    /// the per-severity labels. A careless catalogue edit can't ship
+    /// a comparison screen where the section header falls back to
+    /// the raw key.
+    func test_comparisonStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("home.comparisonCard.title",        lang: "en"), "Compare audits")
+        XCTAssertEqual(localized("home.comparisonCard.title",        lang: "fr"), "Comparer mes audits")
+        XCTAssertNotNil(localized("home.comparisonCard.subtitle",    lang: "en"))
+        XCTAssertNotNil(localized("home.comparisonCard.subtitle",    lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.title",                 lang: "en"), "Audit comparison")
+        XCTAssertEqual(localized("comparison.title",                 lang: "fr"), "Comparaison d'audits")
+        XCTAssertEqual(localized("comparison.close",                 lang: "en"), "Close")
+        XCTAssertEqual(localized("comparison.close",                 lang: "fr"), "Fermer")
+
+        XCTAssertEqual(localized("comparison.picker.headline",       lang: "en"), "Pick 2–4 audits")
+        XCTAssertEqual(localized("comparison.picker.headline",       lang: "fr"), "Choisis 2 à 4 audits")
+        XCTAssertNotNil(localized("comparison.picker.subtitle",      lang: "en"))
+        XCTAssertNotNil(localized("comparison.picker.subtitle",      lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.empty.title",           lang: "en"), "No audits archived yet")
+        XCTAssertEqual(localized("comparison.empty.title",           lang: "fr"), "Aucun audit archivé pour l'instant")
+        XCTAssertNotNil(localized("comparison.empty.subtitle",       lang: "en"))
+        XCTAssertNotNil(localized("comparison.empty.subtitle",       lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.compare.cta",           lang: "en"), "Compare %d audits")
+        XCTAssertEqual(localized("comparison.compare.cta",           lang: "fr"), "Comparer %d audits")
+        XCTAssertEqual(localized("comparison.compare.cta.disabled",  lang: "en"), "Select at least 2 (currently %d)")
+        XCTAssertEqual(localized("comparison.compare.cta.disabled",  lang: "fr"), "Choisis-en au moins 2 (actuellement %d)")
+
+        XCTAssertEqual(localized("comparison.results.headline",      lang: "en"), "Side-by-side")
+        XCTAssertEqual(localized("comparison.results.headline",      lang: "fr"), "Côte à côte")
+        XCTAssertEqual(localized("comparison.results.subtitle",      lang: "en"), "Comparing %d clients across 6 axes.")
+        XCTAssertEqual(localized("comparison.results.subtitle",      lang: "fr"), "Comparaison de %d clients sur 6 axes.")
+
+        XCTAssertEqual(localized("comparison.legend.title",          lang: "en"), "Legend")
+        XCTAssertEqual(localized("comparison.legend.title",          lang: "fr"), "Légende")
+        XCTAssertEqual(localized("comparison.scoreboard.title",      lang: "en"), "Scoreboard")
+        XCTAssertEqual(localized("comparison.scoreboard.title",      lang: "fr"), "Tableau des scores")
+        XCTAssertEqual(localized("comparison.leader.label",          lang: "en"), "Leader: #%d")
+        XCTAssertEqual(localized("comparison.leader.label",          lang: "fr"), "Tête : #%d")
+
+        XCTAssertEqual(localized("comparison.overlap.title",         lang: "en"), "Shared quick wins")
+        XCTAssertEqual(localized("comparison.overlap.title",         lang: "fr"), "Quick wins partagés")
+        XCTAssertNotNil(localized("comparison.overlap.empty",        lang: "en"))
+        XCTAssertNotNil(localized("comparison.overlap.empty",        lang: "fr"))
+        XCTAssertEqual(localized("comparison.overlap.count",         lang: "en"), "%d audits")
+        XCTAssertEqual(localized("comparison.overlap.count",         lang: "fr"), "%d audits")
+
+        XCTAssertEqual(localized("comparison.differences.title",     lang: "en"), "Unique hidden risks")
+        XCTAssertEqual(localized("comparison.differences.title",     lang: "fr"), "Risques propres à un seul client")
+        XCTAssertNotNil(localized("comparison.differences.empty",    lang: "en"))
+        XCTAssertNotNil(localized("comparison.differences.empty",    lang: "fr"))
+
+        XCTAssertEqual(localized("comparison.back.cta",              lang: "en"), "Change selection")
+        XCTAssertEqual(localized("comparison.back.cta",              lang: "fr"), "Modifier la sélection")
+
+        XCTAssertEqual(localized("comparison.severity.low",          lang: "en"), "low")
+        XCTAssertEqual(localized("comparison.severity.low",          lang: "fr"), "faible")
+        XCTAssertEqual(localized("comparison.severity.medium",       lang: "en"), "medium")
+        XCTAssertEqual(localized("comparison.severity.medium",       lang: "fr"), "moyen")
+        XCTAssertEqual(localized("comparison.severity.high",         lang: "en"), "high")
+        XCTAssertEqual(localized("comparison.severity.high",         lang: "fr"), "élevé")
+        XCTAssertEqual(localized("comparison.severity.critical",     lang: "en"), "critical")
+        XCTAssertEqual(localized("comparison.severity.critical",     lang: "fr"), "critique")
+    }
+
+    /// v0.24.1 — Stage Manager / Mac Catalyst menu bar keys.
+    /// Locks every label the user sees in the menu bar so the FR
+    /// build can't silently fall back to the EN source string when
+    /// someone forgets to translate a new shortcut.
+    func test_stageManagerCommandStrings_resolveBothLanguages() {
+        // ⌘N action label
+        XCTAssertEqual(localized("command.newAudit",      lang: "en"), "New Audit")
+        XCTAssertEqual(localized("command.newAudit",      lang: "fr"), "Nouvel audit")
+
+        // Custom View menu title that groups the ⌘1...⌘4 shortcuts
+        XCTAssertEqual(localized("command.view.menu",     lang: "en"), "View")
+        XCTAssertEqual(localized("command.view.menu",     lang: "fr"), "Affichage")
+
+        // Per-tab labels — every TabShortcut case must resolve in
+        // both languages. Iterates over the namespace explicitly so
+        // a future addition to TabShortcut + xcstrings is forced to
+        // pass through this test.
+        XCTAssertEqual(localized("command.tab.home",      lang: "en"), "Home")
+        XCTAssertEqual(localized("command.tab.home",      lang: "fr"), "Accueil")
+        XCTAssertEqual(localized("command.tab.clients",   lang: "en"), "Clients")
+        XCTAssertEqual(localized("command.tab.clients",   lang: "fr"), "Clients")
+        XCTAssertEqual(localized("command.tab.pipeline",  lang: "en"), "Pipeline")
+        XCTAssertEqual(localized("command.tab.pipeline",  lang: "fr"), "Pipeline")
+        XCTAssertEqual(localized("command.tab.settings",  lang: "en"), "Settings")
+        XCTAssertEqual(localized("command.tab.settings",  lang: "fr"), "Réglages")
+    }
+
+    /// v1.0-alpha.12 — Mac Catalyst polish strings. Every menu /
+    /// toolbar / Settings entry surfaced when MIND runs on Catalyst
+    /// must resolve in both languages — a raw-key fallback on the
+    /// Mac menu bar would feel like a broken integration, not a
+    /// translation gap.
+    func test_macCatalystStrings_resolveBothLanguages() {
+        // Custom Project menu that groups ⌘⇧ shortcuts.
+        XCTAssertEqual(localized("menu.project.menu", lang: "en"), "Project")
+        XCTAssertEqual(localized("menu.project.menu", lang: "fr"), "Projet")
+
+        // Every MacShortcut localizedKey must resolve. Iterates via
+        // the catalog so a future case added to MacShortcut forces
+        // an xcstrings entry through this test.
+        XCTAssertNotNil(localized("menu.shortcuts.bootstrap",   lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.bootstrap",   lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.leadInbox",   lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.leadInbox",   lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.newInvoice",  lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.newInvoice",  lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.refresh",     lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.refresh",     lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.pipelineTab", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.pipelineTab", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.settingsTab", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.settingsTab", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.focusSearch", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.focusSearch", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.auditSource", lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.auditSource", lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.battleMode",  lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.battleMode",  lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.outreach",    lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.outreach",    lang: "fr"))
+        XCTAssertNotNil(localized("menu.shortcuts.deploy",      lang: "en"))
+        XCTAssertNotNil(localized("menu.shortcuts.deploy",      lang: "fr"))
+
+        // Toolbar labels.
+        XCTAssertEqual(localized("toolbar.leads",     lang: "en"), "Leads")
+        XCTAssertEqual(localized("toolbar.leads",     lang: "fr"), "Leads")
+        XCTAssertEqual(localized("toolbar.audit",     lang: "en"), "Audit")
+        XCTAssertEqual(localized("toolbar.audit",     lang: "fr"), "Audit")
+        XCTAssertEqual(localized("toolbar.bootstrap", lang: "en"), "Bootstrap")
+        XCTAssertEqual(localized("toolbar.bootstrap", lang: "fr"), "Bootstrap")
+        XCTAssertEqual(localized("toolbar.refresh",   lang: "en"), "Refresh")
+        XCTAssertEqual(localized("toolbar.refresh",   lang: "fr"), "Rafraîchir")
+
+        // Settings → Apparence Mac section.
+        XCTAssertEqual(localized("settings.mac.section.title", lang: "en"), "Mac Appearance")
+        XCTAssertEqual(localized("settings.mac.section.title", lang: "fr"), "Apparence Mac")
+        XCTAssertEqual(localized("settings.mac.compact.title", lang: "en"), "Compact Mode")
+        XCTAssertEqual(localized("settings.mac.compact.title", lang: "fr"), "Mode compact")
+        XCTAssertEqual(localized("settings.mac.sidebar.title", lang: "en"), "Persistent Sidebar")
+        XCTAssertEqual(localized("settings.mac.sidebar.title", lang: "fr"), "Sidebar persistante")
+
+        // Dock badge accessibility label — placeholder survives in
+        // both languages (the format takes %d for the count).
+        XCTAssertTrue(localized("mac.dockBadge.leads.format", lang: "en")?.contains("%d") == true)
+        XCTAssertTrue(localized("mac.dockBadge.leads.format", lang: "fr")?.contains("%d") == true)
+    }
+
+    /// v1.0-alpha.5 — Lead Webhook Settings section. The HMAC
+    /// secret field + per-Project copy rows live on the most-
+    /// looked-at surface in MIND (Settings → Lead Webhook is the
+    /// "did I wire it right" canonical check), so every string
+    /// must resolve in both languages — a raw-key fallback there
+    /// would feel like a broken integration, not a translation gap.
+    func test_webhookStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("settings.webhook.section",         lang: "en"), "Lead Webhook")
+        XCTAssertEqual(localized("settings.webhook.section",         lang: "fr"), "Lead Webhook")
+
+        XCTAssertNotNil(localized("settings.webhook.subtitle",       lang: "en"))
+        XCTAssertNotNil(localized("settings.webhook.subtitle",       lang: "fr"))
+
+        XCTAssertEqual(localized("settings.webhook.projects.label",  lang: "en"), "Copy a Project ID")
+        XCTAssertEqual(localized("settings.webhook.projects.label",  lang: "fr"), "Copier un Project ID")
+
+        XCTAssertNotNil(localized("settings.webhook.projects.empty", lang: "en"))
+        XCTAssertNotNil(localized("settings.webhook.projects.empty", lang: "fr"))
+
+        XCTAssertEqual(localized("settings.webhook.copied.title",    lang: "en"), "Project ID copied")
+        XCTAssertEqual(localized("settings.webhook.copied.title",    lang: "fr"), "Project ID copié")
+
+        // Body uses %@ for the project name — assert the placeholder
+        // survives in both languages so `String(format:)` doesn't
+        // silently drop it on a translation regression.
+        XCTAssertTrue(localized("settings.webhook.copied.body", lang: "en")?.contains("%@") == true)
+        XCTAssertTrue(localized("settings.webhook.copied.body", lang: "fr")?.contains("%@") == true)
+    }
+
+    /// v1.0-alpha.7 — SEO Swarm Orchestrator strings. The wizard
+    /// surface goes through three steps + a result sheet — every
+    /// label must resolve in both languages so the FR build never
+    /// silently falls back to the EN source on a 1140-page swarm.
+    func test_swarmStrings_resolveBothLanguages() {
+        // Wizard frame
+        XCTAssertEqual(localized("swarm.title",          lang: "en"), "SEO Swarm")
+        XCTAssertEqual(localized("swarm.title",          lang: "fr"), "Swarm SEO")
+        XCTAssertEqual(localized("swarm.step.target",    lang: "en"), "Target")
+        XCTAssertEqual(localized("swarm.step.target",    lang: "fr"), "Cible")
+        XCTAssertEqual(localized("swarm.step.config",    lang: "en"), "Configuration")
+        XCTAssertEqual(localized("swarm.step.config",    lang: "fr"), "Configuration")
+        XCTAssertEqual(localized("swarm.step.launch",    lang: "en"), "Launch")
+        XCTAssertEqual(localized("swarm.step.launch",    lang: "fr"), "Lancement")
+
+        // Form labels
+        XCTAssertNotNil(localized("swarm.field.services", lang: "en"))
+        XCTAssertNotNil(localized("swarm.field.services", lang: "fr"))
+        XCTAssertNotNil(localized("swarm.field.zones",    lang: "en"))
+        XCTAssertNotNil(localized("swarm.field.zones",    lang: "fr"))
+        XCTAssertNotNil(localized("swarm.field.project",  lang: "en"))
+        XCTAssertNotNil(localized("swarm.field.project",  lang: "fr"))
+
+        // Preview format strings — placeholders survive
+        XCTAssertTrue(localized("swarm.preview.count.format", lang: "en")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.preview.count.format", lang: "fr")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.preview.cost.format",  lang: "en")?.contains("%@") == true)
+        XCTAssertTrue(localized("swarm.preview.cost.format",  lang: "fr")?.contains("%@") == true)
+
+        // Confirm + CTA
+        XCTAssertTrue(localized("swarm.cta.generate", lang: "en")?.contains("%d") == true)
+        XCTAssertTrue(localized("swarm.cta.generate", lang: "fr")?.contains("%d") == true)
+        XCTAssertNotNil(localized("swarm.confirm.title", lang: "en"))
+        XCTAssertNotNil(localized("swarm.confirm.title", lang: "fr"))
+        XCTAssertTrue(localized("swarm.confirm.body.format", lang: "en")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.confirm.body.format", lang: "fr")?.contains("%") == true)
+
+        // Running + completed
+        XCTAssertTrue(localized("swarm.running.progress.format", lang: "en")?.contains("%") == true)
+        XCTAssertTrue(localized("swarm.running.progress.format", lang: "fr")?.contains("%") == true)
+        XCTAssertEqual(localized("swarm.running.cancel", lang: "en"), "Cancel")
+        XCTAssertEqual(localized("swarm.running.cancel", lang: "fr"), "Annuler")
+        XCTAssertTrue(localized("swarm.completed.title", lang: "en")?.contains("%d") == true)
+        XCTAssertTrue(localized("swarm.completed.title", lang: "fr")?.contains("%d") == true)
+        XCTAssertNotNil(localized("swarm.completed.actions.summary", lang: "en"))
+        XCTAssertNotNil(localized("swarm.completed.actions.summary", lang: "fr"))
+        XCTAssertNotNil(localized("swarm.completed.actions.zip",     lang: "en"))
+        XCTAssertNotNil(localized("swarm.completed.actions.zip",     lang: "fr"))
+        XCTAssertNotNil(localized("swarm.completed.actions.github",  lang: "en"))
+        XCTAssertNotNil(localized("swarm.completed.actions.github",  lang: "fr"))
+
+        // HomeView card
+        XCTAssertEqual(localized("home.swarm.title",    lang: "en"), "SEO Swarm")
+        XCTAssertEqual(localized("home.swarm.title",    lang: "fr"), "SEO Swarm")
+        XCTAssertNotNil(localized("home.swarm.subtitle", lang: "en"))
+        XCTAssertNotNil(localized("home.swarm.subtitle", lang: "fr"))
+    }
+
+    // MARK: - v1.0-alpha.8 — Project Health Pulse strings
+
+    /// Locks every key the Site Health row + the ProjectCard status
+    /// dot read. If a label drifts mid-translation, the dot
+    /// accessibility label silently falls back to the raw key. This
+    /// test makes the regression loud across both languages.
+    func test_healthPulseStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("project.detail.health", lang: "en"), "Site health")
+        XCTAssertEqual(localized("project.detail.health", lang: "fr"), "Santé du site")
+
+        XCTAssertEqual(localized("health.status.online",   lang: "en"), "Online")
+        XCTAssertEqual(localized("health.status.online",   lang: "fr"), "En ligne")
+
+        XCTAssertEqual(localized("health.status.degraded", lang: "en"), "Degraded")
+        XCTAssertEqual(localized("health.status.degraded", lang: "fr"), "Lent")
+
+        XCTAssertEqual(localized("health.status.error",    lang: "en"), "Server error")
+        XCTAssertEqual(localized("health.status.error",    lang: "fr"), "Erreur serveur")
+
+        XCTAssertEqual(localized("health.status.offline",  lang: "en"), "Offline")
+        XCTAssertEqual(localized("health.status.offline",  lang: "fr"), "Hors ligne")
+
+        XCTAssertEqual(localized("health.status.unknown",  lang: "en"), "Not checked")
+        XCTAssertEqual(localized("health.status.unknown",  lang: "fr"), "Non vérifié")
+    }
+}

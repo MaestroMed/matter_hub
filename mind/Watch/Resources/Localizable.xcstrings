@@ -1,0 +1,102 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "watch.tab.leads.title": {
+      "comment": "v1.0-alpha.17 · Watch leads tab title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads" } }
+      }
+    },
+    "watch.tab.focus.title": {
+      "comment": "v1.0-alpha.17 · Watch focus tab title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Focus" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Focus" } }
+      }
+    },
+    "watch.tab.portfolio.title": {
+      "comment": "v1.0-alpha.17 · Watch portfolio tab title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Portfolio" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Portfolio" } }
+      }
+    },
+    "watch.focus.start.button": {
+      "comment": "v1.0-alpha.17 · Watch Focus start CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Start Focus" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Démarrer Focus" } }
+      }
+    },
+    "watch.focus.stop.button": {
+      "comment": "v1.0-alpha.17 · Watch Focus stop CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stop" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Arrêter" } }
+      }
+    },
+    "watch.focus.elapsed.format": {
+      "comment": "v1.0-alpha.17 · Subtitle format below the focus elapsed counter ('Pomodoro %d min').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pomodoro %d min" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pomodoro %d min" } }
+      }
+    },
+    "watch.portfolio.leads": {
+      "comment": "v1.0-alpha.17 · Watch portfolio Leads row title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads today" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads aujourd'hui" } }
+      }
+    },
+    "watch.portfolio.mrr": {
+      "comment": "v1.0-alpha.17 · Watch portfolio MRR row title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "MRR" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "MRR" } }
+      }
+    },
+    "watch.portfolio.errors": {
+      "comment": "v1.0-alpha.17 · Watch portfolio Build errors row title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Build errors" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Builds en erreur" } }
+      }
+    },
+    "watch.lead.dictate": {
+      "comment": "v1.0-alpha.17 · Watch lead detail dictation CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dictate a reply" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dicter une réponse" } }
+      }
+    },
+    "watch.empty.leads": {
+      "comment": "v1.0-alpha.17 · Watch empty state when no leads yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No lead today" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun lead aujourd'hui" } }
+      }
+    },
+    "watch.empty.portfolio": {
+      "comment": "v1.0-alpha.17 · Watch empty state for the portfolio tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open MIND on iPhone to sync" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvre MIND sur iPhone pour synchroniser" } }
+      }
+    }
+  }
+}

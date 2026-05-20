@@ -1,0 +1,101 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Generate Xcode project with Tuist"
+  lane :generate do
+    sh("cd .. && tuist install && tuist generate --no-open")
+  end
+
+  desc "Build and upload a beta to TestFlight"
+  lane :beta do
+    generate
+
+    setup_ci if ENV["CI"]
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_CONTENT"],
+      duration: 1200,
+      in_house: false
+    )
+
+    # v1.0.0 — Match must fetch profiles for the host app + the three
+    # iOS extensions (Widgets / Share / PushService) and the watchOS
+    # companion. The bundle list lives in `Matchfile`.
+    match(
+      type: "appstore",
+      readonly: ENV["CI"] == "true",
+      api_key: api_key
+    )
+
+    increment_build_number(
+      xcodeproj: "MIND.xcodeproj",
+      build_number: ENV["BUILD_NUMBER"] || latest_testflight_build_number(
+        api_key: api_key,
+        app_identifier: "app.mind.ios"
+      ).to_i.next.to_s
+    )
+
+    build_app(
+      scheme: "MIND",
+      project: "MIND.xcodeproj",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "MIND.ipa",
+      clean: true
+    )
+
+    # v1.0.0 — Pull the FR release notes for the current marketing
+    # version straight from `mind/AppStore/release_notes_<version>.fr.md`
+    # so every TestFlight build ships with the correct changelog. Falls
+    # back to a generic "Build interne" string when the file is missing
+    # (e.g. running the lane against a non-tagged commit).
+    version = get_version_number(
+      xcodeproj: "MIND.xcodeproj",
+      target: "MIND"
+    )
+    notes_path = "../AppStore/release_notes_#{version}.fr.md"
+    changelog = File.exist?(notes_path) ? File.read(notes_path) : "Build interne — itération continue."
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      ipa: "build/MIND.ipa",
+      changelog: changelog,
+      distribute_external: false,
+      groups: ENV["TESTFLIGHT_GROUPS"] ? ENV["TESTFLIGHT_GROUPS"].split(",") : nil
+    )
+  end
+
+  desc "Sync App Store metadata (description/keywords/release notes) from mind/AppStore/"
+  # v1.0.0 — Standalone lane that uploads everything in
+  # `mind/AppStore/` to App Store Connect *without* shipping a build.
+  # Useful for iterating on the listing copy between TestFlight
+  # uploads. Skips the binary upload (`skip_binary_upload: true`) and
+  # only touches the metadata + screenshots if present under
+  # `mind/AppStore/screenshots/`.
+  lane :sync_metadata do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_CONTENT"],
+      duration: 1200,
+      in_house: false
+    )
+
+    deliver(
+      api_key: api_key,
+      app_identifier: "app.mind.ios",
+      metadata_path: "../AppStore",
+      skip_binary_upload: true,
+      skip_screenshots: !Dir.exist?("../AppStore/screenshots"),
+      force: true,
+      precheck_include_in_app_purchases: false,
+      submit_for_review: false,
+      automatic_release: false
+    )
+  end
+end

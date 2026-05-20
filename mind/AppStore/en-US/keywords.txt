@@ -1,0 +1,1 @@
+audit,seo,leads,vercel,nextjs,crm,studio,cockpit,invoice,stripe,kanban,pipeline

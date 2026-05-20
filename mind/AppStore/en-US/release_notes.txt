@@ -1,0 +1,13 @@
+MIND 1.0 — Numelite Cockpit. First public release.
+
+- Real-time lead inbox (webhook → APNs)
+- One-tap full audit (9 probes)
+- Kanban project pipeline
+- Stripe + PDF invoicing
+- ElevenLabs voice clone
+- Notion + Linear sync
+- Lock Screen widgets + Live Activity + Apple Watch
+- iPad NavigationSplitView + Mac Catalyst
+- Private iCloud sync, no data on our servers
+
+13 modules, 30+ features, 1083+ tests.

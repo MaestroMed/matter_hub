@@ -1,0 +1,21 @@
+{
+  "name": "mind-lead-webhook",
+  "version": "0.1.0",
+  "description": "MIND lead-webhook Cloudflare Worker — receives signed lead POSTs from any deployed client site, stores them in KV, and notifies the MIND iOS app via APNs.",
+  "private": true,
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260101.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "wrangler": "^3.108.0"
+  }
+}

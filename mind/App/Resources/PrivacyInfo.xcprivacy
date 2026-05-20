@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PrivacyInfo.xcprivacy — Apple privacy manifest for MIND.
+
+  Required by App Store submission since May 2024. Apple's static
+  analysis runs over the bundled binary AND every embedded framework
+  (here: Sentry). The framework manifests are not auto-merged into
+  the app's declaration, so this file lists every Required Reason
+  API category that MIND itself touches in app code.
+
+  Reference reason codes:
+    https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+
+  Tracking:  NO. MIND does not track users across apps or websites.
+  Tracking domains: NONE.
+  Data collected:
+    - Crash Data (opt-in via Sentry, not linked, not for tracking)
+    - Performance Data (opt-in via Sentry, not linked, not for tracking)
+    - Health (opt-in, on-device only — never leaves device, see v0.9)
+    - Audio Data (one-time voice sample, sent to ElevenLabs only when
+      the user explicitly taps "Cloner ma voix" in Settings; see
+      v1.0-alpha.18, VoiceCloneKit)
+  Everything else (notes, focus history, audits, leads, projects,
+  invoices) stays in the user's private CloudKit zone or on-device.
+  Nothing is sent to Anthropic / OpenAI / PageSpeed / ElevenLabs
+  except the URLs / audit content / voice sample the user explicitly
+  submits.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+        <!-- Sentry crash reports. Only sent if the user explicitly
+             configures a Sentry DSN under Settings → Crash reporting.
+             Not linked to user identity, not used for tracking. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeCrashData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Sentry performance traces (20% sampling). Same opt-in
+             condition as crash data. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePerformanceData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Other diagnostic data captured by Sentry breadcrumbs
+             (HTTP calls, navigation events). -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- v0.9 — HealthKit weekly insights. MIND reads steps, sleep,
+             and active minutes for the last 7 days to render the
+             "Cette semaine" card on Home. Strictly opt-in via the
+             Settings toggle, never linked to identity, never used for
+             tracking. The data never leaves the device. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeHealth</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- v1.0-alpha.18 — ElevenLabs voice clone. MIND records one
+             WAV sample (~10-30 s) when the user opens
+             Settings → Voix clonée and taps "Enregistrer un échantillon".
+             The sample stays on disk in the App Group until the user
+             taps "Cloner ma voix"; on tap, the WAV bytes are POSTed to
+             ElevenLabs' /v1/voices/add endpoint as multipart form data.
+             Strictly opt-in, never linked to identity, never used for
+             tracking. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeAudioData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- v0.21+ — Customer-data / contact info collected for leads
+             stays on-device in the user's private CloudKit zone.
+             Listed for App Store transparency since the AI sales email
+             generator and the lead inbox handle prospect names / emails
+             / phone numbers — but MIND never POSTs them anywhere; the
+             user always controls the outbound mailto / OutreachSheet. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeName</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePhoneNumber</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+    </array>
+
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <!-- UserDefaults (CA92.1): MINDPreferences stores user-only
+             configuration (selected persona, Sentry DSN, etc.) that
+             never leaves the app sandbox. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+
+        <!-- File timestamp (C617.1): SwiftData / FileManager inspect
+             timestamps on documents the user opens (PDF exports, audit
+             reports the user re-opens). All access is user-initiated. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>C617.1</string>
+            </array>
+        </dict>
+
+        <!-- Disk space (E174.1): used to verify there is enough room
+             before writing a PDF / JSON export to the Documents
+             directory, so we can surface a clear error if the user is
+             out of storage. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>E174.1</string>
+            </array>
+        </dict>
+
+        <!-- System boot time (35F9.1): Sentry uses ProcessInfo's
+             systemUptime to measure time between in-app events for
+             performance traces. Listed here because Sentry is statically
+             linked into the app binary and Apple's static analyzer
+             reports the usage against MIND. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>35F9.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
