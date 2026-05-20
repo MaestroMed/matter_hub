@@ -1295,13 +1295,49 @@ in AuditKit (pure heuristic + optional aiEnhanced), 23 new pure
 tests in `LeadScorerTests`, 14 new FR/EN localizable keys, README
 section added.
 
-### v0.27.1 — Lock Screen widgets ⏳
+### v0.27.1 — Lock Screen widgets ✅
 **What**: Lock Screen widgets (circular, rectangular, inline) for
 focus timer + quick capture + today's brief. **Acceptance**: all 3
 widget styles render correctly on lock screen, tap deep-links into
 app. (Deferred from v0.27 to make room for the Lead Scoring Engine
 pivot — the score is the load-bearing "who do I call next" signal
 that the Lock Screen widgets will eventually surface anyway.)
+Shipped 2026-05-20: pure-substrate Lock Screen complication trio
+lands behind a single new `LockScreenWidget` registration in
+`MINDWidgetsBundle`. New `LockScreenEntrySnapshot` Sendable
+Equatable value type + `LockScreenWidgetFormatter` namespace live
+in `mind/Modules/GraphCore/Sources/LockScreenWidgetEntry.swift` so
+the test target can pin every formatter boundary without linking
+WidgetKit (the widget appExtension is sandboxed away from MINDTests).
+Three accessory families register: `.accessoryCircular` (brain glyph
++ count dial, 18pt rounded mono glyph for <100, 14pt for >=100,
+clamped at 999+ via `LockScreenWidgetFormatter.formatCount`),
+`.accessoryRectangular` (brain header + pluralised count + last
+Node title or "Tap to capture" empty-state CTA), `.accessoryInline`
+("MIND · N thoughts" prefix-branded single line). All three render
+through `LockScreenWidgetView` switched on `@Environment(\.widgetFamily)`,
+share the same `LockScreenProvider` reading `Node` rows from
+`GraphCore.sharedContainer` (sort by `updatedAt` desc, filter to
+`note + capture` kinds), and `widgetURL(...)` to `mind://lock` so the
+Lock Screen tap deep-links into the host app. Hourly Timeline
+refresh policy mirrors `QuickStatsWidget` for snapshot consistency.
+Tests: 19 new `LockScreenWidgetFormatterTests` lock every formatter
+branch — `formatCount` (zero, single-digit pass-through, two-digit
+pass-through, three-digit pass-through, overflow → "999+",
+overflow at 12_345, negative defensive → "0"), `rectangularHeader`
+(empty graph CTA, singular `1 thought`, plural `N thoughts`,
+overflow `999+ thoughts` via the same clamp), `inlineBody`
+(always-brand-prefix, singular, plural with count, zero plural),
+`deepLinkURL` (absolute string `mind://lock`, scheme `mind`, host
+`lock`), value-type round-trips (placeholder constants preserved,
+empty preset carries 0+nil, Equatable identical-fields-equal,
+Equatable differing-count-unequal). Build SUCCEEDED on iPhone 17
+Pro simulator. Vision verify at `mind/screenshots/v0.27.1.png`
+shows the host launching clean on the Cockpit — the Lock Screen
+surface itself lives behind iOS's Lock Screen customisation flow,
+matching the host-launches-clean vision-verify bar used by
+v0.22.1 / v0.31.1 / v1.0-alpha.7 / v1.0-alpha.8 for pure-substrate
+shipments.
 
 ### v0.28 — Discovery Call Prep Dossier ✅
 **What** (pivoted from original "Standby mode dashboard", deferred to
