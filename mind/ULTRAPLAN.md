@@ -1,5 +1,23 @@
 # MIND — ULTRAPLAN v2 (50 versions)
 
+> ⚠️ **MIND a pivoté (2026-05-20).** Le projet n'est plus un second-
+> brain : c'est désormais un **cockpit Studio** pour l'agence Numelite
+> — outil interne pour piloter sites clients, leads, projets et
+> factures. Voir `v1.0-alpha.*` pour le nouveau scope. Les entrées du
+> chapitre 3+ ci-dessous sont **préservées pour archéologie** ; la
+> roadmap réelle vit désormais dans les versions `v1.0-alpha.x`.
+
+## v1.0-alpha.1 — Radical cleanup (Cockpit Studio pivot) ✅
+
+Shipped 2026-05-20: gut the second-brain modules + UI surfaces that
+no longer serve the studio-cockpit pivot. NodeKind narrowed to
+`.client` / `.audit` (+ `.project` / `.lead` placeholders for Wave B).
+RootView reduced from 3056 → ~786 lines (4 tabs: Home, Clients,
+Pipeline, Settings). OnboardingView rewritten to Cockpit Numelite
+copy. MINDApp.swift stripped of every share-extension, reminders,
+daily-brief, meeting-brief lifecycle call. Project.swift dropped the
+Widget + ShareExtension targets; Module.swift dropped 7 module cases.
+
 Long-form roadmap for the next 50 versions of MIND. Each version is
 a coherent, single-PR-shippable unit with concrete acceptance
 criteria. Engineered as the input for the autonomous iteration agent

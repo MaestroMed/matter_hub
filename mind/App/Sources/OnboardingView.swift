@@ -143,30 +143,30 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 10) {
-                    Text("onboarding.welcome.title")
+                    Text(verbatim: "Bienvenue dans ton cockpit Numelite")
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.7)
                         .lineLimit(2)
-                    Text("onboarding.welcome.body")
+                    Text(verbatim: "Pilote tes sites, tes leads et tes factures depuis un seul endroit.")
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 8)
                 }
 
-                bulletRow(icon: "doc.text.fill",
-                          tint: LiquidPalette.iris,
-                          title: "onboarding.welcome.bullet.capture.title",
-                          detail: "onboarding.welcome.bullet.capture.detail")
+                bulletRow(icon: "envelope.fill",
+                          tint: LiquidPalette.aqua,
+                          title: "Leads unifiés",
+                          detail: "Webhook depuis tous tes sites clients vers un seul cockpit.")
                 bulletRow(icon: "magnifyingglass",
                           tint: .orange,
-                          title: "onboarding.welcome.bullet.audit.title",
-                          detail: "onboarding.welcome.bullet.audit.detail")
-                bulletRow(icon: "drop.fill",
+                          title: "Audit client",
+                          detail: "Lance un audit complet depuis n'importe quelle URL.")
+                bulletRow(icon: "square.stack.3d.up.fill",
                           tint: LiquidPalette.iris,
-                          title: "onboarding.welcome.bullet.focus.title",
-                          detail: "onboarding.welcome.bullet.focus.detail")
+                          title: "Pipeline projets",
+                          detail: "Kanban CRM avec statut Vercel et MRR live.")
             }
         }
     }
@@ -338,8 +338,8 @@ struct OnboardingView: View {
     private func bulletRow(
         icon: String,
         tint: Color,
-        title: LocalizedStringKey,
-        detail: LocalizedStringKey
+        title: String,
+        detail: String
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
@@ -351,11 +351,11 @@ struct OnboardingView: View {
                     .foregroundStyle(tint)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
+                Text(verbatim: title)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .minimumScaleFactor(0.85)
                     .lineLimit(2)
-                Text(detail)
+                Text(verbatim: detail)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(3)

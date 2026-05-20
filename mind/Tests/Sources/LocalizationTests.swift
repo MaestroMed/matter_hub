@@ -455,4 +455,31 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("comparison.severity.critical",     lang: "en"), "critical")
         XCTAssertEqual(localized("comparison.severity.critical",     lang: "fr"), "critique")
     }
+
+    /// v0.24.1 — Stage Manager / Mac Catalyst menu bar keys.
+    /// Locks every label the user sees in the menu bar so the FR
+    /// build can't silently fall back to the EN source string when
+    /// someone forgets to translate a new shortcut.
+    func test_stageManagerCommandStrings_resolveBothLanguages() {
+        // ⌘N action label
+        XCTAssertEqual(localized("command.newAudit",      lang: "en"), "New Audit")
+        XCTAssertEqual(localized("command.newAudit",      lang: "fr"), "Nouvel audit")
+
+        // Custom View menu title that groups the ⌘1...⌘4 shortcuts
+        XCTAssertEqual(localized("command.view.menu",     lang: "en"), "View")
+        XCTAssertEqual(localized("command.view.menu",     lang: "fr"), "Affichage")
+
+        // Per-tab labels — every TabShortcut case must resolve in
+        // both languages. Iterates over the namespace explicitly so
+        // a future addition to TabShortcut + xcstrings is forced to
+        // pass through this test.
+        XCTAssertEqual(localized("command.tab.home",      lang: "en"), "Home")
+        XCTAssertEqual(localized("command.tab.home",      lang: "fr"), "Accueil")
+        XCTAssertEqual(localized("command.tab.clients",   lang: "en"), "Clients")
+        XCTAssertEqual(localized("command.tab.clients",   lang: "fr"), "Clients")
+        XCTAssertEqual(localized("command.tab.pipeline",  lang: "en"), "Pipeline")
+        XCTAssertEqual(localized("command.tab.pipeline",  lang: "fr"), "Pipeline")
+        XCTAssertEqual(localized("command.tab.settings",  lang: "en"), "Settings")
+        XCTAssertEqual(localized("command.tab.settings",  lang: "fr"), "Réglages")
+    }
 }

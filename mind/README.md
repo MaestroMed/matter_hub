@@ -1,13 +1,17 @@
 # MIND
 
-A second-brain iOS app built around a single typed graph. Liquid Glass UI,
-on-device Apple Intelligence (Foundation Models), Claude API for heavy
-reasoning, Anthropic + OpenAI for the audit / visual-board pipelines.
-iOS 26+, SwiftUI, SwiftData, CloudKit, Tuist 4.
+> **MIND Cockpit** — orchestrator for the Numelite studio agency.
+> Pilot every client site, every inbound lead, every audit and every
+> invoice from one Liquid Glass cockpit. iOS 26+, SwiftUI, SwiftData,
+> CloudKit, Tuist 4.
 
 ## Status
 
-The app is feature-complete for the first TestFlight run:
+v1.0-alpha.1 — Cockpit Studio pivot. MIND is no longer a second-brain;
+it's the studio cockpit Mehdi reaches for daily to audit client sites
+(AZ Construction, IEF&Co, Sconnect, Numelite, atelierfrissons, …),
+track inbound leads aggregated from those clients' contact forms, and
+ship invoices when a Won deal closes. Surfaces kept after the pivot:
 
 - **Universal Object Graph** — every Node (note, capture, client, audit,
   task, journal entry, habit, goal) lives in one SwiftData graph backed

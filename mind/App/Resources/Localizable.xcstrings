@@ -5695,6 +5695,54 @@
         "en": { "stringUnit": { "state": "translated", "value": "Invoices to chase" } },
         "fr": { "stringUnit": { "state": "translated", "value": "Factures à relancer" } }
       }
+    },
+    "command.newAudit": {
+      "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘N action label, opens a fresh audit form on the Home tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New Audit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouvel audit" } }
+      }
+    },
+    "command.view.menu": {
+      "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — title of the custom View menu that groups the ⌘1...⌘4 tab-switch shortcuts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "View" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Affichage" } }
+      }
+    },
+    "command.tab.home": {
+      "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘1 entry, jumps to the Home tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Home" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Accueil" } }
+      }
+    },
+    "command.tab.clients": {
+      "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘2 entry, jumps to the Clients tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Clients" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clients" } }
+      }
+    },
+    "command.tab.pipeline": {
+      "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘3 entry, jumps to the Pipeline kanban tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pipeline" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pipeline" } }
+      }
+    },
+    "command.tab.settings": {
+      "comment": "v0.24.1 · Stage Manager / Mac Catalyst menu bar — ⌘4 entry, jumps to the Settings tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Settings" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réglages" } }
+      }
     }
   }
 }
