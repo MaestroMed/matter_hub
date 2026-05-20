@@ -150,6 +150,18 @@ let testTarget: Target = .target(
         // is also exercised — a hermetic temp directory keeps the
         // counter ratchet test from leaking onto disk between runs.
         .target(name: Module.invoiceKit.rawValue),
+        // v0.22.1 — WatchCaptureKit tests lock the pure substrate
+        // behind the deferred Watch surface — the `WatchCaptureRecord`
+        // Codable round-trip, the `WatchCaptureTranscriptAssembler`
+        // normalisation (whitespace collapse, control strip, longest-
+        // fragment pick, sentence-cut title derivation), the
+        // `WatchCaptureNodeBuilder` draft shape (kind / tags /
+        // content clamp / empty-transcript skip), and the
+        // `WatchCaptureQueue` actor's atomic enqueue + drain (sort
+        // by startedAt, idempotent on id, remove on sync). The
+        // future watchOS App + CloudKit mirror plug into the same
+        // substrate without re-rolling the data shape.
+        .target(name: Module.watchCaptureKit.rawValue),
         // v1.0-alpha.7 — SwarmKit tests cover the pure
         // `SEOSwarmPromptBuilder` (system + page prompt anchors,
         // deterministic shape, JSON-only contract, population

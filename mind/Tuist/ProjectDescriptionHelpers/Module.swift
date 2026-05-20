@@ -23,6 +23,7 @@ public enum Module: String, CaseIterable {
     case invoiceKit = "InvoiceKit"
     case bootstrapKit = "BootstrapKit"
     case swarmKit = "SwarmKit"
+    case watchCaptureKit = "WatchCaptureKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -283,6 +284,21 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.auditKit.rawValue),
                 .target(name: Module.intelligence.rawValue),
+            ]
+        case .watchCaptureKit:
+            // v0.22.1 — Watch voice capture (pure substrate). Pure
+            // value types + on-disk queue + transcript assembler +
+            // Node-draft builder that the deferred watchOS App
+            // surface (and the iPhone "simulate Watch capture" sheet
+            // that ships ahead of it) write into. Depends on
+            // GraphCore for `NodeKind` (the draft's `kind` is
+            // `.capture`) and for `MINDTelemetry` breadcrumbs once
+            // the live drain wires up (`watchCapture.queued` /
+            // `watchCapture.folded` / `watchCapture.failed`). No
+            // DesignSystem dep — the kit is pure data; the SwiftUI
+            // surface lives in the App target.
+            return [
+                .target(name: Module.graphCore.rawValue),
             ]
         case .swarmKit:
             // v1.0-alpha.7 — SEO Swarm Orchestrator. Generates N
