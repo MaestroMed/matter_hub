@@ -1001,11 +1001,51 @@ magic). 521 tests, 12 skipped, 0 failures (was 498 in v0.30).
 Vision: iOS screenshot at `mind/screenshots/v0.31.png`, sample PDF
 at `mind/screenshots/v0.31-invoice.pdf`.
 
-### v0.31.1 — Audit v2: predictive (forecast trends) ⏳ (deferred from v0.31)
+### v0.31.1 — Audit v2: predictive (forecast trends) ✅ (deferred from v0.31)
 **What**: Audit synthesizer gains a "Forecast" section: project the
 3 main metrics (perf, SEO, security score) over the next quarter
 based on industry baselines. **Acceptance**: each audit shows
 forecast chart, projections are explained in plain language.
+Shipped 2026-05-20: pure-substrate forecast layer lands in AuditKit
+ahead of the UI surface (same model v1.0-alpha.8 used for the health
+pulse). New `AuditForecast` Sendable Codable Hashable value type +
+`AuditForecaster` namespace + per-persona `Baseline` trio + 3-month
+horizon constant — all pure, deterministic, no async, no network.
+`AuditForecaster.forecast(for:)` derives a 3-projection forecast
+(performance / SEO / security only — mobile + brand intentionally
+excluded because they don't project cleanly with a linear convergence
+model). Each projection carries `currentScore`, `projectedScore`,
+signed `delta`, `TrendBucket` (improvement / plateau / decline), and
+a one-sentence FR explanation grounded on the persona baseline.
+Math: 40 % convergence rate upward when current < baseline (calibrated
+on the 50→65 SEO climb observed across 3 Numelite engagements during
+Q1 2026), 15 % regression rate downward when current > baseline (high
+performers maintain). Trend classification: ±2 pts is plateau, ±3+
+pts is up/down (matches the smallest meaningful PageSpeed Insights
+field-data delta). Per-persona baselines anchored on the first 30
+Numelite audits: SaaS B2B (82 perf / 80 SEO / 85 security), TPE/PME
+(65 / 60 / 55), Lifestyle/DTC (75 / 72 / 68), Other (70 / 68 / 65).
+All-zero scoring → empty forecast so the UI hides the card rather
+than projecting "0 to 26". Clamp to [0, 100] guards forward-compat
+against future baseline tweaks. `clientName` resolved via the
+existing `AuditClient.displayName` accessor (falls back to URL host).
+21 new `AuditForecastTests` lock the entire surface (empty/degenerate
+inputs, per-persona baseline values, baseline accessor field
+routing, projection math for below/above/at baseline, upper + lower
+clamp, trend classification thresholds including the ±2-pt plateau
+band, end-to-end forecast shape for TPE/PME below baseline / at
+baseline / SaaS B2B above baseline, projection lookup helper, FR
+explanation openers for all three trend buckets, determinism,
+Codable round-trip, horizon constant, metric enum exactly-three
+invariant). 729 tests total (was 708 in v1.0-alpha.8), 15 skipped,
+0 failures. Build SUCCEEDED on iPhone 17 Pro simulator. Vision
+verify at `mind/screenshots/v0.31.1.png` (host launches clean on
+the Cockpit — the forecast surface itself is pure substrate this
+iteration, the AuditSheet trend row + ComparisonSheet forecast
+column will fold in once the UI affordances ship). Forecast-chart
+UI deferred to a follow-up patch (v0.31.2) once the AuditSheet hero
+card lands its next refactor — locking the pure derivation contract
+first means every future surface reads from the same source of truth.
 
 ### v0.32 — Audit comparisons (multi-target) ✅
 **What**: User can pick 2-4 audited clients and see a side-by-side
