@@ -11339,6 +11339,246 @@
         "en": { "stringUnit": { "state": "translated", "value": "%d new lead(s)" } },
         "fr": { "stringUnit": { "state": "translated", "value": "%d nouveau(x) lead(s)" } }
       }
+    },
+    "lead.reply.angle.direct": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · tab pill label for the 'direct' angle (concise answer + call slot).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Direct" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Direct" } }
+      }
+    },
+    "lead.reply.angle.consultative": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · tab pill label for the 'consultative' angle (2 qualifying questions before pricing).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Consultative" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Consultatif" } }
+      }
+    },
+    "lead.reply.angle.similarCase": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · tab pill label for the 'similarCase' angle (reference to a past engagement).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Similar case" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cas similaire" } }
+      }
+    },
+    "lead.reply.generating.label": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · shimmer skeleton label while Claude generates the 3 variants.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generating…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Génération…" } }
+      }
+    },
+    "lead.reply.regenerate": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · 'regenerate' icon button accessibility label + tooltip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Regenerate" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Régénérer" } }
+      }
+    },
+    "lead.reply.pick.label": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · accessibility label for the variant tab pill row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pick a reply variant" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Choisir une variante" } }
+      }
+    },
+    "lead.reply.saved.toast": {
+      "comment": "v1.0-alpha.13 · AI Reply Composer · small green check + label visible after the debounced auto-save fires.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Saved" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Enregistré" } }
+      }
+    },
+    "home.velocity.title": {
+      "comment": "v1.0-alpha.13 · HomeView · Velocity card title between Boîte leads and Projets actifs.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Velocity" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Vélocité" } }
+      }
+    },
+    "home.velocity.chart.mrr": {
+      "comment": "v1.0-alpha.13 · HomeView Velocity card · MRR mini-chart label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "MRR" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "MRR" } }
+      }
+    },
+    "home.velocity.chart.leads": {
+      "comment": "v1.0-alpha.13 · HomeView Velocity card · Weekly leads mini-chart label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads / wk" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads / sem" } }
+      }
+    },
+    "home.velocity.chart.conversion": {
+      "comment": "v1.0-alpha.13 · HomeView Velocity card · Conversion mini-gauge label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Conversion" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Conversion" } }
+      }
+    },
+    "home.velocity.target.format": {
+      "comment": "v1.0-alpha.13 · Velocity sheet · MRR target line annotation. %d is the euro target (e.g. 5000).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Target €%d/mo" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Objectif €%d/mois" } }
+      }
+    },
+    "velocity.sheet.title": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · header title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sales Velocity" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Vélocité commerciale" } }
+      }
+    },
+    "velocity.sheet.export": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · 'Export to PDF' bottom CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export to PDF" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter en PDF" } }
+      }
+    },
+    "velocity.funnel.title": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel distribution chart title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Funnel distribution" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Répartition funnel" } }
+      }
+    },
+    "velocity.funnel.new": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel stage label · 'new'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouveau" } }
+      }
+    },
+    "velocity.funnel.contacted": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel stage label · 'contacted'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Contacted" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Contacté" } }
+      }
+    },
+    "velocity.funnel.qualified": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel stage label · 'qualified'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Qualified" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Qualifié" } }
+      }
+    },
+    "velocity.funnel.won": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel stage label · 'won'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Won" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Gagné" } }
+      }
+    },
+    "velocity.funnel.lost": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel stage label · 'lost'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lost" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Perdu" } }
+      }
+    },
+    "velocity.funnel.spam": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · funnel stage label · 'spam'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Spam" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Spam" } }
+      }
+    },
+    "velocity.cumulative.title": {
+      "comment": "v1.0-alpha.13 · SalesVelocitySheet · cumulative leads area chart title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cumulative leads (12 weeks)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads cumulés (12 semaines)" } }
+      }
+    },
+    "home.dormant.title.format": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · title. %d is the number of dormant projects.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d dormant project(s) — archive?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d projet(s) dormant(s) — archiver ?" } }
+      }
+    },
+    "home.dormant.subtitle": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · subtitle copy under the title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No activity in the last 90 days. Archive or keep active?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune activité depuis 90 jours. Archiver ou garder actif ?" } }
+      }
+    },
+    "home.dormant.action.archive": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · per-row 'archive' button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Archive" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Archiver" } }
+      }
+    },
+    "home.dormant.action.keepActive": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · per-row 'keep active' button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Keep active" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Garder actif" } }
+      }
+    },
+    "home.dormant.reason.noAudit": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · per-row reason · last audit X days ago. %d is the day count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last audit: %d days ago" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dernier audit : il y a %d jours" } }
+      }
+    },
+    "home.dormant.reason.noLead": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · per-row reason · last lead X days ago. %d is the day count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last lead: %d days ago" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dernier lead : il y a %d jours" } }
+      }
+    },
+    "home.dormant.reason.noPush": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · per-row reason · last GitHub push X days ago. %d is the day count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last GitHub push: %d days ago" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dernier commit GitHub : il y a %d jours" } }
+      }
+    },
+    "home.dormant.reason.noActivity": {
+      "comment": "v1.0-alpha.13 · HomeView dormant projects card · per-row reason · catch-all when no signal is available.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No activity" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pas d'activité" } }
+      }
     }
   }
 }

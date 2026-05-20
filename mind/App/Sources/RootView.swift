@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 import CoreSpotlight
 import AuditKit
 import BootstrapKit
@@ -381,6 +382,18 @@ private struct HomeView: View {
     @State private var portfolioHealth: PortfolioHealth?
     @State private var showPortfolioSheet: Bool = false
 
+    // v1.0-alpha.13 — Velocity dashboard surface. Tapping the card
+    // flips this true; the sheet renders `SalesVelocitySheet` with
+    // the per-month MRR + cumulative leads + funnel distribution.
+    @State private var showVelocitySheet: Bool = false
+
+    // v1.0-alpha.13 — Dormant-project heuristic results. Populated
+    // on `.task` so the dormant card only appears when at least one
+    // active project has been quiet > 90 days. Mutating the
+    // lifecycleStage from the row archives the project; "Garder
+    // actif" touches lastActivityAt + drops it from the array.
+    @State private var dormantProjects: [Project] = []
+
     private var sortedNewLeads: [Lead] {
         Array(LeadInboxSorter.sort(newLeads, by: .dateDescending).prefix(10))
     }
@@ -401,7 +414,11 @@ private struct HomeView: View {
                 greeting
                 portfolioKPIBar
                 leadInboxCard
+                velocityCard
                 projectsCarouselCard
+                if !dormantProjects.isEmpty {
+                    dormantProjectsCard
+                }
                 pipelineSummaryCard
                 bootstrapCard
                 auditCardStack
@@ -420,6 +437,11 @@ private struct HomeView: View {
             // persisted. Subsequent refreshes happen via the
             // pull-to-refresh gesture on the parent ScrollView.
             await loadPortfolioSnapshot()
+            // v1.0-alpha.13 — Surface dormant projects so the
+            // archive-suggestion card knows whether to render. The
+            // heuristic itself is pure GraphCore math; the only
+            // SwiftData touch happens here (reading `allProjects`).
+            refreshDormantProjects()
         }
         .sheet(isPresented: $showPortfolioSheet) {
             PortfolioHealthSheet(
@@ -429,6 +451,12 @@ private struct HomeView: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
             .presentationBackground(.ultraThinMaterial)
+        }
+        .sheet(isPresented: $showVelocitySheet) {
+            SalesVelocitySheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet()
@@ -594,6 +622,310 @@ private struct HomeView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .padding(.horizontal, 4)
+    }
+
+    // MARK: - Velocity card (v1.0-alpha.13)
+
+    /// Compact horizontal strip with three sparkline-style mini-
+    /// charts (MRR / Leads / Conversion). Tap → opens the full-
+    /// screen `SalesVelocitySheet`. Sits between the lead inbox and
+    /// the projects carousel so it earns the second-row real-estate
+    /// the cockpit "what's hot?" mental model expects.
+    private var velocityCard: some View {
+        let mrr = SalesVelocityCalculator.monthlyMRRHistory(
+            projects: allProjects,
+            months: 12
+        )
+        let leads = SalesVelocityCalculator.weeklyLeads(
+            leads: newLeads + allLeadsForFunnel,
+            weeks: 12
+        )
+        let conversion = SalesVelocityCalculator.conversionRate(
+            leads: allLeadsForFunnel,
+            lastWeeks: 4
+        )
+
+        return LiquidCard(cornerRadius: 22) {
+            Button {
+                LiquidHaptics.select()
+                showVelocitySheet = true
+                MINDTelemetry.info(
+                    "velocity.opened",
+                    data: [
+                        "mrrPoints": String(mrr.count),
+                        "leadPoints": String(leads.count),
+                        "conversion": String(format: "%.2f", conversion),
+                    ]
+                )
+            } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.aqua.opacity(0.18))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.aqua)
+                        }
+                        Text("home.velocity.title")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    HStack(spacing: 12) {
+                        miniMRRChart(points: mrr)
+                        miniLeadsChart(points: leads)
+                        miniConversionGauge(value: conversion)
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// Pull every Lead (regardless of status) so the velocity card's
+    /// weeklyLeads bucket lands the entire history, not just the
+    /// `.new` slice the inbox card consumes. The funnel + conversion
+    /// readouts need every status to be accurate.
+    @Query private var allLeadsForFunnel: [Lead]
+
+    @ViewBuilder
+    private func miniMRRChart(points: [MRRPoint]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("home.velocity.chart.mrr")
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Chart(points) { point in
+                LineMark(
+                    x: .value("Month", point.monthStart),
+                    y: .value("MRR", point.mrrEUR)
+                )
+                .foregroundStyle(LiquidPalette.iris)
+                .lineStyle(StrokeStyle(lineWidth: 1.5))
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(height: 36)
+            Text(verbatim: "€\(points.last?.mrrEUR ?? 0)")
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(LiquidPalette.iris)
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func miniLeadsChart(points: [WeeklyLeadPoint]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("home.velocity.chart.leads")
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Chart(points) { point in
+                BarMark(
+                    x: .value("Week", point.weekStart),
+                    y: .value("Leads", point.count)
+                )
+                .foregroundStyle(LiquidPalette.aqua)
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(height: 36)
+            Text(verbatim: "\(points.reduce(0) { $0 + $1.count })")
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(LiquidPalette.aqua)
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func miniConversionGauge(value: Double) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("home.velocity.chart.conversion")
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            ZStack {
+                Circle()
+                    .stroke(LiquidPalette.lavender.opacity(0.25), lineWidth: 4)
+                Circle()
+                    .trim(from: 0, to: max(0, min(1, value)))
+                    .stroke(
+                        LiquidPalette.lavender,
+                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+            }
+            .frame(width: 36, height: 36)
+            Text(verbatim: "\(Int((max(0, min(1, value))) * 100))%")
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(LiquidPalette.lavender)
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Dormant projects card (v1.0-alpha.13)
+
+    /// Non-intrusive archive-suggestion card. Renders only when at
+    /// least one active project has been quiet for > 90 days. Each
+    /// row exposes two CTAs: "Archiver" flips lifecycleStage to
+    /// `.archived` + emits `project.archived.auto`; "Garder actif"
+    /// touches `lastActivityAt` to now + emits
+    /// `project.archive.dismissed`.
+    private var dormantProjectsCard: some View {
+        LiquidCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.orange.opacity(0.18))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "moon.zzz.fill")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+                    let format = String(localized: "home.dormant.title.format")
+                    Text(verbatim: String(format: format, dormantProjects.count))
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                }
+                Text("home.dormant.subtitle")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+                VStack(spacing: 8) {
+                    ForEach(dormantProjects) { project in
+                        dormantRow(project)
+                    }
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func dormantRow(_ project: Project) -> some View {
+        let accent = Color(hex: project.primaryColor) ?? LiquidPalette.iris
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Circle().fill(accent).frame(width: 8, height: 8)
+                Text(verbatim: project.name)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Spacer()
+            }
+            Text(verbatim: ProjectLifecycleHeuristic.reason(
+                for: project,
+                lastPush: nil,
+                asOf: .now
+            ))
+            .font(.system(.caption, design: .rounded))
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            HStack(spacing: 8) {
+                Button {
+                    LiquidHaptics.tap()
+                    archiveProject(project)
+                } label: {
+                    Text("home.dormant.action.archive")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(Color.orange.opacity(0.92))
+                        }
+                }
+                .buttonStyle(.plain)
+                Button {
+                    LiquidHaptics.tap()
+                    keepActive(project)
+                } label: {
+                    Text("home.dormant.action.keepActive")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(.ultraThinMaterial)
+                        }
+                        .overlay {
+                            Capsule(style: .continuous)
+                                .stroke(LiquidPalette.iris.opacity(0.2), lineWidth: 1)
+                        }
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
+        }
+        .padding(12)
+        .background {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(accent.opacity(0.05))
+        }
+    }
+
+    /// Refreshes the dormant-projects snapshot from the live
+    /// `allProjects` array. Called on `.task` once + after every
+    /// row CTA so the card visibility stays consistent.
+    private func refreshDormantProjects() {
+        let candidates = ProjectLifecycleHeuristic.dormantProjects(
+            allProjects,
+            thresholdDays: ProjectLifecycleHeuristic.defaultThresholdDays
+        )
+        dormantProjects = candidates
+        if !candidates.isEmpty {
+            MINDTelemetry.info(
+                "project.archive.suggested",
+                data: [
+                    "count": String(candidates.count),
+                ]
+            )
+        }
+    }
+
+    private func archiveProject(_ project: Project) {
+        project.lifecycleStageEnum = .archived
+        project.touchActivity()
+        try? context.save()
+        MINDTelemetry.info(
+            "project.archived.auto",
+            data: [
+                "projectID": project.id.uuidString,
+                "projectName": project.name,
+            ]
+        )
+        refreshDormantProjects()
+    }
+
+    private func keepActive(_ project: Project) {
+        project.touchActivity()
+        try? context.save()
+        MINDTelemetry.info(
+            "project.archive.dismissed",
+            data: [
+                "projectID": project.id.uuidString,
+                "projectName": project.name,
+            ]
+        )
+        refreshDormantProjects()
     }
 
     // MARK: - Refresh fan-out (v1.0-alpha.9)

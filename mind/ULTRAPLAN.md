@@ -15,7 +15,7 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
-## v1.0-alpha.13+ — Next ⏳
+## v1.0-alpha.14+ — Next ⏳
 
 - **v1.0-alpha.12.1** ⏳ — Mac Catalyst destination flip. Split
   `FocusKit.ActivityKit` (Live Activities) off so the App target
@@ -36,6 +36,85 @@ the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 - **Vision Pro spatial cockpit** ⏳ — already has the
   `VisionSpatialKit` substrate (v0.25.1); ship the visionOS App
   target + the RealityView spatial layout.
+
+## v1.0-alpha.13 — AI Reply Composer + Sales Velocity + auto-archive ✅
+
+**What**: Three small + complementary pieces that turn the cockpit
+from a data table into an active assistant. **Piece 1 — AI Reply
+Composer** in `LeadDetailSheet`: tapping "Générer 3 variantes" fires
+the new MainActor `generateLeadReply(lead:project:similarProjects:)`
+entry point, which builds a pure prompt via
+`LeadReplyPromptBuilder.build(lead:project:similarProjects:)` then
+hands the prompt to a new actor worker `completeReplyPrompt(...)`
+on `OutreachEmailGenerator`. Returns 3 `OutreachReply` values
+tagged direct / consultative / similarCase. Tab pills above the
+TextEditor swap the body on tap (`LiquidHaptics.select()`); the
+edited draft persists to `lead.draftReply` via a 500ms-debounced
+`Task`-cancellation save that fires the `lead.draft.saved`
+breadcrumb. A small green check + "Enregistré" toast flashes for
+1.5s after every save. The shimmer skeleton renders three pill
+placeholders + four line-bars while the composer round-trips.
+
+**Piece 2 — Sales Velocity Dashboard**: new `velocityCard` between
+the lead inbox and the projects carousel on HomeView surfaces three
+mini-charts (12-month MRR line, 12-week leads bar, 4-week
+conversion gauge) reading from the new pure
+`SalesVelocityCalculator` namespace in GraphCore. Tap → opens
+`SalesVelocitySheet` (full-screen) with full-resolution MRR line
+(with a 5000€/mo target rule line annotation), cumulative leads
+area chart, funnel stage distribution stacked bar, and an
+"Exporter en PDF" CTA that fires the `velocity.exported.pdf`
+breadcrumb. Sheet open emits `velocity.opened` /
+`velocity.sheet.opened`.
+
+**Piece 3 — Project auto-archive heuristic**: new pure
+`ProjectLifecycleHeuristic.dormantProjects(...)` in GraphCore
+returns projects that have been quiet on every signal (no lead, no
+audit, no GitHub push) for 90 days. Surfaced on HomeView via a
+non-intrusive `dormantProjectsCard` that only renders when
+`dormantProjects.count > 0`. Each row shows the
+`ProjectLifecycleHeuristic.reason(for:lastPush:)` (FR/EN copy under
+`home.dormant.reason.*`) plus two CTAs — "Archiver" flips
+`lifecycleStage` to `.archived` + emits `project.archived.auto`,
+"Garder actif" touches `lastActivityAt` + emits
+`project.archive.dismissed`. The heuristic is conservative — any
+single fresh signal keeps the project active.
+
+Localizable.xcstrings adds 29 new FR/EN keys under three
+namespaces: `lead.reply.*` (7 keys — angle labels, generating /
+regenerate / pick / saved), `home.velocity.*` + `velocity.*` +
+`home.velocity.*` (15 keys — card title, 3 chart labels, target
+format, sheet title + export, 6 funnel stage labels, cumulative
+title), `home.dormant.*` (7 keys — title format, subtitle, 2 CTAs,
+3 reason variants).
+
+Tests: 34 new tests across three pure-spec test files —
+12 `LeadReplyPromptBuilderTests` (FR mention, direct angle slot
+proposal, consultative 2-question contract, similarCase fallback,
+lead-message verbatim, project-name passthrough, empty-message
+graceful path, deterministic for same input, 3-variant JSON
+schema lock, Mehdi-as-sender, well-formed JSON round-trip, invalid
+JSON soft-fail); 14 `SalesVelocityCalculatorTests` (MRR empty + 12
+zeros, single retainer at current month, oneshots excluded, MRR
+history ascending order, weekly leads empty + 12 zeros, current
+week count, cross-week distribution, conversion 4-of-10 → 0.4,
+empty leads → 0, spam-only → 0, funnel sums to leads.count,
+non-negative stages, 6-stage envelope, deterministic shape);
+8 `ProjectLifecycleHeuristicTests` (empty input, fresh project not
+dormant, old project with no GitHub data dormant, recent push
+keeps active, archived excluded, ordering longest-first, reason
+branch picks youngest signal, tighter threshold selects more).
+967 tests total, 19 skipped, 0 failures (was 933 in v1.0-alpha.12).
+Build SUCCEEDED on iPhone 17 Pro simulator. Vision verify at
+`mind/screenshots/v1.0-alpha.13.png` — host launches clean on the
+cockpit Home with greeting + KPI bar + Boîte leads (4 demo leads
+visible) + new Vélocité card with three mini-charts (MRR /
+Leads/sem / Conversion) + Projets actifs row begin. The dormant
+projects card hides on the demo seed because every seed project
+has `startedAt = .now`, so no projects are stale yet — that branch
+ships fully wired for the day a real portfolio ages into it.
+
+Shipped 2026-05-20.
 
 ## v1.0-alpha.12 — Mac Catalyst polish (substrate) ✅
 

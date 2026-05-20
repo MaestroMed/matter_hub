@@ -11,10 +11,16 @@ import OutreachKit
 ///
 /// 1. Header — contact name, project name + chip, form-type pill.
 /// 2. Message — the raw lead.message (selectable text).
-/// 3. Draft reply — editable text editor. If empty, a "Générer brouillon"
-///    CTA fires `OutreachEmailGenerator.shared.generate(...)` using the
-///    same `ProspectContext` pipeline OutreachSheet uses. The first
-///    returned variant's body is written back into `lead.draftReply`.
+/// 3. Draft reply — editable text editor. v1.0-alpha.13 adds the
+///    AI Reply Composer: tapping the "Générer 3 variantes" CTA shows
+///    a shimmer skeleton over the textarea while
+///    `OutreachEmailGenerator.shared.leadReply(...)` returns 3
+///    variants tagged with distinct angles (direct / consultative /
+///    similarCase). Tab pills above the editor let the user pick
+///    one — picking swaps the textarea in (haptic .select). The
+///    edited draft saves to `lead.draftReply` on every keystroke
+///    (debounced 500ms via a Task-cancellation latch) + emits the
+///    `lead.draft.saved` breadcrumb on persist.
 /// 4. Actions — qualified / won (opens InvoiceSheet) / lost (alert
 ///    for reason) / spam.
 /// 5. Metadata — sourceURL, receivedAt, formType, userAgent, IP hash
@@ -27,6 +33,12 @@ struct LeadDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
 
+    /// Pull every Project so the AI Reply Composer can suggest a
+    /// "similar past engagement" for the `similarCase` angle. The
+    /// sheet itself only ever surfaces 3 variants — the filtering
+    /// happens before the composer fires.
+    @Query private var allProjects: [Project]
+
     @Bindable var lead: Lead
 
     /// Local mirror of `lead.draftReply` so the TextEditor binds to a
@@ -34,8 +46,31 @@ struct LeadDetailSheet: View {
     @State private var draftReply: String
 
     /// Latch while the OutreachEmailGenerator round-trips so the
-    /// "Générer brouillon" CTA can swap to a progress label.
+    /// "Générer brouillon" CTA can swap to a shimmer skeleton.
     @State private var isGeneratingDraft: Bool = false
+
+    /// The 3 reply variants returned by the latest composer call.
+    /// Empty until the user taps "Générer 3 variantes". Cleared on
+    /// every re-generation so the tab pills always reflect the most-
+    /// recent batch.
+    @State private var replyVariants: [OutreachReply] = []
+
+    /// The currently-selected reply angle. Drives both the tab pill
+    /// highlight and the textarea content swap. nil when no variant
+    /// is selected yet (initial state + immediately after a
+    /// re-generation).
+    @State private var selectedReplyAngle: OutreachReply.Angle?
+
+    /// Flashed when the debounced auto-save persists a draft edit.
+    /// Used to render the small green check + accessibility "Brouillon
+    /// enregistré" announce. Resets after a 1.5s window via
+    /// `.task(id:)`.
+    @State private var lastSavedAt: Date?
+
+    /// Task handle for the debounced auto-save. Cancelled on every
+    /// keystroke so only the trailing edit (500ms after the last
+    /// keystroke) hits SwiftData.
+    @State private var saveTask: Task<Void, Never>?
 
     /// Bound to the "Marquer perdu" alert so the user can supply a
     /// short reason without bouncing through a separate sheet.
@@ -227,56 +262,25 @@ struct LeadDetailSheet: View {
         }
     }
 
-    // MARK: - Draft reply
+    // MARK: - Draft reply (v1.0-alpha.13 — AI Reply Composer)
 
+    /// 3-angle composer card. Sections from top to bottom:
+    ///   1. Header (title + saved-check + spinner during generation)
+    ///   2. Tab pills (one per variant, rendered after variants land)
+    ///   3. Either:
+    ///      - "Générer 3 variantes" CTA (empty initial state), or
+    ///      - Shimmer skeleton (while generating), or
+    ///      - The editable TextEditor pre-populated with the chosen
+    ///        variant's body
+    ///   4. Optional inline error banner
     private var draftReplySection: some View {
         LiquidCard(cornerRadius: 20) {
             VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("lead.detail.draftReply")
-                        .font(.system(.headline, design: .rounded, weight: .semibold))
-                    Spacer()
-                    if isGeneratingDraft {
-                        ProgressView().controlSize(.small)
-                    }
+                draftReplyHeader
+                if !replyVariants.isEmpty {
+                    variantTabPills
                 }
-                if draftReply.isEmpty && !isGeneratingDraft {
-                    Button {
-                        Task { await generateDraft() }
-                    } label: {
-                        Label(
-                            String(localized: "lead.detail.generateDraft"),
-                            systemImage: "sparkles"
-                        )
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background {
-                            Capsule(style: .continuous)
-                                .fill(LiquidPalette.iris.opacity(0.16))
-                        }
-                        .overlay {
-                            Capsule(style: .continuous)
-                                .stroke(LiquidPalette.iris.opacity(0.35), lineWidth: 1)
-                        }
-                        .foregroundStyle(LiquidPalette.iris)
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    TextEditor(text: $draftReply)
-                        .font(.system(.body, design: .rounded))
-                        .frame(minHeight: 160)
-                        .scrollContentBackground(.hidden)
-                        .padding(10)
-                        .background {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(.ultraThinMaterial)
-                        }
-                        .onChange(of: draftReply) { _, newValue in
-                            lead.draftReply = newValue.isEmpty ? nil : newValue
-                            try? context.save()
-                        }
-                }
+                draftReplyBody
                 if let generationError {
                     Text(verbatim: generationError)
                         .font(.system(.caption, design: .rounded))
@@ -288,30 +292,290 @@ struct LeadDetailSheet: View {
         }
     }
 
-    private func generateDraft() async {
+    private var draftReplyHeader: some View {
+        HStack(spacing: 8) {
+            Text("lead.detail.draftReply")
+                .font(.system(.headline, design: .rounded, weight: .semibold))
+            Spacer()
+            if isGeneratingDraft {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("lead.reply.generating.label")
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            } else if savedRecently {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.green)
+                    Text("lead.reply.saved.toast")
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(.green)
+                }
+                .transition(.opacity)
+            } else if !replyVariants.isEmpty {
+                Button {
+                    Task { await generateReplyVariants() }
+                } label: {
+                    Label(
+                        String(localized: "lead.reply.regenerate"),
+                        systemImage: "arrow.clockwise"
+                    )
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(LiquidPalette.iris)
+                    .labelStyle(.iconOnly)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("lead.reply.regenerate"))
+            }
+        }
+    }
+
+    /// Tab pill row driving angle selection. Renders 3 capsules
+    /// (Direct / Consultatif / Cas similaire) once the composer has
+    /// returned. Tap = haptic .select + textarea body swap.
+    private var variantTabPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(replyVariants) { variant in
+                    let isSelected = selectedReplyAngle == variant.angle
+                    Button {
+                        LiquidHaptics.select()
+                        selectedReplyAngle = variant.angle
+                        draftReply = variant.body
+                        scheduleDraftSave(force: true)
+                        MINDTelemetry.info(
+                            "lead.reply.angle.picked",
+                            data: [
+                                "leadID": lead.id.uuidString,
+                                "angle": variant.angle.rawValue,
+                            ]
+                        )
+                    } label: {
+                        Text(variant.angle.localizedLabel)
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(isSelected ? .white : LiquidPalette.iris)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background {
+                                Capsule(style: .continuous)
+                                    .fill(
+                                        isSelected
+                                            ? LiquidPalette.iris.opacity(0.92)
+                                            : LiquidPalette.iris.opacity(0.14)
+                                    )
+                            }
+                            .overlay {
+                                Capsule(style: .continuous)
+                                    .stroke(
+                                        LiquidPalette.iris.opacity(isSelected ? 0.0 : 0.35),
+                                        lineWidth: 1
+                                    )
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+                Text(verbatim: " ")
+                    .accessibilityHidden(true)
+            }
+        }
+        .accessibilityLabel(Text("lead.reply.pick.label"))
+    }
+
+    /// Either the CTA, the shimmer skeleton, or the editable textarea
+    /// depending on isGeneratingDraft + replyVariants state.
+    @ViewBuilder
+    private var draftReplyBody: some View {
+        if isGeneratingDraft {
+            shimmerSkeleton
+        } else if replyVariants.isEmpty && draftReply.isEmpty {
+            Button {
+                Task { await generateReplyVariants() }
+            } label: {
+                Label(
+                    String(localized: "lead.detail.generateDraft"),
+                    systemImage: "sparkles"
+                )
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(LiquidPalette.iris.opacity(0.16))
+                }
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidPalette.iris.opacity(0.35), lineWidth: 1)
+                }
+                .foregroundStyle(LiquidPalette.iris)
+            }
+            .buttonStyle(.plain)
+        } else {
+            TextEditor(text: $draftReply)
+                .font(.system(.body, design: .rounded))
+                .frame(minHeight: 160)
+                .scrollContentBackground(.hidden)
+                .padding(10)
+                .background {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                }
+                .onChange(of: draftReply) { _, _ in
+                    scheduleDraftSave(force: false)
+                }
+        }
+    }
+
+    /// Pulsing skeleton placeholder rendered over the textarea
+    /// position while the composer is generating. Three stacked
+    /// capsules approximate the variant-tab + first-line shape.
+    private var shimmerSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                shimmerPill(width: 70)
+                shimmerPill(width: 92)
+                shimmerPill(width: 110)
+            }
+            VStack(spacing: 10) {
+                ForEach(0 ..< 4, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(LiquidPalette.iris.opacity(0.14))
+                        .frame(height: 14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(.top, 4)
+        }
+        .padding(12)
+        .background {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.ultraThinMaterial)
+        }
+        .opacity(0.85)
+        .symbolEffect(.pulse, options: .repeating)
+        .accessibilityLabel(Text("lead.reply.generating.label"))
+    }
+
+    @ViewBuilder
+    private func shimmerPill(width: CGFloat) -> some View {
+        Capsule(style: .continuous)
+            .fill(LiquidPalette.iris.opacity(0.18))
+            .frame(width: width, height: 22)
+    }
+
+    /// True while the auto-save check icon should be visible. The
+    /// flag flips off after a 1.5s window via a `.task(id:)` watcher
+    /// attached to `lastSavedAt`.
+    private var savedRecently: Bool {
+        guard let lastSavedAt else { return false }
+        return Date.now.timeIntervalSince(lastSavedAt) < 1.5
+    }
+
+    /// Generate 3 reply variants from the cloud LLM. Wipes the
+    /// previous batch so the tab pills always reflect the latest
+    /// generation. Telemetry is fired by the actor itself.
+    @MainActor
+    private func generateReplyVariants() async {
         isGeneratingDraft = true
         generationError = nil
+        replyVariants = []
+        selectedReplyAngle = nil
         defer { isGeneratingDraft = false }
-        let prospect = ProspectContext(
-            clientName: lead.project?.name ?? lead.contactName,
-            host: lead.project?.host ?? "",
-            recentTrigger: lead.message,
-            primaryContactName: lead.contactName.isEmpty ? nil : lead.contactName
-        )
+
+        // Heuristic for the `similarCase` angle — find up to 3
+        // active retainer projects with the same contract type as
+        // the lead's project. Empty array is fine; the builder
+        // gracefully falls back to a generic "peer client" line.
+        let similar = similarProjectsForLead()
+
         do {
-            let variants = try await OutreachEmailGenerator.shared.generate(
-                prospect: prospect,
-                variantCount: 1
+            let variants = try await generateLeadReply(
+                lead: lead,
+                project: lead.project,
+                similarProjects: similar
             )
-            guard let first = variants.first else {
+            guard !variants.isEmpty else {
                 generationError = String(localized: "lead.detail.generate.failed")
                 return
             }
-            draftReply = first.body
-            lead.draftReply = first.body
-            try? context.save()
+            replyVariants = variants
+            if let first = variants.first {
+                selectedReplyAngle = first.angle
+                draftReply = first.body
+                scheduleDraftSave(force: true)
+            }
         } catch {
             generationError = error.localizedDescription
+        }
+    }
+
+    /// Best-effort similar-project picker for the `similarCase`
+    /// grounding block. Filters to:
+    ///   - Same contract type as the lead's project (oneshot ↔
+    ///     oneshot, retainer ↔ retainer) so the reference matches
+    ///     the buying pattern.
+    ///   - lifecycleStage active or maintenance — referencing an
+    ///     archived engagement weakens the warm-reply tone.
+    ///   - Excluding the lead's own project (no "your project is
+    ///     similar to your project" loops).
+    /// Returns up to 3 candidates ordered by recent activity so
+    /// the freshest case study comes first.
+    private func similarProjectsForLead() -> [Project] {
+        guard let leadProject = lead.project else {
+            // No project context — return the top 3 most-active
+            // projects so Claude still has something to reference.
+            return Array(
+                allProjects
+                    .filter {
+                        $0.lifecycleStageEnum == .active ||
+                        $0.lifecycleStageEnum == .maintenance
+                    }
+                    .sorted { $0.lastActivityAt > $1.lastActivityAt }
+                    .prefix(3)
+            )
+        }
+        return Array(
+            allProjects
+                .filter { project in
+                    project.id != leadProject.id &&
+                    project.contractTypeEnum == leadProject.contractTypeEnum &&
+                    (project.lifecycleStageEnum == .active ||
+                     project.lifecycleStageEnum == .maintenance)
+                }
+                .sorted { $0.lastActivityAt > $1.lastActivityAt }
+                .prefix(3)
+        )
+    }
+
+    /// Schedules a debounced save. `force: true` flushes immediately
+    /// (used after variant selection where the user *intended* the
+    /// swap). `force: false` waits 500ms after the last keystroke so
+    /// every character doesn't hit SwiftData.
+    private func scheduleDraftSave(force: Bool) {
+        saveTask?.cancel()
+        let valueAtSchedule = draftReply
+        saveTask = Task {
+            if !force {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
+            if Task.isCancelled { return }
+            // Read latest value off MainActor to avoid stale writes.
+            await MainActor.run {
+                let valueToPersist = draftReply
+                guard valueAtSchedule == valueToPersist || force else { return }
+                lead.draftReply = valueToPersist.isEmpty ? nil : valueToPersist
+                try? context.save()
+                lastSavedAt = .now
+                MINDTelemetry.info(
+                    "lead.draft.saved",
+                    data: [
+                        "leadID": lead.id.uuidString,
+                        "length": String(valueToPersist.count),
+                    ]
+                )
+            }
         }
     }
 
@@ -478,6 +742,26 @@ struct LeadDetailSheet: View {
             return String([first, last]).uppercased()
         }
         return String(first).uppercased()
+    }
+}
+
+// MARK: - Reply angle label
+
+/// Localized label for the AI Reply Composer tab pills. Lives in the
+/// App layer because the FR/EN copy is the UI surface — the
+/// OutreachKit `OutreachReply.Angle` enum stays a pure data type.
+extension OutreachReply.Angle {
+    /// FR/EN label rendered on the tab pill, sourced from
+    /// `lead.reply.angle.*` in the Localizable.xcstrings catalog.
+    var localizedLabel: String {
+        switch self {
+        case .direct:
+            return String(localized: "lead.reply.angle.direct")
+        case .consultative:
+            return String(localized: "lead.reply.angle.consultative")
+        case .similarCase:
+            return String(localized: "lead.reply.angle.similarCase")
+        }
     }
 }
 
