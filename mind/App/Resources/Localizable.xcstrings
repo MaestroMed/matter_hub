@@ -11787,6 +11787,342 @@
         "en": { "stringUnit": { "state": "translated", "value": "Your cockpit at night." } },
         "fr": { "stringUnit": { "state": "translated", "value": "Dashboard la nuit" } }
       }
+    },
+    "settings.voiceClone.section": {
+      "comment": "v1.0-alpha.18 · Settings section title for the ElevenLabs voice clone.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Voice clone" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voix clonée" } }
+      }
+    },
+    "settings.voiceClone.subtitle": {
+      "comment": "v1.0-alpha.18 · Settings voice clone subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Record a voice sample once. Every audit pitch then plays in your own voice via ElevenLabs." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Enregistre ta voix une fois. Chaque pitch d'audit pourra ensuite être lu dans ta voix via ElevenLabs." } }
+      }
+    },
+    "settings.voiceClone.detail": {
+      "comment": "v1.0-alpha.18 · Settings voice clone row detail string.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sample stays on device until upload. Audio synthesis powered by ElevenLabs." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "L'échantillon reste sur l'appareil jusqu'à l'envoi. Synthèse audio via ElevenLabs." } }
+      }
+    },
+    "settings.voiceClone.cloned.label": {
+      "comment": "v1.0-alpha.18 · Settings voice clone status label when a voice is already cloned (%@ = display name).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Voice cloned: %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voix clonée : %@" } }
+      }
+    },
+    "settings.voiceClone.notCloned.label": {
+      "comment": "v1.0-alpha.18 · Settings voice clone status label when no voice has been cloned yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No voice cloned yet" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune voix clonée" } }
+      }
+    },
+    "settings.voiceClone.cta.start": {
+      "comment": "v1.0-alpha.18 · Settings CTA to open the voice clone setup sheet for the first time.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Clone my voice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cloner ma voix" } }
+      }
+    },
+    "settings.voiceClone.cta.manage": {
+      "comment": "v1.0-alpha.18 · Settings CTA to manage / re-clone an already-cloned voice.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Manage voice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Gérer la voix" } }
+      }
+    },
+    "voiceClone.title": {
+      "comment": "v1.0-alpha.18 · VoiceCloneSetupSheet header title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Voice clone" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voix clonée" } }
+      }
+    },
+    "voiceClone.subtitle": {
+      "comment": "v1.0-alpha.18 · VoiceCloneSetupSheet header subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ElevenLabs · five steps · stays on device" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ElevenLabs · cinq étapes · reste sur l'appareil" } }
+      }
+    },
+    "voiceClone.step.token": {
+      "comment": "v1.0-alpha.18 · VoiceCloneSetupSheet step 1 — token paste.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "STEP 1 — API KEY" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ÉTAPE 1 — CLÉ API" } }
+      }
+    },
+    "voiceClone.token.subtitle": {
+      "comment": "v1.0-alpha.18 · Token field caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Paste your ElevenLabs personal API key. Stored in the iOS Keychain." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Colle ta clé API ElevenLabs. Conservée dans le Keychain iOS." } }
+      }
+    },
+    "voiceClone.token.status.ok": {
+      "comment": "v1.0-alpha.18 · Token status label when validation succeeded.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Connected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connectée" } }
+      }
+    },
+    "voiceClone.token.status.fail": {
+      "comment": "v1.0-alpha.18 · Token status label when validation failed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Token rejected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé rejetée" } }
+      }
+    },
+    "voiceClone.step.voice": {
+      "comment": "v1.0-alpha.18 · Step 2 — existing voices check.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "STEP 2 — EXISTING VOICES" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ÉTAPE 2 — VOIX EXISTANTES" } }
+      }
+    },
+    "voiceClone.voice.alreadyCloned": {
+      "comment": "v1.0-alpha.18 · Status when a Mehdi voice is already cloned.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Voice already cloned" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voix déjà clonée" } }
+      }
+    },
+    "voiceClone.voice.recloneCTA": {
+      "comment": "v1.0-alpha.18 · Re-clone CTA on the existing-voice card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Re-clone" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Re-cloner" } }
+      }
+    },
+    "voiceClone.voice.loading": {
+      "comment": "v1.0-alpha.18 · Existing-voices loading caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Looking for existing voices…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Recherche des voix existantes…" } }
+      }
+    },
+    "voiceClone.voice.noMatch": {
+      "comment": "v1.0-alpha.18 · Existing-voices result when no matching voice exists.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No matching voice yet. Record a sample below to clone yours." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune voix existante. Enregistre un échantillon ci-dessous pour cloner la tienne." } }
+      }
+    },
+    "voiceClone.step.sample": {
+      "comment": "v1.0-alpha.18 · Step 3 — voice sample recording.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "STEP 3 — VOICE SAMPLE" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ÉTAPE 3 — ÉCHANTILLON VOCAL" } }
+      }
+    },
+    "voiceClone.sample.subtitle": {
+      "comment": "v1.0-alpha.18 · Sample step caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Speak naturally for 60–180 s. The longer the sample, the better the clone." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Parle naturellement pendant 60–180 s. Plus l'échantillon est long, meilleur sera le clone." } }
+      }
+    },
+    "voiceClone.record.start": {
+      "comment": "v1.0-alpha.18 · Start recording CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Start recording" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Démarrer l'enregistrement" } }
+      }
+    },
+    "voiceClone.record.stop": {
+      "comment": "v1.0-alpha.18 · Stop recording CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stop" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Arrêter" } }
+      }
+    },
+    "voiceClone.record.delete": {
+      "comment": "v1.0-alpha.18 · Delete sample CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete sample" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Supprimer l'échantillon" } }
+      }
+    },
+    "voiceClone.step.upload": {
+      "comment": "v1.0-alpha.18 · Step 4 — sample upload.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "STEP 4 — UPLOAD" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ÉTAPE 4 — ENVOI" } }
+      }
+    },
+    "voiceClone.upload.label": {
+      "comment": "v1.0-alpha.18 · Upload section caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Upload your sample to ElevenLabs to receive a voice ID." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Envoie ton échantillon à ElevenLabs pour obtenir l'identifiant de voix." } }
+      }
+    },
+    "voiceClone.upload.button": {
+      "comment": "v1.0-alpha.18 · Upload CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Clone my voice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cloner ma voix" } }
+      }
+    },
+    "voiceClone.upload.inflight": {
+      "comment": "v1.0-alpha.18 · Upload spinner caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Uploading sample…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Envoi de l'échantillon…" } }
+      }
+    },
+    "voiceClone.step.test": {
+      "comment": "v1.0-alpha.18 · Step 5 — voice test.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "STEP 5 — TEST" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "ÉTAPE 5 — TEST" } }
+      }
+    },
+    "voiceClone.test.subtitle": {
+      "comment": "v1.0-alpha.18 · Test step caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Type a short sentence and listen to your cloned voice." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Saisis une phrase courte et écoute ta voix clonée." } }
+      }
+    },
+    "voiceClone.test.placeholder": {
+      "comment": "v1.0-alpha.18 · Default sentence pre-filled into the voice test text editor.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hello, this is Mehdi. Welcome to your audit." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bonjour, c'est Mehdi. Bienvenue dans votre audit." } }
+      }
+    },
+    "voiceClone.test.play": {
+      "comment": "v1.0-alpha.18 · Play test CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Test the voice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tester la voix" } }
+      }
+    },
+    "voiceClone.test.playing": {
+      "comment": "v1.0-alpha.18 · Test playback in-flight caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generating…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Génération en cours…" } }
+      }
+    },
+    "audit.pitchAudio.section.title": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pitch audio" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pitch audio" } }
+      }
+    },
+    "audit.pitchAudio.subtitle": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio card subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Play the pitch in your own voice" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lis le pitch dans ta voix" } }
+      }
+    },
+    "audit.pitchAudio.voice.label": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio voice display label (%@ = voice name).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Voice: %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voix : %@" } }
+      }
+    },
+    "audit.pitchAudio.generate.button": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio generate CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generate pitch audio" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Générer le pitch audio" } }
+      }
+    },
+    "audit.pitchAudio.regenerate.button": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio regenerate CTA.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Regenerate" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Régénérer" } }
+      }
+    },
+    "audit.pitchAudio.generating": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio generation in-flight caption.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Synthesizing…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Synthèse en cours…" } }
+      }
+    },
+    "audit.pitchAudio.player.play": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio playback play button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Play" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lire" } }
+      }
+    },
+    "audit.pitchAudio.player.pause": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio playback pause button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pause" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Pause" } }
+      }
+    },
+    "audit.pitchAudio.empty.title": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio empty-state title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Clone your voice first" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clone ta voix d'abord" } }
+      }
+    },
+    "audit.pitchAudio.empty.hint": {
+      "comment": "v1.0-alpha.18 · AuditSheet pitch audio empty-state hint.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open Settings → Voice clone to record a sample, then come back to generate a personalised pitch audio." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Va dans Réglages → Voix clonée pour enregistrer un échantillon, puis reviens générer un pitch audio personnalisé." } }
+      }
     }
   }
 }

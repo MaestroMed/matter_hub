@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AVFoundation
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import AuditKit
@@ -11,6 +12,7 @@ import LiveBroadcastKit
 import NotionKit
 import Settings
 import VisualKit
+import VoiceCloneKit
 
 struct AuditSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -60,6 +62,17 @@ struct AuditSheet: View {
     // exactly how each number was derived before pitching the
     // client.
     @State private var roiMethodologyShown: Bool = false
+
+    // v1.0-alpha.18 — Per-audit pitch audio state. Gates the
+    // "Générer le pitch audio" CTA / "Lire" playback button, holds
+    // the currently-playing AVAudioPlayer so it survives across
+    // body re-renders, and surfaces any synthesis error inline so
+    // Mehdi sees what went wrong without a modal trip.
+    @State private var pitchAudioGenerating: Bool = false
+    @State private var pitchAudioPath: String? = nil
+    @State private var pitchAudioError: String? = nil
+    @State private var pitchAudioPlayer: AVAudioPlayer?
+    @State private var pitchAudioPlaying: Bool = false
 
     @FocusState private var urlFocused: Bool
 
@@ -664,6 +677,15 @@ struct AuditSheet: View {
 
             section("Pitch prêt à envoyer") {
                 pitchCard(report)
+            }
+
+            // v1.0-alpha.18 — Pitch audio section. Mounted between
+            // the written pitch + the save bar so Mehdi can either
+            // listen to the synthesized pitch in his own voice (when
+            // a voice has been cloned) OR see the hint pointing him
+            // back to Settings (when no voice yet).
+            section(String(localized: "audit.pitchAudio.section.title", bundle: .main)) {
+                pitchAudioCard(report)
             }
 
             saveBar(for: report)
@@ -1804,6 +1826,227 @@ struct AuditSheet: View {
         let min = bet.budgetMinEUR / 1000
         let max = bet.budgetMaxEUR / 1000
         return "€\(min)k – €\(max)k"
+    }
+
+    // MARK: - v1.0-alpha.18 — Pitch audio (ElevenLabs voice clone)
+
+    @ViewBuilder
+    private func pitchAudioCard(_ report: AuditReport) -> some View {
+        if let voiceID = MINDPreferences.currentElevenLabsVoiceID(), !voiceID.isEmpty {
+            LiquidCard(cornerRadius: 18) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(LiquidPalette.iris.opacity(0.18))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "waveform")
+                                .font(.system(.callout, design: .rounded, weight: .semibold))
+                                .foregroundStyle(LiquidPalette.iris)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("audit.pitchAudio.subtitle", bundle: .main)
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            let voiceName = MINDPreferences.currentElevenLabsVoiceName() ?? "Mehdi Nafaa"
+                            Text(String(
+                                format: String(localized: "audit.pitchAudio.voice.label", bundle: .main),
+                                voiceName
+                            ))
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+
+                    if let error = pitchAudioError {
+                        Text(error)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.red)
+                    }
+
+                    HStack(spacing: 10) {
+                        if pitchAudioGenerating {
+                            ProgressView().controlSize(.small)
+                            Text("audit.pitchAudio.generating", bundle: .main)
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        } else if let path = pitchAudioPath ?? report.audioPitchMP3Path,
+                                  !path.isEmpty {
+                            LiquidButton(
+                                title: pitchAudioPlaying
+                                    ? String(localized: "audit.pitchAudio.player.pause", bundle: .main)
+                                    : String(localized: "audit.pitchAudio.player.play", bundle: .main),
+                                systemImage: pitchAudioPlaying ? "pause.fill" : "play.fill",
+                                haptic: .select
+                            ) {
+                                togglePitchAudio(path: path)
+                            }
+                            Button {
+                                regeneratePitchAudio(for: report)
+                            } label: {
+                                Label(
+                                    String(localized: "audit.pitchAudio.regenerate.button", bundle: .main),
+                                    systemImage: "arrow.clockwise"
+                                )
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            LiquidButton(
+                                title: String(localized: "audit.pitchAudio.generate.button", bundle: .main),
+                                systemImage: "sparkles",
+                                haptic: .success
+                            ) {
+                                generatePitchAudio(for: report)
+                            }
+                        }
+                        Spacer()
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            LiquidCard(cornerRadius: 18) {
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: "mic.fill")
+                        .font(.system(.title3))
+                        .foregroundStyle(LiquidPalette.iris)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("audit.pitchAudio.empty.title", bundle: .main)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        Text("audit.pitchAudio.empty.hint", bundle: .main)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func auditCacheKey(_ report: AuditReport) -> UUID {
+        // Derive a deterministic UUID from the audit's URL host +
+        // generation timestamp so re-opening a saved audit hits the
+        // same cache slot. NodeID isn't surfaced on AuditReport so
+        // we mint the cache key from the public-facing identity
+        // fields the report already carries.
+        let host = report.client.url.host(percentEncoded: false) ?? report.client.url.absoluteString
+        let stamp = ISO8601DateFormatter().string(from: report.generatedAt)
+        let raw = "\(host)|\(stamp)"
+        // Hash to a UUID-shaped Data. Deterministic for the same
+        // host + generatedAt pair (idempotent across launches).
+        var hasher = Hasher()
+        hasher.combine(raw)
+        let value = UInt64(bitPattern: Int64(hasher.finalize()))
+        return UUID(uuid: (
+            UInt8((value >> 56) & 0xff),
+            UInt8((value >> 48) & 0xff),
+            UInt8((value >> 40) & 0xff),
+            UInt8((value >> 32) & 0xff),
+            UInt8((value >> 24) & 0xff),
+            UInt8((value >> 16) & 0xff),
+            UInt8((value >> 8) & 0xff),
+            UInt8(value & 0xff),
+            UInt8((value >> 56) & 0xff),
+            UInt8((value >> 48) & 0xff),
+            UInt8((value >> 40) & 0xff),
+            UInt8((value >> 32) & 0xff),
+            UInt8((value >> 24) & 0xff),
+            UInt8((value >> 16) & 0xff),
+            UInt8((value >> 8) & 0xff),
+            UInt8(value & 0xff)
+        ))
+    }
+
+    private func generatePitchAudio(for report: AuditReport) {
+        guard let voiceID = MINDPreferences.currentElevenLabsVoiceID(), !voiceID.isEmpty else { return }
+        pitchAudioGenerating = true
+        pitchAudioError = nil
+        MINDTelemetry.info("audit.pitchAudio.generating", data: ["voiceID": voiceID])
+        let id = auditCacheKey(report)
+        let text = report.pitch
+        Task {
+            // Reuse cached MP3 if we already synthesized this audit.
+            if let cached = await AuditPitchAudioStore.shared.cachedURL(for: id) {
+                await MainActor.run {
+                    pitchAudioPath = cached.lastPathComponent
+                    pitchAudioGenerating = false
+                    MINDTelemetry.info("audit.pitchAudio.cached", data: ["bytes": "\((try? Data(contentsOf: cached).count) ?? 0)"])
+                }
+                return
+            }
+            do {
+                let bytes = try await ElevenLabsClient.shared.synthesize(
+                    voiceID: voiceID,
+                    text: text
+                )
+                let url = try await AuditPitchAudioStore.shared.save(mp3Data: bytes, for: id)
+                await MainActor.run {
+                    pitchAudioPath = url.lastPathComponent
+                    pitchAudioGenerating = false
+                    LiquidHaptics.success()
+                    MINDTelemetry.info("audit.pitchAudio.generated", data: ["bytes": "\(bytes.count)"])
+                }
+            } catch {
+                await MainActor.run {
+                    pitchAudioGenerating = false
+                    pitchAudioError = String(describing: error)
+                    LiquidHaptics.error()
+                    MINDTelemetry.warning("voiceClone.synthesis.failed", data: ["error": String(describing: error)])
+                }
+            }
+        }
+    }
+
+    private func regeneratePitchAudio(for report: AuditReport) {
+        let id = auditCacheKey(report)
+        Task {
+            await AuditPitchAudioStore.shared.clear(for: id)
+            await MainActor.run {
+                pitchAudioPath = nil
+                pitchAudioPlayer?.stop()
+                pitchAudioPlaying = false
+            }
+            await MainActor.run {
+                generatePitchAudio(for: report)
+            }
+        }
+    }
+
+    private func togglePitchAudio(path: String) {
+        if pitchAudioPlaying {
+            pitchAudioPlayer?.pause()
+            pitchAudioPlaying = false
+            return
+        }
+        if let player = pitchAudioPlayer {
+            player.play()
+            pitchAudioPlaying = true
+            MINDTelemetry.info("audit.pitchAudio.played", data: [:])
+            return
+        }
+        guard let docs = try? FileManager.default.url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: false
+        ) else { return }
+        let url = docs.appendingPathComponent("audit-audio").appendingPathComponent(path)
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [])
+            try AVAudioSession.sharedInstance().setActive(true, options: [])
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.prepareToPlay()
+            player.play()
+            pitchAudioPlayer = player
+            pitchAudioPlaying = true
+            MINDTelemetry.info("audit.pitchAudio.played", data: ["path": path])
+        } catch {
+            pitchAudioError = String(describing: error)
+        }
     }
 
     @ViewBuilder

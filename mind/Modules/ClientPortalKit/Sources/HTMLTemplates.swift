@@ -83,6 +83,13 @@ public enum HTMLTemplates {
             strategicBetsSection(report: report),
             hiddenRisksSection(report: report),
             pitchSection(report: report, brand: brand),
+            // v1.0-alpha.18 — Voice pitch audio. Sits between the
+            // written pitch and the contact CTA so the client first
+            // reads the pitch, then hears it in Mehdi's voice, then
+            // taps "Réserver un appel". Renders an empty string when
+            // no audio has been generated yet (legacy portals stay
+            // byte-identical).
+            pitchAudioSection(report: report),
             contactSection(report: report, brand: brand),
             footerSection(report: report, brand: brand),
         ].joined(separator: "\n")
@@ -575,6 +582,43 @@ public enum HTMLTemplates {
                 <div class="pitch__byline-title">\(title)</div>
               </div>
             </div>
+          </div>
+        </section>
+        """
+    }
+
+    /// v1.0-alpha.18 — Voice pitch audio section. Reads the MP3 bytes
+    /// from `Documents/audit-audio/<audioPitchMP3Path>` when present
+    /// and inlines them as a base64 data URL inside an
+    /// `<audio controls preload="metadata">` element so the portal
+    /// stays single-folder self-contained (no separate media file
+    /// the client has to download alongside `index.html`). Renders an
+    /// empty string when `report.audioPitchMP3Path` is nil so legacy
+    /// portals stay byte-identical to the pre-v1.0-alpha.18 baseline.
+    public static func pitchAudioSection(report: AuditReport) -> String {
+        guard let path = report.audioPitchMP3Path else { return "" }
+        guard
+            let docs = try? FileManager.default.url(
+                for: .documentDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: false
+            )
+        else { return "" }
+        let url = docs.appendingPathComponent("audit-audio").appendingPathComponent(path)
+        guard
+            let data = try? Data(contentsOf: url),
+            !data.isEmpty
+        else { return "" }
+        let base64 = data.base64EncodedString()
+        return """
+        <section class="pitchAudio reveal" data-reveal="up">
+          <div class="pitchAudio__inner">
+            <div class="pitchAudio__eyebrow">07 — VOIX DU CONSULTANT</div>
+            <h2 class="pitchAudio__title">Écoute le pitch en voix de Mehdi</h2>
+            <audio class="pitchAudio__player" controls preload="metadata" src="data:audio/mpeg;base64,\(base64)">
+              Votre navigateur ne supporte pas la lecture audio.
+            </audio>
           </div>
         </section>
         """
@@ -1188,6 +1232,12 @@ public enum HTMLTemplates {
         .pitch__portrait{width:54px;height:54px;border-radius:50%;object-fit:cover;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;letter-spacing:0.04em;}
         .pitch__byline-name{font-size:15px;font-weight:600;color:var(--ink);}
         .pitch__byline-title{font-size:13px;color:var(--ink-quiet);}
+        /* v1.0-alpha.18 — Pitch audio (ElevenLabs voice clone) */
+        .pitchAudio{max-width:var(--max-w-prose);}
+        .pitchAudio__inner{background:linear-gradient(160deg,rgba(107,93,211,0.14) 0%,rgba(168,230,224,0.08) 100%);border:1px solid var(--card-stroke);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:var(--radius-lg);padding:32px 28px;}
+        .pitchAudio__eyebrow{font-size:11px;font-weight:700;color:var(--accent-2);letter-spacing:0.18em;margin-bottom:10px;}
+        .pitchAudio__title{font-size:clamp(22px,2.4vw,28px);font-weight:700;letter-spacing:-0.02em;margin-bottom:18px;color:var(--ink);}
+        .pitchAudio__player{display:block;width:100%;height:48px;}
         /* Contact */
         .contact{text-align:center;padding-bottom:140px;}
         .contact__title{font-size:clamp(40px,7vw,80px);font-weight:800;letter-spacing:-0.04em;margin-bottom:18px;background:linear-gradient(180deg,#fff 0%,var(--accent-2) 130%);-webkit-background-clip:text;background-clip:text;color:transparent;}

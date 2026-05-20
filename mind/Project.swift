@@ -30,7 +30,12 @@ let appTarget: Target = .target(
         // (`public.app-category.productivity` is the canonical UTI).
         "LSApplicationCategoryType": "public.app-category.productivity",
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
-        "NSMicrophoneUsageDescription": "MIND uses your microphone to capture voice notes and transcribe them on-device.",
+        // v1.0-alpha.18 — Extended copy: MIND records a one-time voice
+        // sample for the ElevenLabs voice clone (Settings → Voix
+        // clonée). The sample stays on the device until the user
+        // taps "Cloner ma voix"; on tap, the WAV bytes leave the
+        // device only to the ElevenLabs API. No background recording.
+        "NSMicrophoneUsageDescription": "MIND enregistre un échantillon de ta voix une fois pour générer ensuite tes pitches audio dans ta voix via ElevenLabs.",
         "NSSpeechRecognitionUsageDescription": "MIND transcribes your voice locally so you can capture thoughts hands-free.",
         "NSCameraUsageDescription": "MIND scans documents and images so they become part of your second brain.",
         "NSPhotoLibraryUsageDescription": "MIND can pull photos to enrich your knowledge graph.",
@@ -243,6 +248,14 @@ let testTarget: Target = .target(
         // value types defined in ProjectHealthKit. The actor's
         // HTTP path is exercised end-to-end via the simulator screenshot.
         .target(name: Module.bootstrapKit.rawValue),
+        // v1.0-alpha.18 — VoiceCloneKit tests cover the pure helpers
+        // of `ElevenLabsClient` (multipart body byte shape, synthesis
+        // payload JSON shape, ElevenLabsVoice JSON decoding), the
+        // Keychain round-trip for `ElevenLabsTokenStore` under a
+        // skip-on-Simulator guard, and the
+        // `VoiceSampleRecorderState` enum + `AuditPitchAudioStore`
+        // actor on-disk round-trip.
+        .target(name: Module.voiceCloneKit.rawValue),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0",

@@ -26,6 +26,7 @@ public enum Module: String, CaseIterable {
     case watchCaptureKit = "WatchCaptureKit"
     case visionSpatialKit = "VisionSpatialKit"
     case projectHealthKit = "ProjectHealthKit"
+    case voiceCloneKit = "VoiceCloneKit"
 
     public var bundleId: String {
         "app.mind.ios.\(rawValue.lowercased())"
@@ -95,6 +96,14 @@ public enum Module: String, CaseIterable {
                 // its green/red dot status, mirroring the Notion /
                 // Linear sections.
                 .target(name: Module.projectHealthKit.rawValue),
+                // v1.0-alpha.18 — Settings owns the new "Voice Clone"
+                // entry point: a "Configurer la voix" row that pushes
+                // the `VoiceCloneSetupSheet` modal. Depending on
+                // VoiceCloneKit here means Settings can talk to
+                // `ElevenLabsTokenStore` + `ElevenLabsClient` from
+                // the row's tap action without reaching back across
+                // module boundaries.
+                .target(name: Module.voiceCloneKit.rawValue),
             ]
         case .chat:
             return [
@@ -360,6 +369,26 @@ public enum Module: String, CaseIterable {
                 .target(name: Module.auditKit.rawValue),
                 .target(name: Module.intelligence.rawValue),
                 .target(name: Module.designSystem.rawValue),
+            ]
+        case .voiceCloneKit:
+            // v1.0-alpha.18 — ElevenLabs Voice Clone. Owns the
+            // Keychain wrapper for the ElevenLabs API key
+            // (`ElevenLabsTokenStore`), the actor that talks to the
+            // ElevenLabs HTTP API (`ElevenLabsClient`), the
+            // AVAudioRecorder-backed sample capture
+            // (`VoiceSampleRecorder`), and the on-disk MP3 cache
+            // (`AuditPitchAudioStore`). Depends on GraphCore for
+            // `MINDTelemetry` breadcrumbs (`voiceClone.token.saved` /
+            // `voiceClone.sample.recorded` / `voiceClone.upload.*` /
+            // `voiceClone.synthesis.*` / `audit.pitchAudio.*`). No
+            // AuditKit dep — the AuditPitchAudioStore is keyed by
+            // `UUID` (the audit ID the App layer passes in) so the
+            // store stays pure-data and reusable from any future
+            // surface (Daily Brief read-aloud, share-card audio,
+            // …) without circular linkage. No DesignSystem dep —
+            // the SwiftUI surface lives in the App target.
+            return [
+                .target(name: Module.graphCore.rawValue),
             ]
         case .projectHealthKit:
             // v1.0-alpha.8 — Vercel + GitHub + Lighthouse live integration.

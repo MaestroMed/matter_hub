@@ -42,6 +42,14 @@ public final class MINDPreferences {
         static let consultantIBAN            = "mind.pref.consultantIBAN"
         static let consultantVATNumber       = "mind.pref.consultantVATNumber"
         static let consultantAddress         = "mind.pref.consultantAddress"
+        // v1.0-alpha.18 — ElevenLabs voice clone. The user clones
+        // their voice once via the VoiceCloneSetupSheet — we persist
+        // the returned `voice_id` here so every audit can synthesize
+        // its pitch in that voice without re-uploading the sample.
+        // The display name lets Settings render "Voix : Mehdi Nafaa
+        // ✓" without an extra ElevenLabs API call on every launch.
+        static let elevenLabsVoiceID         = "mind.pref.elevenLabsVoiceID"
+        static let elevenLabsVoiceName       = "mind.pref.elevenLabsVoiceName"
     }
 
     /// Shared UserDefaults the audit / focus modules can read without
@@ -220,6 +228,29 @@ public final class MINDPreferences {
         }
     }
 
+    /// v1.0-alpha.18 — Cloned voice ID returned by the ElevenLabs
+    /// `POST /v1/voices/add` round-trip the first time the user runs
+    /// the VoiceCloneSetupSheet. Empty default = "no voice cloned yet"
+    /// and the AuditSheet pitch audio section surfaces a hint card
+    /// pointing the user back to Settings.
+    public var elevenLabsVoiceID: String {
+        didSet {
+            let trimmed = elevenLabsVoiceID.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.elevenLabsVoiceID)
+        }
+    }
+
+    /// v1.0-alpha.18 — Display name of the cloned voice (e.g. "Mehdi
+    /// Nafaa") so the Settings row + status badge render without
+    /// re-querying the ElevenLabs `/v1/voices` endpoint on every
+    /// launch.
+    public var elevenLabsVoiceName: String {
+        didSet {
+            let trimmed = elevenLabsVoiceName.trimmingCharacters(in: .whitespacesAndNewlines)
+            defaults.set(trimmed, forKey: Key.elevenLabsVoiceName)
+        }
+    }
+
     // MARK: - Init
 
     public init(
@@ -274,6 +305,13 @@ public final class MINDPreferences {
         self.consultantIBAN        = suite.string(forKey: Key.consultantIBAN) ?? ""
         self.consultantVATNumber   = suite.string(forKey: Key.consultantVATNumber) ?? ""
         self.consultantAddress     = suite.string(forKey: Key.consultantAddress) ?? ""
+
+        // v1.0-alpha.18 — Voice clone state. Empty defaults =
+        // "voice not cloned yet"; the AuditSheet pitch audio
+        // section surfaces a hint pointing back to Settings until
+        // the user has flowed through the VoiceCloneSetupSheet.
+        self.elevenLabsVoiceID    = suite.string(forKey: Key.elevenLabsVoiceID) ?? ""
+        self.elevenLabsVoiceName  = suite.string(forKey: Key.elevenLabsVoiceName) ?? ""
     }
 
     // MARK: - Static convenience for non-Observable consumers
@@ -417,6 +455,32 @@ public final class MINDPreferences {
     ) -> String? {
         let suite = UserDefaults(suiteName: suiteName) ?? .standard
         let value = suite.string(forKey: Key.consultantAddress)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v1.0-alpha.18 — Non-Observable accessor for the cloned voice
+    /// ID. Lets AuditSheet (and any future surface — Daily Brief,
+    /// outreach — that wants to read the pitch in Mehdi's voice)
+    /// check whether a voice has been cloned without holding a
+    /// reference to the @MainActor instance. Returns nil when empty
+    /// so the caller can use `if let voiceID = …` to branch.
+    public static func currentElevenLabsVoiceID(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.elevenLabsVoiceID)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value?.isEmpty == false) ? value : nil
+    }
+
+    /// v1.0-alpha.18 — Non-Observable accessor for the cloned voice
+    /// display name.
+    public static func currentElevenLabsVoiceName(
+        suiteName: String = MINDPreferences.sharedSuiteName
+    ) -> String? {
+        let suite = UserDefaults(suiteName: suiteName) ?? .standard
+        let value = suite.string(forKey: Key.elevenLabsVoiceName)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return (value?.isEmpty == false) ? value : nil
     }

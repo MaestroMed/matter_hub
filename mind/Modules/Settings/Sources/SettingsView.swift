@@ -14,6 +14,7 @@ import NotionKit
 import ProjectHealthKit
 import RemindersKit
 import VisualKit
+import VoiceCloneKit
 
 public struct SettingsView: View {
     /// v0.20 — Used by the Beta section to open the TestFlight
@@ -131,8 +132,20 @@ public struct SettingsView: View {
     /// so non-cockpit hosts (tests, previews) skip the row entirely.
     private let onPresentBulkImport: (() -> Void)?
 
-    public init(onPresentBulkImport: (() -> Void)? = nil) {
+    /// v1.0-alpha.18 — Voice Clone. Same surface as the bulk import
+    /// hook above: the `VoiceCloneSetupSheet` lives in the App
+    /// target (depends on `AVFoundation` for the AVAudioPlayer +
+    /// AVAudioRecorder bridges) so SettingsView only needs to know
+    /// when to invoke it. Optional so non-cockpit hosts (tests,
+    /// previews) skip the row.
+    private let onPresentVoiceClone: (() -> Void)?
+
+    public init(
+        onPresentBulkImport: (() -> Void)? = nil,
+        onPresentVoiceClone: (() -> Void)? = nil
+    ) {
         self.onPresentBulkImport = onPresentBulkImport
+        self.onPresentVoiceClone = onPresentVoiceClone
     }
 
     public var body: some View {
@@ -224,6 +237,8 @@ public struct SettingsView: View {
                 notionSection
 
                 linearSection
+
+                voiceCloneSection
 
                 integrationsDevSection
 
@@ -825,6 +840,64 @@ public struct SettingsView: View {
             hiddenRisks: [],
             pitch: ""
         )
+    }
+
+    // MARK: - Voice Clone (v1.0-alpha.18)
+
+    /// Surfaces the ElevenLabs voice-clone entry point as a row in
+    /// Settings. Tapping the CTA forwards to the host App's
+    /// `VoiceCloneSetupSheet` (the heavy AV-recording + multi-step
+    /// flow can't live in this module because Settings doesn't link
+    /// `AVFoundation` for the recorder + player). When a voice has
+    /// already been cloned, the row displays a green-dot
+    /// "Voix Mehdi Nafaa ✓" badge.
+    private var voiceCloneSection: some View {
+        section(localized: "settings.voiceClone.section") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("settings.voiceClone.subtitle", bundle: .main)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    Image(systemName: voiceCloneIsConfigured ? "checkmark.seal.fill" : "mic.fill")
+                        .font(.system(.title3))
+                        .foregroundStyle(voiceCloneIsConfigured ? Color.green : LiquidPalette.iris)
+                    VStack(alignment: .leading, spacing: 2) {
+                        if voiceCloneIsConfigured {
+                            Text(String(
+                                format: String(localized: "settings.voiceClone.cloned.label", bundle: .main),
+                                voiceCloneDisplayName
+                            ))
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        } else {
+                            Text("settings.voiceClone.notCloned.label", bundle: .main)
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        }
+                        Text("settings.voiceClone.detail", bundle: .main)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                if onPresentVoiceClone != nil {
+                    LiquidButton(
+                        title: voiceCloneIsConfigured
+                            ? String(localized: "settings.voiceClone.cta.manage", bundle: .main)
+                            : String(localized: "settings.voiceClone.cta.start", bundle: .main),
+                        systemImage: "waveform"
+                    ) {
+                        onPresentVoiceClone?()
+                    }
+                }
+            }
+        }
+    }
+
+    private var voiceCloneIsConfigured: Bool {
+        !(MINDPreferences.currentElevenLabsVoiceID() ?? "").isEmpty
+    }
+
+    private var voiceCloneDisplayName: String {
+        MINDPreferences.currentElevenLabsVoiceName() ?? "Mehdi Nafaa"
     }
 
     // MARK: - Linear sync (v0.12)

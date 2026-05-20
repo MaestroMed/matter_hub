@@ -67,6 +67,15 @@ public struct AuditReport: Sendable, Codable, Hashable {
     /// byte-identically.
     public var repoFindings: RepositoryAuditFindings?
 
+    /// v1.0-alpha.18 — Path (relative to `Documents/audit-audio/`) of
+    /// the synthesized ElevenLabs MP3 pitch in Mehdi's voice. Nil
+    /// until the user taps "Générer le pitch audio" on the report
+    /// view; populated after a successful round-trip so the Client
+    /// Portal HTML builder can inline an `<audio>` element with the
+    /// MP3 bytes. Kept optional + Codable-backwards-compatible so
+    /// every legacy persisted report still decodes cleanly.
+    public var audioPitchMP3Path: String?
+
     public init(
         client: AuditClient,
         generatedAt: Date = .now,
@@ -80,7 +89,8 @@ public struct AuditReport: Sendable, Codable, Hashable {
         hiddenRisks: [HiddenRisk] = [],
         pitch: String,
         mockups: [RedesignMockup] = [],
-        repoFindings: RepositoryAuditFindings? = nil
+        repoFindings: RepositoryAuditFindings? = nil,
+        audioPitchMP3Path: String? = nil
     ) {
         self.client = client
         self.generatedAt = generatedAt
@@ -95,6 +105,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.pitch = pitch
         self.mockups = mockups
         self.repoFindings = repoFindings
+        self.audioPitchMP3Path = audioPitchMP3Path
     }
 
     // MARK: - Codable (backwards-compatible mockups + repoFindings)
@@ -107,7 +118,8 @@ public struct AuditReport: Sendable, Codable, Hashable {
     private enum CodingKeys: String, CodingKey {
         case client, generatedAt, persona, scoring, performance,
              findings, synthesis, quickWins, strategicBets,
-             hiddenRisks, pitch, mockups, repoFindings
+             hiddenRisks, pitch, mockups, repoFindings,
+             audioPitchMP3Path
     }
 
     public init(from decoder: Decoder) throws {
@@ -125,6 +137,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.pitch         = try c.decode(String.self, forKey: .pitch)
         self.mockups       = try c.decodeIfPresent([RedesignMockup].self, forKey: .mockups) ?? []
         self.repoFindings  = try c.decodeIfPresent(RepositoryAuditFindings.self, forKey: .repoFindings)
+        self.audioPitchMP3Path = try c.decodeIfPresent(String.self, forKey: .audioPitchMP3Path)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -142,6 +155,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         try c.encode(pitch, forKey: .pitch)
         try c.encode(mockups, forKey: .mockups)
         try c.encodeIfPresent(repoFindings, forKey: .repoFindings)
+        try c.encodeIfPresent(audioPitchMP3Path, forKey: .audioPitchMP3Path)
     }
 
     // MARK: - Nested types

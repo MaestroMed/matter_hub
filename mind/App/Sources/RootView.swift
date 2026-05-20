@@ -50,6 +50,13 @@ struct RootView: View {
     /// Settings's "Importer mes repos" CTA flips this true; the
     /// fullScreenCover renders `BulkImportSheet` over the cockpit.
     @State private var showBulkImport: Bool = false
+
+    /// v1.0-alpha.18 — Voice clone sheet toggle. SettingsView's
+    /// `onPresentVoiceClone` closure flips this; the sheet itself
+    /// lives in the App target (`VoiceCloneSetupSheet.swift`) so
+    /// the Settings module doesn't need to link AVFoundation +
+    /// the recorder bridges.
+    @State private var showVoiceClone: Bool = false
     /// Sidebar visibility on regular-width layouts. SwiftUI manages it
     /// but binding lets us collapse the sidebar after the user picks
     /// a row on iPad portrait, where the auto behaviour can leave the
@@ -112,6 +119,15 @@ struct RootView: View {
         }
         .sheet(isPresented: $showBulkImport) {
             BulkImportSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
+        }
+        // v1.0-alpha.18 — Voice Clone Setup sheet. Walks Mehdi
+        // through the ElevenLabs API-key paste, sample recording,
+        // upload, and test playback in five visible steps.
+        .sheet(isPresented: $showVoiceClone) {
+            VoiceCloneSetupSheet()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(.ultraThinMaterial)
@@ -429,7 +445,10 @@ struct RootView: View {
         case .pipeline:
             PipelineView()
         case .settings:
-            SettingsView(onPresentBulkImport: { showBulkImport = true })
+            SettingsView(
+                onPresentBulkImport: { showBulkImport = true },
+                onPresentVoiceClone: { showVoiceClone = true }
+            )
         }
     }
 }
