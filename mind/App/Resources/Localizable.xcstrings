@@ -12123,6 +12123,110 @@
         "en": { "stringUnit": { "state": "translated", "value": "Open Settings → Voice clone to record a sample, then come back to generate a personalised pitch audio." } },
         "fr": { "stringUnit": { "state": "translated", "value": "Va dans Réglages → Voix clonée pour enregistrer un échantillon, puis reviens générer un pitch audio personnalisé." } }
       }
+    },
+    "spatial.tab.leads": {
+      "comment": "v1.0-alpha.19 · visionOS spatial cockpit · Leads tab label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads" } }
+      }
+    },
+    "spatial.tab.projects": {
+      "comment": "v1.0-alpha.19 · visionOS spatial cockpit · Projects tab label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Projects" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Projets" } }
+      }
+    },
+    "spatial.tab.audit": {
+      "comment": "v1.0-alpha.19 · visionOS spatial cockpit · Audit Theater tab label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audits" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Audits" } }
+      }
+    },
+    "spatial.leads.subtitle": {
+      "comment": "v1.0-alpha.19 · visionOS spatial leads panel subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Floating inbox" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Boîte d'entrée flottante" } }
+      }
+    },
+    "spatial.projects.subtitle": {
+      "comment": "v1.0-alpha.19 · visionOS spatial projects gallery subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Floating portfolio gallery" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Galerie flottante du portfolio" } }
+      }
+    },
+    "spatial.audit.subtitle": {
+      "comment": "v1.0-alpha.19 · visionOS spatial audit theater subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Immersive theater for finished reports" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Théâtre d'immersion pour les rapports finis" } }
+      }
+    },
+    "spatial.audit.theater.button": {
+      "comment": "v1.0-alpha.19 · CTA opening the visionOS Audit Theater immersive space.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Present immersively" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Présenter en immersion" } }
+      }
+    },
+    "spatial.audit.theater.exit": {
+      "comment": "v1.0-alpha.19 · CTA dismissing the visionOS Audit Theater immersive space.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Exit immersion" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Quitter l'immersion" } }
+      }
+    },
+    "spatial.audit.theater.synthesis.title": {
+      "comment": "v1.0-alpha.19 · Header above the central synthesis panel inside the visionOS Audit Theater.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Synthesis" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Synthèse" } }
+      }
+    },
+    "spatial.empty.leads": {
+      "comment": "v1.0-alpha.19 · Empty state for the visionOS leads panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No leads — the inbox is empty." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun lead — la boîte d'entrée est vide." } }
+      }
+    },
+    "spatial.empty.projects": {
+      "comment": "v1.0-alpha.19 · Empty state for the visionOS projects gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No projects in the portfolio." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun projet dans le portfolio." } }
+      }
+    },
+    "spatial.empty.audits": {
+      "comment": "v1.0-alpha.19 · Empty state for the visionOS audit theater list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No finished audit to present." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun audit terminé à présenter." } }
+      }
+    },
+    "spatial.window.title": {
+      "comment": "v1.0-alpha.19 · Default window title for the visionOS spatial cockpit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "MIND Cockpit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "MIND Cockpit" } }
+      }
     }
   }
 }

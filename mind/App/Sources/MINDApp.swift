@@ -13,6 +13,12 @@ import Settings
 // the targetEnvironment-gated import block below is dropped.
 import UIKit
 import UserNotifications
+// v1.0-alpha.19 — Vision Pro spatial cockpit. `VisionSpatialKit`
+// exposes `SpatialTelemetryBridge` on every platform (so the iOS
+// host can wire its sink at bootstrap) and the visionOS-only
+// SwiftUI surfaces (`SpatialRootView`, `SpatialAuditTheaterImmersive`)
+// behind `#if os(visionOS)`.
+import VisionSpatialKit
 
 /// v1.0-alpha.1 — Cockpit Studio pivot. Stripped lifecycle to the
 /// hooks the rebuild keeps using: foreground CloudKit refresh,
@@ -41,6 +47,7 @@ struct MINDApp: App {
     init() {
         bootstrapSentry()
         bootstrapBackgroundRefresh()
+        bootstrapSpatialTelemetry()
         // v1.0-alpha.17 — Activate the WatchConnectivity bridge from
         // the iPhone side. Soft-fails on unsupported platforms
         // (Mac Catalyst, iPad without a paired Watch) so the call is
@@ -209,6 +216,26 @@ struct MINDApp: App {
     }
 
     var body: some Scene {
+        #if os(visionOS)
+        // v1.0-alpha.19 — Vision Pro spatial cockpit. The visionOS
+        // slice ships a volumetric `WindowGroup` of the
+        // `SpatialRootView` (Leads / Projects / Audits TabView, every
+        // panel built on `.ultraThinMaterial` + `glassBackgroundEffect()`),
+        // plus the `AuditTheater` `ImmersiveSpace` the user opens from
+        // a finished audit. Both compile only when the visionOS slice
+        // is targeted; iOS / iPad / Mac Catalyst fall through to the
+        // standard `RootView`.
+        WindowGroup(id: SpatialAuditTheater.immersiveSpaceID + ".main") {
+            SpatialRootView()
+        }
+        .windowStyle(.volumetric)
+        .defaultSize(width: 1.2, height: 0.8, depth: 0.3, in: .meters)
+        .modelContainer(GraphCore.sharedContainer)
+
+        ImmersiveSpace(id: SpatialAuditTheater.immersiveSpaceID) {
+            SpatialAuditTheaterImmersive()
+        }
+        #else
         WindowGroup {
             RootView()
                 .preferredColorScheme(.light)
@@ -274,6 +301,7 @@ struct MINDApp: App {
                 break
             }
         }
+        #endif
     }
 
     /// v1.0-alpha.12 — Updates the Mac Catalyst dock badge with the
@@ -347,6 +375,21 @@ struct MINDApp: App {
                     "graph.foreground.save.failed",
                     data: ["error": String(describing: error)]
                 )
+            }
+        }
+    }
+
+    /// v1.0-alpha.19 — Wires the visionOS spatial cockpit's telemetry
+    /// bridge to `MINDTelemetry`. Every breadcrumb the spatial views
+    /// emit (`spatial.app.launched`, `spatial.tab.changed`,
+    /// `spatial.audit.theater.opened`, …) routes through the same
+    /// Sentry sink as every other module. Safe to call on iOS — the
+    /// bridge type compiles on every platform; only the visionOS
+    /// surfaces themselves are gated.
+    private func bootstrapSpatialTelemetry() {
+        SpatialTelemetryBridge.shared.sink = { event in
+            Task { @MainActor in
+                MINDTelemetry.info(event.name, data: event.data)
             }
         }
     }
