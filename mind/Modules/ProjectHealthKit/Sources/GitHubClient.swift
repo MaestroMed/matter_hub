@@ -185,6 +185,81 @@ public actor GitHubClient {
         }
     }
 
+    /// v1.0-alpha.10 — `GET /repos/<repo>/contents/<path>` returning
+    /// the decoded UTF-8 string body of the file, or nil when the
+    /// file doesn't exist (404), the contents are non-text, or the
+    /// upstream returns any other error. Soft-fail by design — the
+    /// `RepositoryAuditProbe` probes a fixed set of optional files
+    /// (package.json, tsconfig.json, etc.) and a missing one is
+    /// information, not an error.
+    public func readFile(repo: String, path: String) async -> String? {
+        guard let token = GitHubTokenStore.read(), !token.isEmpty else {
+            return nil
+        }
+        guard let url = Self.contentsURL(repo: repo, path: path) else {
+            return nil
+        }
+        let request = signedRequest(url: url, token: token)
+        do {
+            let (data, status) = try await perform(request: request)
+            guard (200..<300).contains(status) else { return nil }
+            let dto = try JSONDecoder().decode(GitHubContentsDTO.self, from: data)
+            guard let encoded = dto.content, dto.encoding == "base64" else {
+                return nil
+            }
+            let cleaned = encoded.replacingOccurrences(of: "\n", with: "")
+            guard let raw = Data(base64Encoded: cleaned) else { return nil }
+            return String(data: raw, encoding: .utf8)
+        } catch {
+            return nil
+        }
+    }
+
+    /// v1.0-alpha.10 — `GET /repos/<repo>/contents/<path>` returning a
+    /// shallow listing of the directory at `path`. Each entry carries
+    /// its name and type (`"file"` / `"dir"`). Returns an empty array
+    /// when the directory is missing or the upstream errors — soft-
+    /// fail aligned with `readFile(repo:path:)`.
+    public func listDirectory(repo: String, path: String) async -> [GitHubContentEntry] {
+        guard let token = GitHubTokenStore.read(), !token.isEmpty else {
+            return []
+        }
+        guard let url = Self.contentsURL(repo: repo, path: path) else {
+            return []
+        }
+        let request = signedRequest(url: url, token: token)
+        do {
+            let (data, status) = try await perform(request: request)
+            guard (200..<300).contains(status) else { return [] }
+            let entries = try JSONDecoder().decode([GitHubContentEntry].self, from: data)
+            return entries
+        } catch {
+            return []
+        }
+    }
+
+    /// v1.0-alpha.10 — `GET /repos/<repo>/git/trees/<branch>?recursive=1`
+    /// — full-repo listing used to surface `.env*` and `*.test.*`
+    /// files cheaply (one call instead of one per directory). Returns
+    /// an empty array on any error.
+    public func recursiveTree(repo: String, branch: String = "main") async -> [GitHubTreeEntry] {
+        guard let token = GitHubTokenStore.read(), !token.isEmpty else {
+            return []
+        }
+        guard let url = Self.treeURL(repo: repo, branch: branch) else {
+            return []
+        }
+        let request = signedRequest(url: url, token: token)
+        do {
+            let (data, status) = try await perform(request: request)
+            guard (200..<300).contains(status) else { return [] }
+            let dto = try JSONDecoder().decode(GitHubTreeDTO.self, from: data)
+            return dto.tree ?? []
+        } catch {
+            return []
+        }
+    }
+
     /// Lightweight token validation — calls `GET /user` and checks
     /// for 200. Used by the Settings "Test connexion" button.
     public func validateToken() async -> Bool {
@@ -228,6 +303,35 @@ public actor GitHubClient {
             URLQueryItem(name: "state", value: "open"),
             URLQueryItem(name: "per_page", value: "\(limit)"),
         ]
+        return components?.url
+    }
+
+    /// v1.0-alpha.10 — `GET /repos/<repo>/contents/<path>` URL builder.
+    /// Returns nil for empty repo. Path components are percent-encoded
+    /// so file names with spaces / scoped segments survive the call.
+    public static func contentsURL(repo: String, path: String) -> URL? {
+        guard !repo.isEmpty else { return nil }
+        let trimmedPath = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let suffix = trimmedPath.isEmpty ? "" : "/\(trimmedPath)"
+        let allowed = CharacterSet.urlPathAllowed
+        // Keep `/` in path so nested directories still resolve.
+        let encoded = suffix
+            .addingPercentEncoding(withAllowedCharacters: allowed) ?? suffix
+        return URL(string: "https://api.github.com/repos/\(repo)/contents\(encoded)")
+    }
+
+    /// v1.0-alpha.10 — `GET /repos/<repo>/git/trees/<branch>?recursive=1`
+    /// URL builder. Returns nil for empty repo. Branch defaults to
+    /// `main`; the probe falls back to `master` on a 404.
+    public static func treeURL(repo: String, branch: String) -> URL? {
+        guard !repo.isEmpty else { return nil }
+        let trimmedBranch = branch.trimmingCharacters(in: .whitespacesAndNewlines)
+        let ref = trimmedBranch.isEmpty ? "main" : trimmedBranch
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent("repos/\(repo)/git/trees/\(ref)"),
+            resolvingAgainstBaseURL: false
+        )
+        components?.queryItems = [URLQueryItem(name: "recursive", value: "1")]
         return components?.url
     }
 
@@ -336,6 +440,56 @@ private struct GitHubRepoDTO: Decodable {
             lastPushedAt: date
         )
     }
+}
+
+// MARK: - v1.0-alpha.10 — Contents / Tree wire shapes
+
+/// One shallow entry returned by `GET /repos/<repo>/contents/<path>`
+/// when the target is a directory. Used by `RepositoryAuditProbe` to
+/// classify `.github/workflows/*.yml` and similar shallow listings.
+public struct GitHubContentEntry: Sendable, Codable, Equatable {
+    public let name: String
+    public let path: String
+    public let type: String  // "file" | "dir" | "symlink" | "submodule"
+    public let size: Int?
+
+    public init(name: String, path: String, type: String, size: Int? = nil) {
+        self.name = name
+        self.path = path
+        self.type = type
+        self.size = size
+    }
+}
+
+/// One entry in the recursive git tree (`/git/trees/<ref>?recursive=1`).
+/// `path` is the full repo-relative path with forward slashes; `type`
+/// is `"blob"` for files and `"tree"` for directories.
+public struct GitHubTreeEntry: Sendable, Codable, Equatable {
+    public let path: String
+    public let type: String
+    public let size: Int?
+
+    public init(path: String, type: String, size: Int? = nil) {
+        self.path = path
+        self.type = type
+        self.size = size
+    }
+}
+
+/// `/contents/<file>` wire shape. We project `content` + `encoding`
+/// (typically `"base64"`); the probe handles the decode.
+private struct GitHubContentsDTO: Decodable {
+    let content: String?
+    let encoding: String?
+}
+
+/// `/git/trees/<ref>` wire shape. The recursive flag flattens the
+/// tree; `truncated == true` means the call hit GitHub's per-call
+/// cap (rare for cockpit-scale repos but the probe doesn't care —
+/// it just reads what came back).
+private struct GitHubTreeDTO: Decodable {
+    let tree: [GitHubTreeEntry]?
+    let truncated: Bool?
 }
 
 /// `/repos/<repo>/issues` wire shape. GitHub mixes PRs into this

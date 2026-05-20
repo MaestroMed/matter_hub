@@ -598,6 +598,14 @@ struct AuditSheet: View {
                 }
             }
 
+            // v1.0-alpha.10 — Repository-aware audit. Only mounted
+            // when the controller landed a non-nil `repoFindings`
+            // (the audit was launched against a project with a
+            // configured `githubRepo`).
+            if let repo = report.repoFindings {
+                repoSection(repo)
+            }
+
             visionSection(for: report)
 
             if !report.quickWins.isEmpty {
@@ -757,6 +765,251 @@ struct AuditSheet: View {
         .background {
             Capsule().fill(.ultraThinMaterial)
         }
+    }
+
+    // MARK: - v1.0-alpha.10 — Repository-aware audit
+
+    /// Renders the "Code source" section: grade pill + summary +
+    /// per-signal lists for outdated deps, security signals, CI,
+    /// tests, bundle. Mounted only when `report.repoFindings != nil`.
+    @ViewBuilder
+    private func repoSection(_ findings: RepositoryAuditFindings) -> some View {
+        section(String(localized: "audit.section.repo.title")) {
+            VStack(alignment: .leading, spacing: 14) {
+                repoSummaryCard(findings)
+                if !findings.outdatedDependencies.isEmpty {
+                    repoOutdatedCard(findings.outdatedDependencies)
+                }
+                if !findings.securitySignals.isEmpty {
+                    repoSecurityCard(findings.securitySignals)
+                }
+                repoCiTestsBundleCard(findings)
+            }
+        }
+    }
+
+    private func repoSummaryCard(_ findings: RepositoryAuditFindings) -> some View {
+        LiquidCard(cornerRadius: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 14) {
+                    repoGradePill(findings.overallGrade)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: findings.framework ?? "Framework non détecté")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                        Text(verbatim: repoSubtitle(findings))
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                if !findings.summary.isEmpty {
+                    MarkdownView(findings.summary)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func repoSubtitle(_ findings: RepositoryAuditFindings) -> String {
+        let pm = findings.packageManager ?? String(
+            localized: "audit.section.repo.subtitle.pm.unknown"
+        )
+        let strict = findings.typescriptStrict
+            ? String(localized: "audit.section.repo.ts.strict")
+            : String(localized: "audit.section.repo.ts.loose")
+        return "\(pm) · \(strict)"
+    }
+
+    @ViewBuilder
+    private func repoGradePill(_ grade: String) -> some View {
+        Text(verbatim: grade)
+            .font(.system(size: 36, weight: .bold, design: .rounded))
+            .foregroundStyle(repoGradeColor(grade))
+            .frame(width: 64, height: 64)
+            .background {
+                Circle().fill(repoGradeColor(grade).opacity(0.18))
+            }
+            .overlay {
+                Circle().strokeBorder(repoGradeColor(grade).opacity(0.42), lineWidth: 1.5)
+            }
+            .accessibilityLabel(String(format: String(localized: "audit.section.repo.grade.accessibility"), grade))
+    }
+
+    private func repoGradeColor(_ grade: String) -> Color {
+        switch grade {
+        case "A+":  return LiquidPalette.iris
+        case "A":   return .green
+        case "B":   return .orange
+        case "C":   return .orange
+        case "D":   return .red
+        case "F":   return .red
+        default:    return .gray
+        }
+    }
+
+    private func repoOutdatedCard(_ outdated: [OutdatedDependency]) -> some View {
+        LiquidCard(cornerRadius: 16) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("audit.section.repo.outdated.title")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                ForEach(outdated.prefix(8), id: \.name) { dep in
+                    HStack(alignment: .center, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: dep.name)
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                            Text(verbatim: "\(dep.installed) → \(dep.latest)")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                        Spacer()
+                        if dep.majorBehind >= 1 {
+                            Text(
+                                String(
+                                    format: String(localized: "audit.section.repo.outdated.major.format"),
+                                    dep.majorBehind
+                                )
+                            )
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background {
+                                Capsule().fill(Color.red.opacity(0.2))
+                            }
+                            .foregroundStyle(Color.red)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func repoSecurityCard(_ signals: [SecuritySignal]) -> some View {
+        LiquidCard(cornerRadius: 16) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("audit.section.repo.security.title")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                ForEach(Array(signals.enumerated()), id: \.offset) { (_, signal) in
+                    HStack(alignment: .top, spacing: 10) {
+                        Circle()
+                            .fill(repoSeverityColor(signal.severity))
+                            .frame(width: 10, height: 10)
+                            .padding(.top, 6)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: signal.detail)
+                                .font(.system(.subheadline, design: .rounded))
+                            if let path = signal.filePath {
+                                Text(verbatim: path)
+                                    .font(.system(.caption2, design: .rounded))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        Spacer()
+                        Text(repoSeverityLabel(signal.severity))
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(repoSeverityColor(signal.severity))
+                    }
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func repoSeverityColor(_ severity: String) -> Color {
+        switch severity {
+        case "high":   return .red
+        case "medium": return .orange
+        case "low":    return .yellow
+        default:       return .gray
+        }
+    }
+
+    private func repoSeverityLabel(_ severity: String) -> String {
+        switch severity {
+        case "high":   return String(localized: "audit.section.repo.security.severity.high")
+        case "medium": return String(localized: "audit.section.repo.security.severity.medium")
+        case "low":    return String(localized: "audit.section.repo.security.severity.low")
+        default:       return severity.capitalized
+        }
+    }
+
+    private func repoCiTestsBundleCard(_ findings: RepositoryAuditFindings) -> some View {
+        LiquidCard(cornerRadius: 16) {
+            VStack(alignment: .leading, spacing: 10) {
+                repoQuickRow(
+                    icon: "checkmark.shield.fill",
+                    label: repoCiLabel(findings.ciSignals)
+                )
+                repoQuickRow(
+                    icon: "testtube.2",
+                    label: repoTestsLabel(findings.testCoverage)
+                )
+                repoQuickRow(
+                    icon: "shippingbox.fill",
+                    label: repoBundleLabel(findings.bundleSignals)
+                )
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func repoQuickRow(icon: String, label: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(.body, design: .rounded, weight: .semibold))
+                .foregroundStyle(LiquidPalette.iris)
+                .frame(width: 24)
+            Text(verbatim: label)
+                .font(.system(.subheadline, design: .rounded))
+            Spacer()
+        }
+    }
+
+    private func repoCiLabel(_ ci: CISignals) -> String {
+        if !ci.hasWorkflows {
+            return String(localized: "audit.section.repo.ci.none")
+        }
+        let workflowFormat = String(localized: "audit.section.repo.ci.workflows")
+        var parts: [String] = [String(format: workflowFormat, ci.workflowCount)]
+        if ci.hasTestWorkflow {
+            parts.append(String(localized: "audit.section.repo.ci.test"))
+        }
+        if ci.hasDeployWorkflow {
+            parts.append(String(localized: "audit.section.repo.ci.deploy"))
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    private func repoTestsLabel(_ tests: TestCoverageSignals) -> String {
+        if !tests.hasTestDirectory {
+            return String(localized: "audit.section.repo.tests.none")
+        }
+        let countFormat = String(localized: "audit.section.repo.tests.count.format")
+        var line = String(format: countFormat, tests.testFiles)
+        if let framework = tests.testFramework {
+            let frameworkFormat = String(localized: "audit.section.repo.tests.framework.format")
+            line += " · " + String(format: frameworkFormat, framework)
+        }
+        return line
+    }
+
+    private func repoBundleLabel(_ bundle: BundleSignals) -> String {
+        if bundle.heavyDependencies.isEmpty {
+            return String(localized: "audit.section.repo.bundle.clean")
+        }
+        let heavyFormat = String(localized: "audit.section.repo.bundle.heavy")
+        var line = String(format: heavyFormat, bundle.heavyDependencies.count)
+        if let kb = bundle.estimatedKB {
+            let sizeFormat = String(localized: "audit.section.repo.bundle.size.format")
+            line += " · " + String(format: sizeFormat, kb)
+        }
+        return line
     }
 
     // MARK: - v0.23 — Vision (generative redesign mockups)

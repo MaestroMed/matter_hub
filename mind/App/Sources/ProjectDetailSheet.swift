@@ -30,6 +30,15 @@ struct ProjectDetailSheet: View {
     @State private var showLeadsListSheet: Bool = false
     @State private var showArchiveConfirm: Bool = false
 
+    /// v1.0-alpha.10 — Repo-only audit state. The "Auditer le code
+    /// source" action kicks off `RepositoryAuditProbe.shared.run(...)`
+    /// directly without the 13-probe URL flow, then surfaces the
+    /// result inline via a `RepoAuditDetailSheet` driven by this
+    /// state slot. nil = sheet hidden.
+    @State private var repoAuditRunning: Bool = false
+    @State private var repoAuditResult: RepositoryAuditFindings?
+    @State private var repoAuditError: String?
+
     /// v1.0-alpha.9 — Redeploy flow state. Confirmation alert before
     /// the POST fires, in-flight spinner gate during the call, toast
     /// text that drives the bottom-pinned `redeployToast` view.
@@ -149,6 +158,12 @@ struct ProjectDetailSheet: View {
         }
         .sheet(item: $sharePortalURL.asIdentifiable) { wrapped in
             ProjectPortalShareView(activityItems: [wrapped.url])
+        }
+        .sheet(item: $repoAuditResult.asRepoAuditItem) { wrapped in
+            RepoAuditDetailSheet(findings: wrapped.findings)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.ultraThinMaterial)
         }
         .overlay(alignment: .bottom) {
             if let toast = redeployToast {
@@ -920,6 +935,22 @@ struct ProjectDetailSheet: View {
                     isSwarming = true
                 }
 
+                // v1.0-alpha.10 — Repository-aware audit. Fires the
+                // new probe directly against the project's GitHub
+                // slug without the 13-probe URL flow. Only mounted
+                // when the project has a `githubRepo` configured.
+                if let repo = project.githubRepo, !repo.isEmpty {
+                    actionRow(
+                        icon: "chevron.left.forwardslash.chevron.right",
+                        tint: LiquidPalette.lavender,
+                        title: String(localized: "project.action.auditRepo"),
+                        trailing: repoAuditRunning ? .spinner : .chevron,
+                        enabled: !repoAuditRunning
+                    ) {
+                        Task { await runRepoAudit(repo: repo) }
+                    }
+                }
+
                 // v1.0-alpha.9 — Live actions. Each is guarded so a
                 // missing token / missing config soft-empties the row
                 // rather than throwing an error sheet.
@@ -1091,6 +1122,23 @@ struct ProjectDetailSheet: View {
                     ]
                 )
             }
+        }
+    }
+
+    /// v1.0-alpha.10 — Fires the new `RepositoryAuditProbe` directly
+    /// for the project's GitHub slug, then presents the result inline
+    /// via `RepoAuditDetailSheet`. Doesn't touch the URL audit
+    /// pipeline — the consultant just wants the source-code grade.
+    private func runRepoAudit(repo: String) async {
+        await MainActor.run {
+            repoAuditRunning = true
+            repoAuditError = nil
+        }
+        let findings = await RepositoryAuditProbe.shared.run(repo: repo)
+        await MainActor.run {
+            repoAuditRunning = false
+            repoAuditResult = findings
+            LiquidHaptics.success()
         }
     }
 
@@ -1461,6 +1509,34 @@ extension Binding where Value == URL? {
     }
 }
 
+/// v1.0-alpha.10 — Sheet driver wrapper for `RepositoryAuditFindings?`.
+/// The findings type is value-only (no `Identifiable` conformance), so
+/// we wrap with the `analyzedAt` timestamp as the stable id.
+struct IdentifiableRepoAudit: Identifiable, Hashable {
+    let findings: RepositoryAuditFindings
+    var id: Date { findings.analyzedAt }
+
+    static func == (lhs: IdentifiableRepoAudit, rhs: IdentifiableRepoAudit) -> Bool {
+        lhs.findings.analyzedAt == rhs.findings.analyzedAt
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(findings.analyzedAt)
+    }
+}
+
+extension Binding where Value == RepositoryAuditFindings? {
+    /// Binding adapter that maps `RepositoryAuditFindings?` →
+    /// `IdentifiableRepoAudit?` so `.sheet(item:)` can drive the
+    /// `RepoAuditDetailSheet` presenter.
+    var asRepoAuditItem: Binding<IdentifiableRepoAudit?> {
+        Binding<IdentifiableRepoAudit?>(
+            get: { self.wrappedValue.map(IdentifiableRepoAudit.init) },
+            set: { newValue in self.wrappedValue = newValue?.findings }
+        )
+    }
+}
+
 /// `UIActivityViewController` bridge — same shape as the
 /// `PortalActivityView` in `PortalSuccessSheet.swift`, kept private
 /// here so the ProjectDetail flow doesn't depend on that file's
@@ -1507,3 +1583,4 @@ enum ProjectPortalLocator {
         return sorted.first
     }
 }
+

@@ -128,6 +128,15 @@ public enum Module: String, CaseIterable {
             return [
                 .target(name: Module.graphCore.rawValue),
                 .target(name: Module.intelligence.rawValue),
+                // v1.0-alpha.10 — Repository-aware audit. The new
+                // `RepositoryAuditProbe` reuses the existing
+                // `GitHubClient` actor (Contents API + recursive tree)
+                // already in ProjectHealthKit to read package.json /
+                // tsconfig.json / .github/workflows/* without
+                // re-rolling the auth+session boilerplate. No
+                // circular dep — ProjectHealthKit doesn't import
+                // AuditKit.
+                .target(name: Module.projectHealthKit.rawValue),
             ]
         case .calendarKit:
             // EventKit reader + lightweight CalendarEvent value type used

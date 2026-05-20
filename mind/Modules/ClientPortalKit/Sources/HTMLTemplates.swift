@@ -72,6 +72,12 @@ public enum HTMLTemplates {
             roiHeroSection(report: report),
             battleHTML,
             synthesisSection(report: report),
+            // v1.0-alpha.10 — Audit code source. Sits between
+            // the synthesis prose and the vision mockups so the
+            // client reads the source-code grade right after
+            // the human-readable analysis. Renders an empty
+            // string when no repo audit landed.
+            repoAuditSection(report: report),
             visionSection(report: report),
             quickWinsSection(report: report),
             strategicBetsSection(report: report),
@@ -346,6 +352,146 @@ public enum HTMLTemplates {
           </div>
         </article>
         """
+    }
+
+    /// v1.0-alpha.10 — Audit code source. Renders the repo-aware
+    /// findings as a giant grade letter (CSS 96px) followed by a
+    /// mini-table of outdated deps + security signals + CI/tests/
+    /// bundle rows. Designed to read as "Mehdi a regardé le moteur,
+    /// pas juste la carrosserie" — placed right after the synthesis
+    /// prose so the source-code grade lands before the visual mockups.
+    /// Empty string when no repo audit is attached, keeping legacy
+    /// URL-only portals byte-identical.
+    public static func repoAuditSection(report: AuditReport) -> String {
+        guard let repo = report.repoFindings else { return "" }
+
+        let grade = escape(repo.overallGrade)
+        let summaryHTML = renderMarkdownLight(repo.summary)
+        let framework = escape(repo.framework ?? "Framework non détecté")
+        let pm = escape(repo.packageManager ?? "Gestionnaire de paquets inconnu")
+        let strict = repo.typescriptStrict ? "TypeScript strict" : "TypeScript non strict"
+        let gradeClass = "repo__grade--\(repoGradeCssClass(repo.overallGrade))"
+
+        let outdatedHTML: String = {
+            guard !repo.outdatedDependencies.isEmpty else { return "" }
+            let rows = repo.outdatedDependencies.prefix(8).map { dep in
+                let major = dep.majorBehind >= 1
+                    ? "<span class=\"repo__major\">\(dep.majorBehind) majeur(s) derrière</span>"
+                    : ""
+                return """
+                <tr>
+                  <td class="repo__dep-name">\(escape(dep.name))</td>
+                  <td class="repo__dep-versions">\(escape(dep.installed)) → \(escape(dep.latest))</td>
+                  <td class="repo__dep-major">\(major)</td>
+                </tr>
+                """
+            }.joined(separator: "\n")
+            return """
+            <div class="repo__block">
+              <h3 class="repo__block-title">Dépendances obsolètes</h3>
+              <table class="repo__table">
+                <tbody>
+                  \(rows)
+                </tbody>
+              </table>
+            </div>
+            """
+        }()
+
+        let securityHTML: String = {
+            guard !repo.securitySignals.isEmpty else { return "" }
+            let rows = repo.securitySignals.map { signal in
+                let dotClass = "repo__sev--\(signal.severity)"
+                let path = signal.filePath.map { "<div class=\"repo__sev-path\">\(escape($0))</div>" } ?? ""
+                return """
+                <li class="repo__sev-row">
+                  <span class="repo__sev-dot \(dotClass)"></span>
+                  <div class="repo__sev-body">
+                    <div class="repo__sev-detail">\(escape(signal.detail))</div>
+                    \(path)
+                  </div>
+                  <span class="repo__sev-tag \(dotClass)">\(escape(signal.severity.uppercased()))</span>
+                </li>
+                """
+            }.joined(separator: "\n")
+            return """
+            <div class="repo__block">
+              <h3 class="repo__block-title">Signaux de sécurité</h3>
+              <ul class="repo__sev-list">
+                \(rows)
+              </ul>
+            </div>
+            """
+        }()
+
+        let ciLine: String = {
+            if !repo.ciSignals.hasWorkflows { return "Aucune CI configurée" }
+            var parts = ["\(repo.ciSignals.workflowCount) workflows"]
+            if repo.ciSignals.hasTestWorkflow { parts.append("tests") }
+            if repo.ciSignals.hasDeployWorkflow { parts.append("déploiement") }
+            return parts.joined(separator: " · ")
+        }()
+        let testsLine: String = {
+            guard repo.testCoverage.hasTestDirectory else { return "Aucun test détecté" }
+            var line = "~\(repo.testCoverage.testFiles) fichiers de tests"
+            if let framework = repo.testCoverage.testFramework {
+                line += " · framework : \(framework)"
+            }
+            return line
+        }()
+        let bundleLine: String = {
+            guard !repo.bundleSignals.heavyDependencies.isEmpty else {
+                return "Aucune dépendance lourde détectée"
+            }
+            var line = "\(repo.bundleSignals.heavyDependencies.count) dépendances lourdes"
+            if let kb = repo.bundleSignals.estimatedKB {
+                line += " · ~\(kb) Ko"
+            }
+            return line
+        }()
+
+        return """
+        <section class="repo reveal" data-reveal="up">
+          <div class="section__header">
+            <div class="section__eyebrow">02c — AUDIT CODE SOURCE</div>
+            <h2 class="section__title">Sous le capot</h2>
+            <p class="section__lead">Pas juste la carrosserie : on a aussi audité le moteur.</p>
+          </div>
+          <div class="repo__hero">
+            <div class="repo__grade \(gradeClass)">\(grade)</div>
+            <div class="repo__hero-body">
+              <div class="repo__hero-title">\(framework)</div>
+              <div class="repo__hero-sub">\(pm) · \(strict)</div>
+              <div class="repo__hero-summary">\(summaryHTML)</div>
+            </div>
+          </div>
+          \(outdatedHTML)
+          \(securityHTML)
+          <div class="repo__block">
+            <h3 class="repo__block-title">CI, tests, bundle</h3>
+            <ul class="repo__quick">
+              <li>\(escape(ciLine))</li>
+              <li>\(escape(testsLine))</li>
+              <li>\(escape(bundleLine))</li>
+            </ul>
+          </div>
+        </section>
+        """
+    }
+
+    /// Maps the letter grade onto a CSS modifier class so the
+    /// inline stylesheet can paint each tier a distinct iris /
+    /// green / amber / orange / red / black accent.
+    private static func repoGradeCssClass(_ grade: String) -> String {
+        switch grade {
+        case "A+": return "aplus"
+        case "A":  return "a"
+        case "B":  return "b"
+        case "C":  return "c"
+        case "D":  return "d"
+        case "F":  return "f"
+        default:   return "unknown"
+        }
     }
 
     public static func quickWinsSection(report: AuditReport) -> String {
@@ -963,6 +1109,44 @@ public enum HTMLTemplates {
         .vision__index{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.08em;}
         .vision__title{font-size:18px;font-weight:600;line-height:1.3;color:var(--ink);letter-spacing:-0.01em;}
         .vision__sub{font-size:13px;color:var(--ink-quiet);}
+        /* v1.0-alpha.10 — Audit code source */
+        .repo__hero{display:flex;align-items:flex-start;gap:24px;background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:30px;margin-bottom:24px;}
+        .repo__grade{font-size:96px;font-weight:800;line-height:1;letter-spacing:-0.05em;min-width:140px;text-align:center;}
+        .repo__grade--aplus{color:#6B5DD3;}
+        .repo__grade--a{color:#A8E6E0;}
+        .repo__grade--b{color:#F0C674;}
+        .repo__grade--c{color:#E8A763;}
+        .repo__grade--d{color:#E47174;}
+        .repo__grade--f{color:#1A1A1A;text-shadow:0 0 18px rgba(228,113,116,0.7);}
+        .repo__grade--unknown{color:var(--ink-quiet);}
+        .repo__hero-body{flex:1;display:flex;flex-direction:column;gap:8px;}
+        .repo__hero-title{font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-0.01em;}
+        .repo__hero-sub{font-size:14px;color:var(--ink-quiet);}
+        .repo__hero-summary{font-size:14px;color:var(--ink-dim);margin-top:8px;}
+        .repo__hero-summary ul{padding-left:20px;}
+        .repo__hero-summary li{margin-bottom:6px;}
+        .repo__block{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:22px 26px;margin-bottom:18px;}
+        .repo__block-title{font-size:14px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-quiet);margin-bottom:12px;}
+        .repo__table{width:100%;border-collapse:collapse;font-size:14px;}
+        .repo__table td{padding:8px 0;border-bottom:1px solid var(--card-stroke);}
+        .repo__table td:last-child{text-align:right;}
+        .repo__dep-name{color:var(--ink);font-weight:600;}
+        .repo__dep-versions{color:var(--ink-quiet);font-family:'SF Mono',Menlo,monospace;font-size:13px;}
+        .repo__major{font-size:11px;font-weight:700;letter-spacing:0.06em;padding:4px 10px;border-radius:999px;background:rgba(228,113,116,0.20);color:#E47174;text-transform:uppercase;}
+        .repo__sev-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+        .repo__sev-row{display:flex;align-items:flex-start;gap:12px;}
+        .repo__sev-dot{flex:0 0 auto;width:10px;height:10px;border-radius:50%;margin-top:6px;}
+        .repo__sev--high{background:#E47174;color:#E47174;}
+        .repo__sev--medium{background:#E8A763;color:#E8A763;}
+        .repo__sev--low{background:#F0C674;color:#F0C674;}
+        .repo__sev-body{flex:1;display:flex;flex-direction:column;gap:4px;}
+        .repo__sev-detail{font-size:14px;color:var(--ink-dim);}
+        .repo__sev-path{font-size:12px;color:var(--ink-quiet);font-family:'SF Mono',Menlo,monospace;}
+        .repo__sev-tag{flex:0 0 auto;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:4px 10px;border-radius:999px;background:rgba(228,113,116,0.18);}
+        .repo__sev-tag.repo__sev--medium{background:rgba(232,167,99,0.18);}
+        .repo__sev-tag.repo__sev--low{background:rgba(240,198,116,0.18);}
+        .repo__quick{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--ink-dim);}
+        .repo__quick li{padding-left:0;}
         /* Quick wins */
         .wins__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
         .win{background:var(--card);border:1px solid var(--card-stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:26px;transition:transform 0.4s var(--easing),box-shadow 0.4s var(--easing);}

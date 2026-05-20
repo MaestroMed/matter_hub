@@ -20,6 +20,190 @@
         }
       }
     },
+    "audit.section.repo.title": {
+      "comment": "v1.0-alpha.10 — Section header in AuditSheet for the repository-aware audit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Source code" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Code source" } }
+      }
+    },
+    "audit.section.repo.subtitle.pm.unknown": {
+      "comment": "v1.0-alpha.10 — Package manager fallback when none detected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unknown package manager" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Gestionnaire de paquets inconnu" } }
+      }
+    },
+    "audit.section.repo.ts.strict": {
+      "comment": "v1.0-alpha.10 — TypeScript strict mode is on.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "TypeScript strict" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "TypeScript strict" } }
+      }
+    },
+    "audit.section.repo.ts.loose": {
+      "comment": "v1.0-alpha.10 — TypeScript strict mode is off / missing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "TypeScript non strict" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "TypeScript non strict" } }
+      }
+    },
+    "audit.section.repo.grade.accessibility": {
+      "comment": "v1.0-alpha.10 — Accessibility label format for the grade pill ('Grade %@').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Grade %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Note %@" } }
+      }
+    },
+    "audit.section.repo.outdated.title": {
+      "comment": "v1.0-alpha.10 — Header for the outdated dependencies list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Outdated dependencies" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dépendances obsolètes" } }
+      }
+    },
+    "audit.section.repo.outdated.major.format": {
+      "comment": "v1.0-alpha.10 — Major-behind badge format ('%d majeur(s) derrière').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d major behind" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d majeur derrière" } }
+      }
+    },
+    "audit.section.repo.security.title": {
+      "comment": "v1.0-alpha.10 — Header for the security signals list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Security signals" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Signaux de sécurité" } }
+      }
+    },
+    "audit.section.repo.security.severity.high": {
+      "comment": "v1.0-alpha.10 — Severity label for high.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "High" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Haute" } }
+      }
+    },
+    "audit.section.repo.security.severity.medium": {
+      "comment": "v1.0-alpha.10 — Severity label for medium.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Medium" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Moyenne" } }
+      }
+    },
+    "audit.section.repo.security.severity.low": {
+      "comment": "v1.0-alpha.10 — Severity label for low.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Low" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Faible" } }
+      }
+    },
+    "audit.section.repo.ci.none": {
+      "comment": "v1.0-alpha.10 — Quick row: no CI workflows.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No CI configured" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune CI configurée" } }
+      }
+    },
+    "audit.section.repo.ci.workflows": {
+      "comment": "v1.0-alpha.10 — Quick row format: workflow count ('%d workflows').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d workflows" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d workflows" } }
+      }
+    },
+    "audit.section.repo.ci.test": {
+      "comment": "v1.0-alpha.10 — Quick row chip: has a test workflow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "tests" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "tests" } }
+      }
+    },
+    "audit.section.repo.ci.deploy": {
+      "comment": "v1.0-alpha.10 — Quick row chip: has a deploy workflow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "deploy" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "déploiement" } }
+      }
+    },
+    "audit.section.repo.tests.none": {
+      "comment": "v1.0-alpha.10 — Quick row: no tests detected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No tests detected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucun test détecté" } }
+      }
+    },
+    "audit.section.repo.tests.count.format": {
+      "comment": "v1.0-alpha.10 — Quick row format: approximate test file count ('~%d test files').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "~%d test files" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "~%d fichiers de tests" } }
+      }
+    },
+    "audit.section.repo.tests.framework.format": {
+      "comment": "v1.0-alpha.10 — Quick row format: detected test framework ('framework: %@').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "framework: %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "framework : %@" } }
+      }
+    },
+    "audit.section.repo.bundle.clean": {
+      "comment": "v1.0-alpha.10 — Quick row: no heavy bundle deps flagged.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No heavy dependencies flagged" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune dépendance lourde détectée" } }
+      }
+    },
+    "audit.section.repo.bundle.heavy": {
+      "comment": "v1.0-alpha.10 — Quick row format: heavy deps count ('%d heavy deps').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d heavy deps" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%d dépendances lourdes" } }
+      }
+    },
+    "audit.section.repo.bundle.size.format": {
+      "comment": "v1.0-alpha.10 — Quick row format: estimated bundle KB ('~%d KB').",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "~%d KB" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "~%d Ko" } }
+      }
+    },
+    "project.action.auditRepo": {
+      "comment": "v1.0-alpha.10 — Project action: launch the repo-only audit (no URL probing).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Audit source code" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Auditer le code source" } }
+      }
+    },
+    "repo.audit.empty.token": {
+      "comment": "v1.0-alpha.10 — Empty state shown when a repo audit is launched without a GitHub token.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Paste a GitHub token in Settings → Integrations to enable the source-code audit." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Colle un token GitHub dans Réglages → Intégrations pour activer l'audit du code source." } }
+      }
+    },
     "ambient.accessibility": {
       "comment": "HomeView greeting · accessibility label for the moon button that opens Ambient.",
       "extractionState": "manual",

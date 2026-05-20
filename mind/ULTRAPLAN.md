@@ -15,6 +15,106 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+## v1.0-alpha.10 — Repository-aware Audit (source code analysis) ✅
+
+**What**: Today AuditKit's 13 probes audit the deployed URL: PageSpeed,
+security headers, TLS, App Store, etc. They learn nothing about the
+**code** behind the site. A consultant auditing a client's Next.js repo
+needs source-level signals: outdated deps, missing CI, security smells,
+bundle bloat, TypeScript strict on/off, test framework presence. This
+wave adds a 14th probe (`RepositoryAuditProbe`) that reads the repo via
+the GitHub Contents API + the recursive git tree, races up to 25 npm
+registry calls in a TaskGroup for outdated-dep detection, and folds the
+result into the existing `AuditReport.repoFindings` slot. The AuditSheet
+"Code source" section + the portal HTML "Audit code source" band both
+render the new grade letter + per-signal lists. ProjectDetailSheet
+gains an "Auditer le code source" action that fires the probe directly
+without the 13-probe URL flow, surfacing the result via a new
+`RepoAuditDetailSheet`.
+
+Shipped 2026-05-20: new `RepositoryAuditFindings` Sendable Codable
+Hashable value type in `mind/Modules/AuditKit/Sources/` carrying
+`packageManager` / `framework` / `typescriptStrict` /
+`totalDependencies` / `outdatedDependencies` / `securitySignals` /
+`ciSignals` / `testCoverage` / `bundleSignals` / `overallGrade` /
+`summary`, plus nested `OutdatedDependency`, `SecuritySignal`,
+`CISignals`, `TestCoverageSignals`, `BundleSignals` value types.
+`RepoAuditGradeBuilder` (pure) maps the signals onto an A+ .. F
+letter grade following the v1.0-alpha.10 rubric (F = `.env` in repo
+or hardcoded secret suspect, D = no TS or 2+ high security signals,
+C = missing CI or 6+ outdated deps or 1 high signal, B = missing
+tests with CI present or 3-5 outdated with at least one major-behind,
+A = one minor blemish, A+ = clean across the board) and renders a
+3-bullet markdown summary. `NpmRegistryClient` actor wraps
+`https://registry.npmjs.org/<pkg>/latest` with a 24h on-disk cache
+under `Documents/npm-cache/` (soft-fail on every error). The probe
+itself reads `package.json` + `tsconfig.json` + `.github/workflows/`
+listing + the full recursive git tree via the GitHub Contents API
+(new `readFile(repo:path:)` / `listDirectory(repo:path:)` /
+`recursiveTree(repo:branch:)` helpers added to the existing
+`GitHubClient` actor in ProjectHealthKit). AuditKit gained a
+ProjectHealthKit dependency in `Tuist/ProjectDescriptionHelpers/Module.swift`
+(no circular dep — ProjectHealthKit doesn't import AuditKit).
+
+`AuditClient` gains an optional `githubRepo` field (backward-compatible
+Codable). `AuditController` gains a 14th `.repoAudit` `ProbeKind` that's
+only seeded into `probeStates` when the client carries a non-empty
+`githubRepo` (the row stays out of the AuditSheet list for URL-only
+audits, vs being a perma-failing red dot), a new
+`activeProbeKinds(for:)` static helper that the seeding + retry path
+read, and a new `runRepoFindings` slot on the parallel runner that
+folds the result onto the synthesised `AuditReport.repoFindings`
+(also backward-compatible Codable). `AuditSheet` gains a `repoSection`
+mounted between Synthèse and Vision when `report.repoFindings != nil`
+— a grade pill (LiquidPalette tier mapping iris/green/amber/orange/red
+for A+/A/B/C/D, red shadow for F), framework subtitle, 3-bullet
+summary, outdated-deps list (compact, with "majeur(s) derrière" badge
+for any non-zero `majorBehind`), security signals list with severity
+color dots, and a quick rows card covering CI / tests / bundle. The
+client portal HTML template ships a parallel "Audit code source"
+section with a 96px CSS grade letter centerpiece + mini-table of
+outdated deps + severity-tagged signal list + CI/tests/bundle quick
+rows, all wrapped in fresh `.repo__*` styles inside `inlineCSS(brand:)`.
+
+`ProjectDetailSheet` gains a `repoAuditRunning` / `repoAuditResult`
+state pair driving a new "Auditer le code source" action row (only
+shown when `project.githubRepo` is non-empty) that fires
+`RepositoryAuditProbe.shared.run(repo:)` directly and presents the
+result inline via the new `RepoAuditDetailSheet` (mounted at
+`mind/App/Sources/RepoAuditDetailSheet.swift`, reusing the AuditSheet
+rendering vocabulary). 20 new FR/EN xcstrings keys land under the
+`audit.section.repo.*` / `project.action.auditRepo` / `repo.audit.empty.token`
+namespaces. 5 new MINDTelemetry breadcrumbs (`repoAudit.started`,
+`repoAudit.completed` with grade payload, `repoAudit.outdated.count`,
+`repoAudit.security.signals.count`, plus the existing
+`audit.probe.failed` route for the wrapped runProbe call).
+
+Tests: 6 new `RepositoryAuditFindingsTests` (defaults all-nil-or-zero,
+Codable round-trip all optionals nil, Codable round-trip all fields
+populated, `OutdatedDependency` Codable + Equatable, `SecuritySignal`
+filePath optional, AuditReport decodes without repoFindings on legacy
+payloads). 12 new `RepoAuditGradeBuilderTests` covering every grade
+boundary: A+ for fully clean, A for one minor blemish, B for missing
+tests with CI, B for 3 outdated with major, C for missing CI, C for
+6+ outdated, D for no TypeScript, F for .env in repo, F for hardcoded
+secret, plus summary has-three-bullets, summary-mentions-framework,
+summary-is-deterministic. 5 new `NpmRegistryClientTests` (latestURL
+shape, scoped-package URL, empty/whitespace nil, cache-key scoped
+slash → `_` collapse, `NpmPackageInfo` Codable with and without size).
+8 new `RepositoryAuditProbeTests` on the pure parsers (parsePackageJSON
+inferred framework + package manager from Next.js / pnpm payload,
+malformed input returns default PackageInfo, tsconfig JSONC + strict
+detection, strict false / missing / nil paths, classifyWorkflows
+detects test + deploy via filename keywords, detectSecuritySignals
+trips env-in-repo high signal while sparing .env.example,
+isNodeEngineStale boundary at Node 18, majorVersion strips operators).
+Build SUCCEEDED on iPhone 17 Pro simulator. Vision verify at
+`mind/screenshots/v1.0-alpha.10.png` shows the host launching clean
+on the Cockpit — the Repo Audit surface itself lives behind the
+ProjectDetail tap + "Auditer le code source" action, matching the
+host-launches-clean vision-verify bar used by v1.0-alpha.8 /
+v1.0-alpha.9 for on-demand UI.
+
 ## v1.0-alpha.9 — Live Actions + portfolio KPI bar ✅
 
 **What**: Light up the live actions everywhere the cockpit shows

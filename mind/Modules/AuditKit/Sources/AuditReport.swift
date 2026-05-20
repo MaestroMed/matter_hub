@@ -58,6 +58,15 @@ public struct AuditReport: Sendable, Codable, Hashable {
     /// they arrive without blocking the main audit flow).
     public var mockups: [RedesignMockup]
 
+    /// v1.0-alpha.10 — Repository-aware findings. Populated only
+    /// when `AuditClient.githubRepo` was non-nil at run time, the
+    /// AuditController fired the 14th probe, and at least one
+    /// signal landed. Nil otherwise — the AuditSheet "Code source"
+    /// section and the portal HTML "Audit code source" band stay
+    /// hidden when this is nil so legacy URL-only audits render
+    /// byte-identically.
+    public var repoFindings: RepositoryAuditFindings?
+
     public init(
         client: AuditClient,
         generatedAt: Date = .now,
@@ -70,7 +79,8 @@ public struct AuditReport: Sendable, Codable, Hashable {
         strategicBets: [StrategicBet],
         hiddenRisks: [HiddenRisk] = [],
         pitch: String,
-        mockups: [RedesignMockup] = []
+        mockups: [RedesignMockup] = [],
+        repoFindings: RepositoryAuditFindings? = nil
     ) {
         self.client = client
         self.generatedAt = generatedAt
@@ -84,18 +94,20 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.hiddenRisks = hiddenRisks
         self.pitch = pitch
         self.mockups = mockups
+        self.repoFindings = repoFindings
     }
 
-    // MARK: - Codable (backwards-compatible mockups)
+    // MARK: - Codable (backwards-compatible mockups + repoFindings)
 
-    /// v0.23 — Custom decoder so payloads serialised before the
-    /// `mockups` field existed still round-trip cleanly. Missing key
-    /// → empty array. Every other key keeps the synthesised
-    /// behaviour the compiler would have produced.
+    /// v0.23 / v1.0-alpha.10 — Custom decoder so payloads serialised
+    /// before the `mockups` / `repoFindings` fields existed still
+    /// round-trip cleanly. Missing key → nil / empty. Every other key
+    /// keeps the synthesised behaviour the compiler would have
+    /// produced.
     private enum CodingKeys: String, CodingKey {
         case client, generatedAt, persona, scoring, performance,
              findings, synthesis, quickWins, strategicBets,
-             hiddenRisks, pitch, mockups
+             hiddenRisks, pitch, mockups, repoFindings
     }
 
     public init(from decoder: Decoder) throws {
@@ -112,6 +124,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         self.hiddenRisks   = try c.decodeIfPresent([HiddenRisk].self, forKey: .hiddenRisks) ?? []
         self.pitch         = try c.decode(String.self, forKey: .pitch)
         self.mockups       = try c.decodeIfPresent([RedesignMockup].self, forKey: .mockups) ?? []
+        self.repoFindings  = try c.decodeIfPresent(RepositoryAuditFindings.self, forKey: .repoFindings)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -128,6 +141,7 @@ public struct AuditReport: Sendable, Codable, Hashable {
         try c.encode(hiddenRisks, forKey: .hiddenRisks)
         try c.encode(pitch, forKey: .pitch)
         try c.encode(mockups, forKey: .mockups)
+        try c.encodeIfPresent(repoFindings, forKey: .repoFindings)
     }
 
     // MARK: - Nested types

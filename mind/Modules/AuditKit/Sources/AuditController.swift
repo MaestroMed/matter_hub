@@ -2,6 +2,17 @@ import Foundation
 import Observation
 import GraphCore  // for MINDTelemetry
 
+/// v1.0-alpha.10 — Soft-fail boundary for the AuditController itself.
+/// Mirrors the per-probe error shapes (e.g. `GitHubClientError`) so
+/// the caller can treat "no repo configured" as a known signal,
+/// distinct from a network outage.
+public enum AuditControllerError: Error, Sendable, Equatable {
+    /// Raised when the repo probe is asked to run without a configured
+    /// repo slug — should be unreachable in production because the
+    /// caller gates on `client.githubRepo`.
+    case missingGitHubRepo
+}
+
 /// Orchestrates a digital audit run end-to-end:
 ///   1. probe every free public source in parallel (PageSpeed + secondary
 ///      findings),
@@ -42,6 +53,9 @@ public final class AuditController {
         case payment
         case cdn
         case trust
+        /// v1.0-alpha.10 — Repository-aware audit. Only seeded into
+        /// `probeStates` when `AuditClient.githubRepo` is non-nil.
+        case repoAudit
 
         /// French human label shown in the per-probe row. FR for
         /// user-facing strings (Mehdi convention).
@@ -60,6 +74,7 @@ public final class AuditController {
             case .payment:      return "Paiement"
             case .cdn:          return "CDN"
             case .trust:        return "Trustpilot"
+            case .repoAudit:    return "Code source"
             }
         }
 
@@ -79,6 +94,7 @@ public final class AuditController {
             case .payment:      return "creditcard.fill"
             case .cdn:          return "cloud.fill"
             case .trust:        return "star.fill"
+            case .repoAudit:    return "chevron.left.forwardslash.chevron.right"
             }
         }
     }
@@ -159,6 +175,7 @@ public final class AuditController {
     /// results on top of these so a re-run only touches failed probes.
     private var lastPerformance: AuditReport.PerformanceMetrics?
     private var lastFindings: AuditFindings = AuditFindings()
+    private var lastRepoFindings: RepositoryAuditFindings?
     private var lastClient: AuditClient?
 
     private var currentTask: Task<Void, Never>?
@@ -200,6 +217,22 @@ public final class AuditController {
         }
     }
 
+    /// v1.0-alpha.10 — Returns the probe kinds that should fire for
+    /// this client. The repo-aware audit only joins the set when
+    /// `client.githubRepo` is non-empty so the AuditSheet row list
+    /// stays clean for URL-only audits.
+    public nonisolated static func activeProbeKinds(for client: AuditClient) -> [ProbeKind] {
+        var kinds: [ProbeKind] = [
+            .pageSpeed, .security, .email, .domain, .mobile,
+            .schema, .openGraph, .crawlability, .compliance,
+            .analytics, .payment, .cdn, .trust,
+        ]
+        if let repo = client.githubRepo, !repo.isEmpty {
+            kinds.append(.repoAudit)
+        }
+        return kinds
+    }
+
     /// All probes whose state is `.failed`, in declaration order. Used
     /// by the retry CTA and exposed for tests.
     public var failedProbes: [ProbeKind] {
@@ -223,12 +256,16 @@ public final class AuditController {
         error = nil
         lastPerformance = nil
         lastFindings = AuditFindings()
+        lastRepoFindings = nil
         lastClient = client
         // Seed all probes as `.running` so the per-probe rows render
         // immediately under the spinner, even before the first probe
-        // returns.
+        // returns. v1.0-alpha.10 — `.repoAudit` only joins the row
+        // when the client carries a `githubRepo`; otherwise the row
+        // never appears (vs being a perma-failing red dot).
+        let enabledProbes = Self.activeProbeKinds(for: client)
         probeStates = Dictionary(
-            uniqueKeysWithValues: ProbeKind.allCases.map { ($0, .running) }
+            uniqueKeysWithValues: enabledProbes.map { ($0, .running) }
         )
         phase = .probing
 
@@ -292,7 +329,7 @@ public final class AuditController {
         }
         do {
             phase = .probing
-            let (performance, findings) = await runProbesInParallel(
+            let (performance, findings, repoFindings) = await runProbesInParallel(
                 for: client,
                 retryOnly: retryOnly
             )
@@ -300,15 +337,25 @@ public final class AuditController {
 
             self.lastPerformance = performance
             self.lastFindings = findings
+            self.lastRepoFindings = repoFindings
 
             phase = .synthesizing
             MINDTelemetry.info("audit.synthesize.start", data: ["host": host])
-            let synthesized = try await synthesizer.synthesize(
+            var synthesized = try await synthesizer.synthesize(
                 for: client,
                 performance: performance,
                 findings: findings
             )
             try Task.checkCancellation()
+
+            // v1.0-alpha.10 — Fold the repo audit findings onto the
+            // synthesised report. The synthesiser doesn't see them
+            // (the prose body talks about the *site*, not the repo),
+            // but the AuditSheet "Code source" section + the portal
+            // HTML "Audit code source" band both render straight off
+            // `report.repoFindings` so the visible audit reads as
+            // "Mehdi a regardé le moteur, pas juste la carrosserie".
+            synthesized.repoFindings = repoFindings
 
             self.report = synthesized
             self.phase = .completed
@@ -330,8 +377,14 @@ public final class AuditController {
             // and-forget — the archive soft-fails on disk errors
             // (the telemetry warning records the regression) and the
             // audit completion banner is never blocked on disk I/O.
+            //
+            // `synthesized` is `var` after v1.0-alpha.10 (we patched
+            // the repoFindings onto it). Snapshot to a `let` here so
+            // the captured value is a `Sendable` value type, never a
+            // mutable reference.
+            let archived = synthesized
             Task.detached {
-                await AuditReportArchive.shared.save(synthesized)
+                await AuditReportArchive.shared.save(archived)
             }
             // v0.23 — Fire-and-forget mockup generation. Doesn't block
             // the audit completion banner — the UI renders the
@@ -385,7 +438,7 @@ public final class AuditController {
     private func runProbesInParallel(
         for client: AuditClient,
         retryOnly: Set<ProbeKind>?
-    ) async -> (AuditReport.PerformanceMetrics?, AuditFindings) {
+    ) async -> (AuditReport.PerformanceMetrics?, AuditFindings, RepositoryAuditFindings?) {
         let url = client.url
         let host = url.host(percentEncoded: false) ?? ""
         let searchName = client.name?.trimmingCharacters(in: .whitespaces) ?? hostLabel(for: host)
@@ -411,6 +464,28 @@ public final class AuditController {
         async let cdn          = runProbe(.cdn,          enabled: shouldRun(.cdn))          { try await CDNProbe.fetch(for: url) }
         async let trust        = runProbe(.trust,        enabled: shouldRun(.trust))        { try await TrustpilotProbe.fetch(for: url) }
 
+        // v1.0-alpha.10 — Third wave: repo-aware audit. The probe is
+        // gated behind `client.githubRepo`; when absent, the row was
+        // never seeded and `runProbe(.repoAudit, enabled: false)`
+        // returns nil. The probe itself never throws — it always
+        // returns a `RepositoryAuditFindings` (degraded when needed)
+        // — but we still route it through `runProbe` so the row
+        // surfaces a green dot on success.
+        let repoEnabled = (client.githubRepo?.isEmpty == false) && shouldRun(.repoAudit)
+        let capturedRepo = client.githubRepo
+        async let repoFindingsTask: RepositoryAuditFindings? = runProbe(
+            .repoAudit,
+            enabled: repoEnabled
+        ) {
+            guard let repo = capturedRepo, !repo.isEmpty else {
+                // Shouldn't happen — `enabled` short-circuits — but
+                // guard anyway so the probe never reads a missing
+                // value as a soft error.
+                throw AuditControllerError.missingGitHubRepo
+            }
+            return await RepositoryAuditProbe.shared.run(repo: repo)
+        }
+
         let perfValue       = await perf
         let securityValue   = await security
         let emailValue      = await email
@@ -424,6 +499,7 @@ public final class AuditController {
         let paymentValue    = await payment
         let cdnValue        = await cdn
         let trustValue      = await trust
+        let repoValue       = await repoFindingsTask
 
         // Splice: on a retry, an `enabled: false` probe returns nil
         // here — we keep the previous successful value instead so the
@@ -443,7 +519,8 @@ public final class AuditController {
             cdn:          cdnValue        ?? (retryOnly != nil ? lastFindings.cdn          : nil),
             trust:        trustValue      ?? (retryOnly != nil ? lastFindings.trust        : nil)
         )
-        return (mergedPerf, mergedFindings)
+        let mergedRepo = repoValue ?? (retryOnly != nil ? lastRepoFindings : nil)
+        return (mergedPerf, mergedFindings, mergedRepo)
     }
 
     /// Runs a single probe, recording state transitions on the MainActor.

@@ -114,10 +114,13 @@ final class AuditControllerTests: XCTestCase {
     // MARK: - v0.4 ProbeKind contract
 
     /// ProbeKind enumerates every network sensor the controller fans
-    /// out to. The count must match the 13 advertised by the FR copy
-    /// in `progressLabel(.probing)` — drift here is a silent UX bug.
+    /// out to. The count is 14 since v1.0-alpha.10 (the 14th is the
+    /// optional `.repoAudit` probe, only seeded when the client carries
+    /// a `githubRepo`). The progressLabel copy still reads "13 sondes"
+    /// because the repo-aware probe sits on its own row in the UI when
+    /// active and is invisible when not.
     func test_probeKind_allCases_matchAdvertisedCount() {
-        XCTAssertEqual(AuditController.ProbeKind.allCases.count, 13)
+        XCTAssertEqual(AuditController.ProbeKind.allCases.count, 14)
     }
 
     /// Raw values are persistence-stable (telemetry `audit.probe.failed`
@@ -196,7 +199,9 @@ final class AuditControllerTests: XCTestCase {
     /// `run(for:)` synchronously seeds every probe to `.running` on
     /// the MainActor before the structured concurrency task fires.
     /// This is what lets the running view paint the per-probe row
-    /// list immediately — no first-frame flicker.
+    /// list immediately — no first-frame flicker. v1.0-alpha.10 —
+    /// the seeded set respects `client.githubRepo`: URL-only audits
+    /// seed 13 probes (no .repoAudit), repo-aware audits seed 14.
     func test_run_seedsAllProbesToRunning() {
         let controller = AuditController()
         let client = AuditClient(
@@ -204,16 +209,36 @@ final class AuditControllerTests: XCTestCase {
             name: "Example"
         )
         controller.run(for: client)
-        XCTAssertEqual(controller.probeStates.count, AuditController.ProbeKind.allCases.count)
-        for kind in AuditController.ProbeKind.allCases {
+        // URL-only audit → 13 probes, .repoAudit not seeded.
+        XCTAssertEqual(controller.probeStates.count, 13)
+        for kind in AuditController.ProbeKind.allCases where kind != .repoAudit {
             XCTAssertEqual(
                 controller.probeStates[kind],
                 .running,
                 "Probe \(kind.rawValue) should be seeded as .running"
             )
         }
+        XCTAssertNil(
+            controller.probeStates[.repoAudit],
+            "URL-only audit should not seed the .repoAudit row"
+        )
         XCTAssertFalse(controller.hasFailedProbes)
         controller.cancel()  // tear down so the network task doesn't leak
+    }
+
+    /// v1.0-alpha.10 — A client carrying a `githubRepo` seeds all 14
+    /// probes, including the new `.repoAudit` row.
+    func test_run_withGithubRepo_seedsRepoAuditRow() {
+        let controller = AuditController()
+        let client = AuditClient(
+            url: URL(string: "https://example.com")!,
+            name: "Example",
+            githubRepo: "owner/example-repo"
+        )
+        controller.run(for: client)
+        XCTAssertEqual(controller.probeStates.count, 14)
+        XCTAssertEqual(controller.probeStates[.repoAudit], .running)
+        controller.cancel()
     }
 
     // MARK: - v0.4 Retry contract
@@ -271,8 +296,8 @@ final class AuditControllerTests: XCTestCase {
         )
         XCTAssertEqual(
             AuditController.ProbeKind.allCases.last,
-            .trust,
-            "Trustpilot runs last (slowest tail call)"
+            .repoAudit,
+            "Repo audit is the 14th probe (v1.0-alpha.10), appended after Trustpilot"
         )
     }
 }
