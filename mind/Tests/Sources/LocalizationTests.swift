@@ -569,4 +569,30 @@ final class LocalizationTests: XCTestCase {
         XCTAssertNotNil(localized("home.swarm.subtitle", lang: "en"))
         XCTAssertNotNil(localized("home.swarm.subtitle", lang: "fr"))
     }
+
+    // MARK: - v1.0-alpha.8 — Project Health Pulse strings
+
+    /// Locks every key the Site Health row + the ProjectCard status
+    /// dot read. If a label drifts mid-translation, the dot
+    /// accessibility label silently falls back to the raw key. This
+    /// test makes the regression loud across both languages.
+    func test_healthPulseStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("project.detail.health", lang: "en"), "Site health")
+        XCTAssertEqual(localized("project.detail.health", lang: "fr"), "Santé du site")
+
+        XCTAssertEqual(localized("health.status.online",   lang: "en"), "Online")
+        XCTAssertEqual(localized("health.status.online",   lang: "fr"), "En ligne")
+
+        XCTAssertEqual(localized("health.status.degraded", lang: "en"), "Degraded")
+        XCTAssertEqual(localized("health.status.degraded", lang: "fr"), "Lent")
+
+        XCTAssertEqual(localized("health.status.error",    lang: "en"), "Server error")
+        XCTAssertEqual(localized("health.status.error",    lang: "fr"), "Erreur serveur")
+
+        XCTAssertEqual(localized("health.status.offline",  lang: "en"), "Offline")
+        XCTAssertEqual(localized("health.status.offline",  lang: "fr"), "Hors ligne")
+
+        XCTAssertEqual(localized("health.status.unknown",  lang: "en"), "Not checked")
+        XCTAssertEqual(localized("health.status.unknown",  lang: "fr"), "Non vérifié")
+    }
 }

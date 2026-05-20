@@ -213,6 +213,72 @@ existing AuditKit pipeline so each generated page gets a lighthouse
 score on commit. **Acceptance**: AZ Construction's 8 services × 12
 Paris zones → 96 deliverables generated in one batch, each with
 its own row on the Cockpit feed.
+### v1.0-alpha.8 — Project Health Pulse (pure substrate) ✅
+
+**What**: Persistent per-Project HTTP health probe results — pure
+value types + pure classifier + on-disk store ready for a future
+background probe wave. Surfaces immediately as a tiny status dot on
+each ProjectCard's avatar (top-right corner) and a "Santé du site"
+row inside ProjectDetailSheet's overview section. The dot maps
+`(statusCode, responseTimeMs)` → `HealthStatus` (online / degraded /
+error / offline / unknown), colour-coded green / orange / red /
+red / hidden. The actual URLSession probe lands in v1.0-alpha.9 —
+this version ships the substrate behind it so the SwiftUI surface,
+the persistence layer, and the classifier are already locked when
+the probe layer lights up. **Acceptance**: `HealthPulseStore`
+round-trips one pulse per project under
+`Documents/health-pulses/<projectID>.json`; pulse hydration survives
+a fresh `HealthPulseStore` instance over the same root URL; pure
+`HealthClassifier.classify(...)` maps every documented bucket
+deterministically (2xx fast → online, 2xx slow → degraded, 3xx →
+degraded, 4xx/5xx → error, transport sentinel → offline); ProjectCard
+status dot renders coloured only when a pulse exists; ProjectDetailSheet
+"Site health" row hides cleanly when the pulse status is `.unknown`.
+
+Shipped 2026-05-20: new `HealthPulse` Sendable Codable value type +
+`HealthStatus` enum (5 buckets, `severityRank` for "most-critical-
+first" sort) + `HealthClassifier` pure mapper (`classify(statusCode:
+responseTimeMs:degradedThresholdMs:)` with the 1500 ms default
+threshold matching the v0.4 audit "performance" probe's slow cutoff)
++ `HealthPulseHelpers` (sortByCriticalFirst + formatRelativeAge
+through `RelativeDateTimeFormatter`) all in GraphCore so no new Tuist
+module is needed. `HealthPulseStore` actor mirrors the
+`SEOSwarmStore` / `FollowUpStore` shape: per-file `<projectID>.json`
+under `Documents/health-pulses/`, in-memory cache backing every
+read, soft-fail telemetry on every disk error
+(`health.store.{hydrate,decode,mkdir,write}.failed`), atomic writes,
+hydration on first read across instances. ProjectsView's
+`ProjectCard` gains a `.task(id: project.id)` that loads the latest
+pulse and renders a 12pt colour dot on the avatar's top-right corner
+when status != `.unknown` (a `.background` stroke makes it pop on
+both light and dark Liquid Glass cards). ProjectDetailSheet's
+overview section gains a `healthRow(pulse:)` rendering the status
+label + relative age + response-time pill behind the same
+`.unknown` gate. 6 new FR/EN xcstrings keys
+(`project.detail.health`, `health.status.{online,degraded,error,
+offline,unknown}`). Tests: 16 new `HealthClassifierTests` cover
+every status-code boundary (fast 2xx → online, 299 still online,
+slow 2xx → degraded, threshold-`==` is degraded, just-under-threshold
+stays online, 301/302 redirect → degraded, custom threshold override,
+404 → error, 500 → error, 503 → error, transport sentinel → offline,
+negative non-sentinel → offline, 100-199 → offline, severity rank
+ordering invariant, sortByCriticalFirst groups+date-desc inside
+bucket, empty input → empty output, Codable round-trip preserves
+every field). 7 new `HealthPulseStoreTests` cover the on-disk
+contract (save→load round-trip, save-replaces-previous for same
+projectID, missing-project → nil, allPulses surfaces every record,
+delete removes from cache + disk, clearAll wipes + idempotent,
+hydration repopulates cache across fresh instance over same root).
+`LocalizationTests` extended with `test_healthPulseStrings_resolveBothLanguages`
+(12 asserts FR + EN). Sample reference data at
+`mind/screenshots/v1.0-alpha.8-sample-pulses.json` documents the
+five status-bucket cases against the real Numelite project hosts.
+708 tests total, 15 skipped, 0 failures (was 684 in v1.0-alpha.6).
+Vision verify at `mind/screenshots/v1.0-alpha.8.png` (host launches
+clean on the Cockpit — the dot + Site health row are intentionally
+hidden because no pulse has been saved yet on a fresh simulator,
+which is the documented `.unknown` soft-default).
+
 Shipped 2026-05-20: SEO Swarm Orchestrator — 3-step wizard generating N {service}×{zone} Next.js pages via Claude, exports as ZIP for `cp -r` into the client repo. New `SwarmKit` module ships five pure surfaces: `SEOSwarmJob` / `SwarmZone` / `SwarmPage` / `SwarmJobStatus` Sendable Codable value types; `SEOSwarmPromptBuilder.systemPrompt()` + `pagePrompt(project:service:zone:)` (FR senior SEO copywriter persona, 1500-2500 word page brief grounded on zone display name + department code + optional population, JSON-only response contract with `{title, metaDescription, h1, bodyMarkdown, jsonLD}` schema, no-hallucination guardrail when population nil); `SEOSwarmOrchestrator` actor (3 in-flight pages via TaskGroup with soft-fail per page, `AsyncStream<ProgressEvent>` for live UI updates, `.started/.pageCompleted/.pageFailed/.completed/.cancelled` event kinds, status reconciliation into `.completed`/`.partial`/`.failed`); `SEOSwarmStore` actor (per-job JSON persistence under `Documents/seo-swarm-jobs/<id>.json` with in-memory cache + soft-fail telemetry mirroring `FollowUpStore`); `SEOSwarmExporter.nextJSAppRouter(pages:)` (one `src/app/<service>/<zone>/page.tsx` per page with Next.js Metadata + JSON-LD script tag + ReactMarkdown body); `SwarmZoneCatalog` (226 IDF + regional commune zones with INSEE population data, URL-safe slugs, alphabetically sorted, filter helper for autocomplete). iOS UI ships `SwarmWizardSheet` (3-step wizard: Cible → chips picker for project/services/zones with autocomplete against SwarmZoneCatalog, Configuration → matrix preview + EUR cost estimate based on Sonnet 4.6 pricing × 0.93 EUR/USD with methodology alert, Lancement → confirm dialog + primary CTA, running view with progress ring + counter + scroll log + cancel CTA, completed sheet with 3 actions Voir résumé/Exporter ZIP/Pousser GitHub). HomeView gains a `tornado`-iconed aqua "SEO Swarm" card after the audit card stack; ProjectDetailSheet gains a "Lancer un swarm SEO" action row that opens the wizard pre-selected on the project. 7 MINDTelemetry breadcrumbs (`swarm.wizard.opened`, `swarm.job.created`, `swarm.job.started`, `swarm.page.generated`, `swarm.page.failed`, `swarm.job.completed`, `swarm.zip.exported`). 19 new FR/EN xcstrings keys under `swarm.*` + `home.swarm.*` namespaces. Tests: 11 `SEOSwarmPromptBuilderTests` (FR mention, project + service + zone anchors, JSON-only contract, LocalBusiness mention, word count range, determinism, slot variance, empty service fallback, population gracing); 6 `SEOSwarmExporterTests` (one file per page, forward-slash paths, route + JSON-LD + markdown body presence, determinism); 5 `SwarmZoneCatalogTests` (>=200 zones, non-empty fields, no duplicate slugs, URL-safe slugs, alphabetical sort); 4 `SEOSwarmStoreTests` (save+load round-trip, list all, delete, load-missing nil). `LocalizationTests` extended with `test_swarmStrings_resolveBothLanguages` (19 FR + EN asserts including format-string placeholder survival). Vision verify at `mind/screenshots/v1.0-alpha.7.png` (host launches clean on the Cockpit) with `mind/screenshots/v1.0-alpha.7-example.txt` carrying a sample generated SwarmPage JSON for AZ Construction × Verrière × Puteaux (92) so Mehdi sees the quality bar.
 
 ## v1.0-alpha.1 — Radical cleanup (Cockpit Studio pivot) ✅

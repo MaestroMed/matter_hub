@@ -8610,6 +8610,114 @@
         }
       }
     },
+    "project.detail.health": {
+      "comment": "v1.0-alpha.8 — Detail row label for Site Health Pulse.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Site health"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Santé du site"
+          }
+        }
+      }
+    },
+    "health.status.online": {
+      "comment": "v1.0-alpha.8 — HealthStatus.online label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En ligne"
+          }
+        }
+      }
+    },
+    "health.status.degraded": {
+      "comment": "v1.0-alpha.8 — HealthStatus.degraded label (slow 2xx or redirect 3xx).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Degraded"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lent"
+          }
+        }
+      }
+    },
+    "health.status.error": {
+      "comment": "v1.0-alpha.8 — HealthStatus.error label (4xx/5xx).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server error"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "health.status.offline": {
+      "comment": "v1.0-alpha.8 — HealthStatus.offline label (transport failure).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hors ligne"
+          }
+        }
+      }
+    },
+    "health.status.unknown": {
+      "comment": "v1.0-alpha.8 — HealthStatus.unknown label (never probed).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not checked"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vérifié"
+          }
+        }
+      }
+    },
     "project.detail.leads.recent": {
       "comment": "v1.0-alpha.3 — Detail section title.",
       "extractionState": "manual",

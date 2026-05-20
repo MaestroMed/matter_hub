@@ -27,6 +27,12 @@ struct ProjectDetailSheet: View {
     @State private var showLeadsListSheet: Bool = false
     @State private var showArchiveConfirm: Bool = false
 
+    /// v1.0-alpha.8 — Latest health pulse hydrated from
+    /// `HealthPulseStore.shared` on appear. nil until the async load
+    /// returns; the overview surface reads that as `.unknown` and
+    /// hides the row gracefully.
+    @State private var healthPulse: HealthPulse?
+
     init(project: Project) {
         self.project = project
         _notesDraft = State(initialValue: project.notes)
@@ -52,6 +58,9 @@ struct ProjectDetailSheet: View {
                 "project.detail.opened",
                 data: ["projectID": project.id.uuidString]
             )
+        }
+        .task(id: project.id) {
+            healthPulse = await HealthPulseStore.shared.load(projectID: project.id)
         }
         .sheet(isPresented: $isAuditing) {
             AuditSheet(initialURL: "https://\(project.host)")
@@ -208,9 +217,68 @@ struct ProjectDetailSheet: View {
                     value: project.lastActivityAt.formatted(.relative(presentation: .named)),
                     url: nil
                 )
+                // v1.0-alpha.8 — Health pulse surface. Hidden when no
+                // probe has ever fired (the dot's "unknown" bucket)
+                // so the section stays tight on fresh projects, and
+                // reveals progressively as the background probe lands
+                // real status codes.
+                if let pulse = healthPulse, pulse.status != .unknown {
+                    healthRow(pulse: pulse)
+                }
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func healthRow(pulse: HealthPulse) -> some View {
+        let tint = healthDotColor(for: pulse.status)
+        HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(tint.opacity(0.18))
+                    .frame(width: 28, height: 28)
+                Circle().fill(tint)
+                    .frame(width: 10, height: 10)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(String(localized: "project.detail.health"))
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(String(localized: String.LocalizationValue(pulse.status.localizationKey)))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(verbatim: "·")
+                        .foregroundStyle(.tertiary)
+                    Text(verbatim: HealthPulseHelpers.formatRelativeAge(pulse.checkedAt))
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            Spacer()
+            if pulse.responseTimeMs >= 0 {
+                Text(verbatim: "\(pulse.responseTimeMs) ms")
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background { Capsule().fill(.ultraThinMaterial) }
+            }
+        }
+    }
+
+    /// Local mirror of the ProjectCard helper so the colour vocabulary
+    /// stays consistent across both surfaces without forcing a new
+    /// public API in DesignSystem.
+    private func healthDotColor(for status: HealthStatus) -> Color {
+        switch status {
+        case .online:   return .green
+        case .degraded: return .orange
+        case .error:    return .red
+        case .offline:  return .red
+        case .unknown:  return .gray
         }
     }
 

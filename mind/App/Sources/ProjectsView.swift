@@ -181,6 +181,11 @@ struct ProjectsView: View {
 private struct ProjectCard: View {
     let project: Project
 
+    /// v1.0-alpha.8 — Latest health pulse loaded from
+    /// `HealthPulseStore` on appear. nil until the async hydration
+    /// returns, which the dot reads as `.unknown`.
+    @State private var healthPulse: HealthPulse?
+
     var body: some View {
         LiquidCard(cornerRadius: 20) {
             HStack(spacing: 14) {
@@ -207,16 +212,57 @@ private struct ProjectCard: View {
             .padding(.vertical, 14)
             .frame(minHeight: 88)
         }
+        .task(id: project.id) {
+            // Hydrate the dot lazily — we never block the render on
+            // the disk read, and a fresh pulse from background probing
+            // shows up on the next `task` cycle. The cache mirror
+            // inside `HealthPulseStore` keeps this O(1) after the
+            // first hit.
+            healthPulse = await HealthPulseStore.shared.load(projectID: project.id)
+        }
     }
 
     private var avatar: some View {
-        ZStack {
-            Circle()
-                .fill(accent.opacity(0.22))
-                .frame(width: 48, height: 48)
-            Text(String(project.name.first ?? "?").uppercased())
-                .font(.system(.title3, design: .rounded, weight: .bold))
-                .foregroundStyle(accent)
+        ZStack(alignment: .topTrailing) {
+            ZStack {
+                Circle()
+                    .fill(accent.opacity(0.22))
+                    .frame(width: 48, height: 48)
+                Text(String(project.name.first ?? "?").uppercased())
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .foregroundStyle(accent)
+            }
+            // v1.0-alpha.8 — Site health pulse dot anchored on the
+            // avatar's top-right corner. Stays a tiny coloured circle
+            // when present, fully invisible when `.unknown` so a
+            // never-probed project doesn't pollute the list with
+            // gray dots.
+            if let status = healthPulse?.status, status != .unknown {
+                Circle()
+                    .fill(healthDotColor(for: status))
+                    .frame(width: 12, height: 12)
+                    .overlay {
+                        Circle()
+                            .stroke(.background, lineWidth: 2)
+                    }
+                    .offset(x: 2, y: -2)
+                    .accessibilityLabel(Text(status.localizationKey))
+            }
+        }
+        .frame(width: 48, height: 48)
+    }
+
+    /// Maps a `HealthStatus` bucket to its dot tint. Kept inside the
+    /// card view so the colour vocabulary stays co-located with the
+    /// thing rendering it (and so a future palette tweak is a one-
+    /// liner here, not a search-and-replace).
+    private func healthDotColor(for status: HealthStatus) -> Color {
+        switch status {
+        case .online:   return .green
+        case .degraded: return .orange
+        case .error:    return .red
+        case .offline:  return .red
+        case .unknown:  return .gray
         }
     }
 

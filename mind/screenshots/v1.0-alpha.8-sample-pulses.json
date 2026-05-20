@@ -1,0 +1,42 @@
+[
+  {
+    "comment": "v1.0-alpha.8 sample — fast 200 OK = online (green dot)",
+    "host": "www.azconcept.fr",
+    "checkedAt": "2026-05-20T12:00:00Z",
+    "statusCode": 200,
+    "responseTimeMs": 312,
+    "status": "online"
+  },
+  {
+    "comment": "Slow 2xx above the 1500 ms threshold = degraded (orange dot)",
+    "host": "www.azconstruction.fr",
+    "checkedAt": "2026-05-20T12:00:30Z",
+    "statusCode": 200,
+    "responseTimeMs": 1820,
+    "status": "degraded"
+  },
+  {
+    "comment": "301 permanent redirect = degraded (yellow dot, host mismatch)",
+    "host": "www.iefandco.com",
+    "checkedAt": "2026-05-20T12:01:00Z",
+    "statusCode": 301,
+    "responseTimeMs": 80,
+    "status": "degraded"
+  },
+  {
+    "comment": "503 Service Unavailable = error (red dot, common Vercel outage)",
+    "host": "www.az-epoxy.fr",
+    "checkedAt": "2026-05-20T12:01:30Z",
+    "statusCode": 503,
+    "responseTimeMs": 240,
+    "status": "error"
+  },
+  {
+    "comment": "Transport-layer failure (-1) = offline (red dot, never connected)",
+    "host": "www.sconnect.fr",
+    "checkedAt": "2026-05-20T12:02:00Z",
+    "statusCode": -1,
+    "responseTimeMs": 0,
+    "status": "offline"
+  }
+]
