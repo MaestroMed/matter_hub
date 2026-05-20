@@ -11428,6 +11428,62 @@
         "fr": { "stringUnit": { "state": "translated", "value": "%d nouveau(x) lead(s)" } }
       }
     },
+    "settings.mac.apparence.section": {
+      "comment": "v1.0-alpha.15 · Settings · 'Apparence Mac' section header rendered only on Mac Catalyst.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mac Appearance" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Apparence Mac" } }
+      }
+    },
+    "settings.mac.apparence.compact": {
+      "comment": "v1.0-alpha.15 · Settings · 'Compact mode' Mac Catalyst toggle (denser cell padding).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Compact mode" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mode compact" } }
+      }
+    },
+    "settings.mac.apparence.sidebar": {
+      "comment": "v1.0-alpha.15 · Settings · 'Persistent sidebar' Mac Catalyst toggle (keeps NavigationSplitView pinned).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Persistent sidebar" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Sidebar persistante" } }
+      }
+    },
+    "mac.toolbar.newAudit": {
+      "comment": "v1.0-alpha.15 · Mac Catalyst toolbar · 'New audit' button label (alias for toolbar.audit).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New audit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouvel audit" } }
+      }
+    },
+    "mac.toolbar.leads": {
+      "comment": "v1.0-alpha.15 · Mac Catalyst toolbar · 'Leads' button label (alias for toolbar.leads).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Leads" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Leads" } }
+      }
+    },
+    "mac.toolbar.bootstrap": {
+      "comment": "v1.0-alpha.15 · Mac Catalyst toolbar · 'Bootstrap' button label (alias for toolbar.bootstrap).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bootstrap" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bootstrap" } }
+      }
+    },
+    "mac.toolbar.refresh": {
+      "comment": "v1.0-alpha.15 · Mac Catalyst toolbar · 'Refresh' button label (alias for toolbar.refresh).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refresh portfolio" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rafraîchir le portfolio" } }
+      }
+    },
     "lead.reply.angle.direct": {
       "comment": "v1.0-alpha.13 · AI Reply Composer · tab pill label for the 'direct' angle (concise answer + call slot).",
       "extractionState": "manual",

@@ -415,6 +415,17 @@ public struct SettingsView: View {
 
                 iCloudSection
 
+                #if targetEnvironment(macCatalyst)
+                // v1.0-alpha.15 — Mac apparence section. Catalyst-only
+                // toggles: compact mode (denser cell padding for the
+                // 27" Numelite cockpit) and sidebar persistance
+                // (NavigationSplitView stays fully visible across
+                // window restores instead of collapsing on detail
+                // taps). Both flip `@AppStorage` keys consumed by
+                // the corresponding view modifiers.
+                macApparenceSection
+                #endif
+
                 // v1.0-alpha.14 — APNs push toggle + device-token row
                 // + test-notification button. Sits between iCloud and
                 // Beta so the operator can verify the device token
@@ -1733,6 +1744,43 @@ public struct SettingsView: View {
         }
     }
 
+    // MARK: - Mac apparence section (v1.0-alpha.15)
+
+    #if targetEnvironment(macCatalyst)
+    /// Catalyst-only Settings section. Surfaces two `@AppStorage`
+    /// toggles that the rest of the cockpit watches:
+    /// - `mind.mac.compact` — denser cell padding (10pt vs. 14pt) on
+    ///   the project carousel + lead inbox, so a 27" Numelite
+    ///   workstation lays out more rows per screen.
+    /// - `mind.mac.sidebar.persistent` — keeps the
+    ///   NavigationSplitView sidebar pinned across detail taps
+    ///   instead of letting the OS auto-collapse it on narrow
+    ///   widths.
+    ///
+    /// Both toggles also emit a `mac.apparence.toggled.*` telemetry
+    /// breadcrumb so the lifecycle hooks can correlate "user
+    /// changed apparence" with subsequent navigation events.
+    private var macApparenceSection: some View {
+        section(localized: "settings.mac.apparence.section") {
+            VStack(alignment: .leading, spacing: 14) {
+                MacApparenceToggleRow(
+                    titleKey: "settings.mac.apparence.compact",
+                    storageKey: "mind.mac.compact",
+                    breadcrumb: "mac.apparence.compact.toggled"
+                )
+                Divider().background(.white.opacity(0.2))
+                MacApparenceToggleRow(
+                    titleKey: "settings.mac.apparence.sidebar",
+                    storageKey: "mind.mac.sidebar.persistent",
+                    breadcrumb: "mac.apparence.sidebar.toggled"
+                )
+            }
+        }
+    }
+    #endif
+    // v1.0-alpha.15 — the catalog keys live at file scope below:
+    // `settings.mac.apparence.section`, `.compact`, `.sidebar`.
+
     /// Async fetches the account status off-main and writes it back to
     /// the @State on the main actor. CKContainer.accountStatus is the
     /// canonical "can MIND sync" probe.
@@ -2469,6 +2517,47 @@ public struct SettingsView: View {
         section(title: resolved, content: content)
     }
 }
+
+// MARK: - Mac apparence toggle row (v1.0-alpha.15)
+
+#if targetEnvironment(macCatalyst)
+/// Catalyst-only toggle row used by `macApparenceSection`. Reads /
+/// writes a single `@AppStorage` key on toggle, then emits a
+/// `MINDTelemetry.info(breadcrumb)` so the apparence change shows
+/// up in the lifecycle timeline next to `mac.scenePhase.*` events.
+private struct MacApparenceToggleRow: View {
+    let titleKey: String
+    let storageKey: String
+    let breadcrumb: String
+
+    init(titleKey: String, storageKey: String, breadcrumb: String) {
+        self.titleKey = titleKey
+        self.storageKey = storageKey
+        self.breadcrumb = breadcrumb
+        self._isOn = AppStorage(wrappedValue: false, storageKey)
+    }
+
+    @AppStorage private var isOn: Bool
+
+    var body: some View {
+        HStack {
+            Text(String(localized: String.LocalizationValue(titleKey), bundle: .main))
+                .font(.system(.body, design: .rounded, weight: .medium))
+            Spacer()
+            LiquidToggle(isOn: Binding(
+                get: { isOn },
+                set: { newValue in
+                    isOn = newValue
+                    MINDTelemetry.info(
+                        breadcrumb,
+                        data: ["enabled": newValue ? "true" : "false"]
+                    )
+                }
+            ))
+        }
+    }
+}
+#endif
 
 /// v0.31 — UIKit bridge for the system share sheet so the
 /// "Generate test invoice" CTA can hand the sample PDF to

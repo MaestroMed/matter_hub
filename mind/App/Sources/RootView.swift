@@ -27,7 +27,24 @@ struct RootView: View {
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Query private var allNodes: [Node]
 
-    @State private var selection: MINDTab = .home
+    /// v1.0-alpha.15 — `MINDTab` selection persists across window
+    /// restores on Mac Catalyst (and iPad multitasking) via
+    /// `@SceneStorage`. The raw string lives under the
+    /// `MacSceneStorageKey.selectedTab` namespace; `selection`
+    /// computes from the raw value with a nonmutating setter that
+    /// writes back through the property wrapper. Existing call
+    /// sites that read OR write `selection` keep working unchanged.
+    @SceneStorage(MacSceneStorageKey.selectedTab) private var rawSelection: String = MINDTab.home.rawValue
+    private var selection: MINDTab {
+        get { MINDTab(rawValue: rawSelection) ?? .home }
+        nonmutating set { rawSelection = newValue.rawValue }
+    }
+    private var selectionBinding: Binding<MINDTab> {
+        Binding(
+            get: { MINDTab(rawValue: rawSelection) ?? .home },
+            set: { newValue in rawSelection = newValue.rawValue }
+        )
+    }
     @State private var selectedNode: Node?
     /// v1.0-alpha.11 — Drives the Bulk Import GitHub repos wizard.
     /// Settings's "Importer mes repos" CTA flips this true; the
@@ -37,7 +54,31 @@ struct RootView: View {
     /// but binding lets us collapse the sidebar after the user picks
     /// a row on iPad portrait, where the auto behaviour can leave the
     /// sidebar covering half the screen.
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    ///
+    /// v1.0-alpha.15 — Persisted across window restores via
+    /// `@SceneStorage` using the
+    /// `MacSceneStorageKey.sidebarVisibility` namespace. The raw
+    /// string is decoded back into `NavigationSplitViewVisibility`
+    /// inside `columnVisibilityBinding`.
+    @SceneStorage(MacSceneStorageKey.sidebarVisibility) private var rawColumnVisibility: String = "all"
+    private var columnVisibilityBinding: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: {
+                switch rawColumnVisibility {
+                case "doubleColumn": return .doubleColumn
+                case "detailOnly":   return .detailOnly
+                default:             return .all
+                }
+            },
+            set: { newValue in
+                switch newValue {
+                case .doubleColumn: rawColumnVisibility = "doubleColumn"
+                case .detailOnly:   rawColumnVisibility = "detailOnly"
+                default:            rawColumnVisibility = "all"
+                }
+            }
+        )
+    }
     /// Flipped to `true` by OnboardingView's final "Start" button on
     /// first launch. Persisted in standard UserDefaults (not the app
     /// group) because no extension needs to know; only this view
@@ -134,6 +175,75 @@ struct RootView: View {
             MINDTelemetry.info("command.newAudit.fired")
             selection = .home
         }
+        .onReceive(NotificationCenter.default.publisher(for: .mindCommandAuditToolbar)) { _ in
+            // v1.0-alpha.15 — Catalyst toolbar "New Audit" button.
+            // Land on Home + fire the same `.mindCommandNewAudit`
+            // channel HomeView is already listening on so the
+            // existing audit-sheet path triggers without a special
+            // toolbar branch.
+            MINDTelemetry.info("mac.toolbar.audit.fired")
+            selection = .home
+            NotificationCenter.default.post(
+                name: .mindCommandNewAudit,
+                object: nil
+            )
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mindCommandLeadInbox)) { _ in
+            // v1.0-alpha.15 — Catalyst toolbar "Leads" button. Flip
+            // back to Home; HomeView already auto-scrolls its lead
+            // inbox card into view on `selection = .home`.
+            MINDTelemetry.info("mac.toolbar.leads.fired")
+            selection = .home
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mindCommandBootstrap)) { _ in
+            // v1.0-alpha.15 — Catalyst toolbar "Bootstrap" button.
+            // Land on Home and surface the same telemetry breadcrumb
+            // the menu-bar ⌘B shortcut emits; HomeView's bootstrap
+            // card listener handles the actual sheet present.
+            MINDTelemetry.info("mac.toolbar.bootstrap.fired")
+            selection = .home
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mindCommandRefresh)) { _ in
+            // v1.0-alpha.15 — Catalyst toolbar refresh button. Emits
+            // a refresh breadcrumb; HomeView already runs the same
+            // portfolio fan-out on its own pull-to-refresh, so the
+            // toolbar surface piggybacks on that path via the
+            // notification channel.
+            MINDTelemetry.info("mac.toolbar.refresh.fired")
+        }
+        #if targetEnvironment(macCatalyst)
+        // v1.0-alpha.15 — Mac Catalyst window toolbar. Four buttons
+        // wired to the `MacToolbarAction` table: Lead inbox / New
+        // audit / Bootstrap / Refresh. Each button posts on its
+        // matching `Notification.Name.mindCommand*` channel, the
+        // same channels the Stage Manager menu-bar entries already
+        // post on, so the downstream listeners (HomeView,
+        // RootView) react identically whether the user clicks the
+        // toolbar or hits ⌘L / ⌘N / ⌘B / ⌘R.
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                ForEach(MacToolbarAction.allCases, id: \.self) { action in
+                    Button {
+                        LiquidHaptics.tap()
+                        MINDTelemetry.info(
+                            "mac.toolbar.tapped",
+                            data: ["action": action.rawValue]
+                        )
+                        NotificationCenter.default.post(
+                            name: action.notificationName,
+                            object: nil
+                        )
+                    } label: {
+                        Label(
+                            String(localized: String.LocalizationValue(action.localizedKey)),
+                            systemImage: action.systemImage
+                        )
+                    }
+                    .help(Text(String(localized: String.LocalizationValue(action.localizedKey))))
+                }
+            }
+        }
+        #endif
     }
 
     // MARK: - Compact (iPhone portrait)
@@ -150,7 +260,7 @@ struct RootView: View {
             VStack {
                 Spacer()
                 LiquidTabBar(
-                    selection: $selection,
+                    selection: selectionBinding,
                     leading: [
                         LiquidTab(icon: "house.fill", tag: MINDTab.home),
                         LiquidTab(icon: "person.text.rectangle.fill", tag: MINDTab.clients),
@@ -170,7 +280,7 @@ struct RootView: View {
     // MARK: - Regular (iPad / iPhone Plus landscape)
 
     private var regularBody: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        NavigationSplitView(columnVisibility: columnVisibilityBinding) {
             sidebar
                 .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 320)
                 .background {

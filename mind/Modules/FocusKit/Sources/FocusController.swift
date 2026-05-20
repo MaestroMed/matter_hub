@@ -1,5 +1,7 @@
 import Foundation
+#if !targetEnvironment(macCatalyst)
 @preconcurrency import ActivityKit
+#endif
 import Observation
 import SwiftData
 import GraphCore
@@ -13,22 +15,39 @@ import GraphCore
 /// updates after a few minutes in background. We don't have a backend
 /// to push from yet, so the observer just keeps the token alive locally.
 /// When Phase 8 adds backend-side push, the upload call goes there.
+///
+/// v1.0-alpha.15 — Mac Catalyst doesn't ship ActivityKit so every
+/// start / pause / resume / end path no-ops and emits a
+/// `focus.activity.unavailable.catalyst` breadcrumb. The public API
+/// stays identical so callers (AmbientView, etc.) compile and link
+/// on Catalyst with reduced functionality.
 @MainActor
 @Observable
 public final class FocusController {
     public static let shared = FocusController()
 
     public private(set) var session: FocusSession?
+
+    #if !targetEnvironment(macCatalyst)
     public private(set) var activity: Activity<FocusActivityAttributes>?
 
     private var pushTokenTask: Task<Void, Never>?
+    #endif
 
     public init() {}
 
+    #if !targetEnvironment(macCatalyst)
     public var isRunning: Bool { activity != nil }
+    #else
+    public var isRunning: Bool { false }
+    #endif
 
     public var areLiveActivitiesEnabled: Bool {
-        ActivityAuthorizationInfo().areActivitiesEnabled
+        #if !targetEnvironment(macCatalyst)
+        return ActivityAuthorizationInfo().areActivitiesEnabled
+        #else
+        return false
+        #endif
     }
 
     /// Start a new Deep Focus session and a matching Live Activity. If a
@@ -40,6 +59,7 @@ public final class FocusController {
         duration: TimeInterval,
         pulseColor: FocusActivityAttributes.ContentState.PulseColor = .iris
     ) -> FocusSession? {
+        #if !targetEnvironment(macCatalyst)
         guard areLiveActivitiesEnabled else { return nil }
         endNow()
 
@@ -86,9 +106,21 @@ public final class FocusController {
             )
             return nil
         }
+        #else
+        MINDTelemetry.info(
+            "focus.activity.unavailable.catalyst",
+            data: [
+                "call": "start",
+                "intention": intention,
+                "duration_s": String(Int(duration))
+            ]
+        )
+        return nil
+        #endif
     }
 
     public func pause() async {
+        #if !targetEnvironment(macCatalyst)
         guard let activity, let session else { return }
         let remaining = max(0, session.endDate.timeIntervalSinceNow)
         let state = FocusActivityAttributes.ContentState(
@@ -99,9 +131,16 @@ public final class FocusController {
             update: activity,
             content: ActivityContent(state: state, staleDate: nil)
         )
+        #else
+        MINDTelemetry.info(
+            "focus.activity.unavailable.catalyst",
+            data: ["call": "pause"]
+        )
+        #endif
     }
 
     public func resume() async {
+        #if !targetEnvironment(macCatalyst)
         guard let activity, let session else { return }
         let state = FocusActivityAttributes.ContentState(
             phase: .running,
@@ -114,9 +153,16 @@ public final class FocusController {
                 staleDate: session.endDate.addingTimeInterval(60)
             )
         )
+        #else
+        MINDTelemetry.info(
+            "focus.activity.unavailable.catalyst",
+            data: ["call": "resume"]
+        )
+        #endif
     }
 
     public func end() {
+        #if !targetEnvironment(macCatalyst)
         MINDTelemetry.info(
             "focus.end",
             data: ["intention": session?.intention ?? "(none)"]
@@ -124,8 +170,15 @@ public final class FocusController {
         Task { [weak self] in
             await self?.endActivity(phase: .completed, persistRecord: true)
         }
+        #else
+        MINDTelemetry.info(
+            "focus.activity.unavailable.catalyst",
+            data: ["call": "end"]
+        )
+        #endif
     }
 
+    #if !targetEnvironment(macCatalyst)
     private func endNow() {
         guard let activity else { return }
         Task {
@@ -229,4 +282,5 @@ public final class FocusController {
             dismissalPolicy: .after(Date.now.addingTimeInterval(30))
         )
     }
+    #endif
 }

@@ -15,17 +15,16 @@ client engagement), `Lead` (inbound webhook from the deployed site),
 Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
 the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
 
+### v1.0-alpha.15 ✅ — Mac Catalyst polish (build green + UI wired)
+
+Shipped 2026-05-20: `FocusKit.ActivityKit` reach wrapped behind `#if !targetEnvironment(macCatalyst)` so `FocusController.start/end/pause/resume` no-op on Catalyst and emit `focus.activity.unavailable.catalyst` breadcrumb; App + Module + Tests targets flipped to `[.iPhone, .iPad, .macCatalyst]`; Widget / Share / Push extensions stay iOS-only via `condition: .when([.ios])` dependency platform filter (fixes the "embedded content built for iOS not allowed" macOS embed error); `RootView` now ships a Catalyst-only `.toolbar` reading from the v1.0-alpha.12 `MacToolbarAction` table (Lead inbox / New audit / Bootstrap / Refresh, each posting on its matching `Notification.Name.mindCommand*` channel); `@SceneStorage` persists `selection: MINDTab` + `columnVisibility: NavigationSplitViewVisibility` across window restores via the `mind.scene.*` namespace; Settings ships a new "Apparence Mac" section behind `#if targetEnvironment(macCatalyst)` with two `@AppStorage` toggles (compact mode + persistent sidebar) emitting `mac.apparence.*.toggled` breadcrumbs; `MINDApp.refreshDockBadge()` runs on every `.active` scene phase to push the new-leads count onto the dock icon. `xcodebuild build` reports BUILD SUCCEEDED on both `platform=macOS,variant=Mac Catalyst` AND `platform=iOS Simulator,name=iPhone 17 Pro`. `MacCatalystGuardTests` adds 6 pure tests on the toolbar table / scene-storage namespace / dock-badge clamp / compile-flag mirror / telemetry breadcrumb name; FR/EN strings for `settings.mac.apparence.{section,compact,sidebar}` + `mac.toolbar.{newAudit,leads,bootstrap,refresh}` keys added to `Localizable.xcstrings`. `mind/screenshots/v1.0-alpha.15.png` shows the iOS host launching clean with the lead inbox + KPI bar populated.
+
 ### v1.0-alpha.14 ✅ — APNs Notification Service Extension
 
 Shipped 2026-05-20: NSE decorates lead pushes with `<contactName> · <projectName>` titles + 120-char truncated body + `lead.<projectID>` thread grouping; App-side `MINDPushDelegate` adapter handles APNs registration + tap routing into the new `.mindOpenLead` notification + `mind://lead/<UUID>` deep link; Settings → Notifications push surfaces the toggle, device token, and "Tester une notification" CTA.
 
-## v1.0-alpha.14+ — Next ⏳
+## v1.0-alpha.15+ — Next ⏳
 
-- **v1.0-alpha.12.1** ⏳ — Mac Catalyst destination flip. Split
-  `FocusKit.ActivityKit` (Live Activities) off so the App target
-  can adopt `[.iPhone, .iPad, .macCatalyst]` cleanly, then turn on
-  the Catalyst toolbar wiring + Touch Bar + the "Apparence Mac"
-  Settings section the v1.0-alpha.12 substrate already locks.
 - **iOS 26 Lock Screen widgets** ⏳ — WidgetKit timeline reading
   the same lead inbox + portfolio KPI surface HomeView shows, gated
   on `WidgetFamily.accessoryRectangular` + `.accessoryInline`.

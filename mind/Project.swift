@@ -4,21 +4,19 @@ import ProjectDescriptionHelpers
 let appBundleId = "app.mind.ios"
 let appName = "MIND"
 
-// v1.0-alpha.12 — Mac Catalyst polish. The App target stays
-// iOS-only for this iteration because `FocusKit` reaches into
-// ActivityKit (Live Activities) which is unavailable on Catalyst —
-// flipping the destinations would cascade compile errors through
-// every legacy module. The substrate (toolbar table, shortcut
-// catalog, scene-storage keys, dock-badge math) ships behind
-// `#if targetEnvironment(macCatalyst)` so flipping destinations to
-// `[.iPhone, .iPad, .macCatalyst]` in alpha.12.1 only needs the
-// FocusKit ActivityKit reach to be split off (or the legacy module
-// retired alongside its AmbientView caller). LSApplicationCategoryType
-// is set unconditionally so the Mac App Store bundle reads cleanly
-// the moment the destination flag flips.
+// v1.0-alpha.15 — Mac Catalyst polish completed. The App target now
+// ships to iPhone, iPad, and Mac Catalyst. The historical
+// FocusKit → ActivityKit reach has been wrapped behind
+// `#if !targetEnvironment(macCatalyst)` so FocusKit cross-compiles
+// on Catalyst with the Live Activity surface no-oped. The Catalyst
+// substrate (toolbar table, shortcut catalog, scene-storage keys,
+// dock-badge math) shipped in v1.0-alpha.12 is now wired into
+// RootView's `.toolbar` and Settings's "Apparence Mac" section,
+// and the dock badge refreshes on every `.active` scene phase via
+// `MINDApp.refreshDockBadge()`.
 let appTarget: Target = .target(
     name: appName,
-    destinations: .iOS,
+    destinations: [.iPhone, .iPad, .macCatalyst],
     product: .app,
     bundleId: appBundleId,
     deploymentTargets: .iOS("26.0"),
@@ -77,12 +75,21 @@ let appTarget: Target = .target(
     resources: ["App/Resources/**"],
     entitlements: .file(path: "App/MIND.entitlements"),
     dependencies: Module.allCases.map { .target(name: $0.rawValue) } + [
-        .target(name: "MINDWidgets"),
-        .target(name: "MINDShareExtension"),
+        // v1.0-alpha.15 — Extensions stay iOS-only. Mac Catalyst
+        // doesn't ship WidgetKit Live Activities, NSExtension share
+        // sheets, or APNs Notification Service Extensions, so the
+        // App target conditionally embeds these three .appex bundles
+        // only when building for iPhone / iPad. The `condition`
+        // platform filter is what lets the Catalyst slice link the
+        // App without dragging an iOS-only embed into the macOS
+        // binary (which previously errored with "embedded content
+        // built for iOS is not allowed").
+        .target(name: "MINDWidgets", condition: .when([.ios])),
+        .target(name: "MINDShareExtension", condition: .when([.ios])),
         // v1.0-alpha.14 — APNs Notification Service Extension. Bundled
         // into the app so iOS picks it up at install time and routes
         // every push payload through `NotificationService.didReceive`.
-        .target(name: "MINDPushService"),
+        .target(name: "MINDPushService", condition: .when([.ios])),
         .external(name: "Sentry"),
     ],
     settings: .settings(base: [
@@ -93,7 +100,11 @@ let appTarget: Target = .target(
 
 let testTarget: Target = .target(
     name: "MINDTests",
-    destinations: .iOS,
+    // v1.0-alpha.15 — Tests also follow the App to Mac Catalyst so
+    // the MacCatalystGuardTests + every test that links @testable
+    // import MIND continues to compile when the App ships for the
+    // Catalyst destination.
+    destinations: [.iPhone, .iPad, .macCatalyst],
     product: .unitTests,
     bundleId: "\(appBundleId).tests",
     deploymentTargets: .iOS("26.0"),
