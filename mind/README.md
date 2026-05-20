@@ -1,146 +1,189 @@
 # MIND
 
-> **MIND Cockpit** — orchestrator for the Numelite studio agency.
-> Pilot every client site, every inbound lead, every audit and every
-> invoice from one Liquid Glass cockpit. iOS 26+, SwiftUI, SwiftData,
-> CloudKit, Tuist 4.
+> **MIND Cockpit Numelite** — the cockpit for a solo studio (Numelite)
+> piloting client sites, inbound leads, projects, audits, and invoices
+> from one Liquid Glass app. iOS 26 + iPadOS + Mac Catalyst (+ Apple
+> Watch + Vision Pro substrate). SwiftUI, SwiftData, CloudKit private
+> DB, Tuist 4, Swift 6 strict concurrency.
 
 ## Status
 
-v1.0-alpha.1 — Cockpit Studio pivot. MIND is no longer a second-brain;
-it's the studio cockpit Mehdi reaches for daily to audit client sites
-(AZ Construction, IEF&Co, Sconnect, Numelite, atelierfrissons, …),
-track inbound leads aggregated from those clients' contact forms, and
-ship invoices when a Won deal closes. Surfaces kept after the pivot:
+**v1.0.0 — TestFlight ready 2026-05-20.** First public release. The
+α series (α.1 → α.20) rebuilt the project from second-brain to
+Cockpit Studio (lead inbox + audits + projects + invoicing) and
+shipped Apple Watch (α.17), ElevenLabs voice clone (α.18), Vision Pro
+spatial cockpit substrate (α.19), and Mac Catalyst polish (α.15).
 
-- **Universal Object Graph** — every Node (note, capture, client, audit,
-  task, journal entry, habit, goal) lives in one SwiftData graph backed
-  by the user's private CloudKit zone.
-- **Liquid Glass design** — Flowora-inspired, custom LiquidCard /
-  LiquidButton / LiquidTabBar / LiquidGradient tokens, soft iris/aqua/sky
-  palette, capsules continuous everywhere.
-- **iPad-first dual layout** — NavigationSplitView with sidebar + live
-  count footer on regular-width, the LiquidTabBar that defines the brand
-  on iPhone portrait.
-- **First-run onboarding** — 4-page flow (Welcome → Anthropic key →
-  Notifications permission → Ready) shown once via `@AppStorage`.
-- **Audit pipeline** — 14 parallel probes (PageSpeed, security headers,
-  TLS, DNS, WHOIS, App Store, social, sitemap…) synthesized by Claude
-  into a structured AuditReport with scoring, quick wins, strategic
-  bets, hidden risks, and a pitch email.
-- **Visual concept boards** — OpenAI GPT Image 2 (`gpt-image-2`) at
-  low/medium/high quality, three brand-aware boards per audit.
-- **Claude Code SOTA brief** — exportable markdown brief generator so the
-  audit hand-off to an agency dev session has zero context loss.
-- **Multi-format export** — PDF (branded), Markdown (Claude Code brief),
-  JSON (raw report), Hyperlink (Notion-ready).
-- **Spotlight integration** — every Node indexed into Core Spotlight,
-  tap → deep-link straight into NodeDetailView.
-- **Deep Focus** — Live Activity + Dynamic Island, weekly stats card,
-  history detail view.
-- **App Intents** — Capture / Ask MIND / Run Audit surfaced in Siri,
-  Spotlight, Shortcuts, Action Button, Home Screen long-press.
-- **Widgets** — small / medium / large WidgetKit timelines reading the
+```
+13 modules · 30+ features · 1083 tests (24 skipped) · 0 failures
+3 destinations green: iOS Simulator, iOS device generic, Mac Catalyst
+```
+
+See `mind/AppStore/` for the App Store submission package and
+`mind/CHANGELOG.md` for the per-version log.
+
+## Surfaces shipped in 1.0.0
+
+- **Real-time lead inbox** — Cloudflare Worker (`mind/tools/cloudflare-worker`)
+  posts to APNs (with a custom Notification Service Extension that
+  decorates the alert per-project), routes the tap into `mind://lead/<UUID>`,
+  and lands the lead on Home as an enriched card with contact +
+  project + AI reply composer.
+- **Audit pipeline** — 14 parallel probes (PageSpeed, security
+  headers, TLS, DNS, WHOIS, App Store presence, social, sitemap,
+  schema, broken links, Lighthouse) synthesised by Claude into an
+  `AuditReport` with scoring, quick wins, strategic bets, hidden
+  risks, ROI estimate, and a pitch email.
+- **Pipeline kanban** — drag-drop columns (lead → discovery → build
+  → live → maintenance) backed by `Node.pipelineStage`. Home surfaces
+  a summary card; PipelineView is the full board.
+- **Client Portal HTML** — every audit one-tap exports a
+  single-folder cinematic site (inline CSS + JS + base64 mockups,
+  ~26 KB without media, page-weight ceiling locked by tests at
+  200 KB). Drop on Vercel / Cloudflare Pages → client URL in 30s.
+- **Battle Mode** — radar comparison against competitors, embedded
+  into the Client Portal HTML.
+- **Generative redesign mockups** — VisualKit calls GPT Image 2
+  (`gpt-image-2`) for three brand-aware boards per audit, surfaced
+  in AuditSheet + Client Portal.
+- **AI Sales Email + Follow-Up Sequences** — OutreachKit composes
+  audit-grounded pitches in Mehdi's voice; FollowUpKit schedules a
+  3-step sequence with local UN notifications, deep-linked to the
+  prospect.
+- **Stripe + PDF invoicing** — InvoiceKit ships a Stripe payment
+  link builder + a self-contained PDF renderer with sequential
+  numbering, SIRET / IBAN graceful skip, FR + EN.
+- **Voice clone (ElevenLabs)** — record a 60-180 s WAV with the
+  in-app peak-level visualiser, upload to ElevenLabs, then every
+  audit pitch synthesises into MP3 in Mehdi's voice. Cached + inlined
+  into the Client Portal as a base64 `<audio>` data URL.
+- **Lock Screen widgets + Live Activity + Apple Watch** — five
+  widget surfaces (rectangular, inline, circular, large StandBy),
+  audit Live Activity with Dynamic Island compact + expanded layouts,
+  and a 3-tab watchOS app (Leads / Focus / Portfolio) reading the
   shared App Group.
-- **Privacy manifest** — `PrivacyInfo.xcprivacy` ships in the bundle so
-  App Store validation passes (Apple requirement since May 2024).
-- **AppIcon set** — light / dark / tinted at 1024×1024, generated by
-  `tools/generate_app_icons.swift` (replace with a real brand mark anytime).
-- **Sentry (opt-in)** — DSN field in Settings; if blank, no telemetry
-  fires. The privacy manifest declares crash + perf data only when
-  the user has explicitly enabled it.
-- **iCloud sync indicator** — live colour-coded status in Settings so
-  Mehdi can verify sync works between his two iPhones.
-- **Settings Danger Zone** — Wipe all data + Reset Spotlight index,
-  both behind .alert confirmation.
-
-**Tests**: 82 unit tests, 0 failures, ~200 ms total on Simulator
-(10 Keychain-write tests skip on Simulator and run on signed devices).
+- **Notion + Linear sync** — push an audit page to Notion / a
+  quick-win issue to Linear, one tap, token in Keychain.
+- **App Shortcuts + Siri** — RunAuditIntent, CaptureIntent,
+  AskMINDIntent surfaced in Spotlight + Action Button + Home
+  long-press.
+- **iPad NavigationSplitView + Mac Catalyst toolbar + Stage Manager**
+  — same binary across iPhone, iPad, and Catalyst with native
+  navigation + dock-badge live counts.
+- **Private CloudKit sync** — every Node lives in the user's private
+  CloudKit zone. Nothing on our servers.
 
 ## Architecture
 
 ```
-App                  SwiftUI shell, both layouts:
+App                  SwiftUI host (RootView, HomeView, AuditSheet,
+ │                   LeadDetailSheet, PipelineView, OnboardingView,
+ │                   SettingsView, …).
  │                   - iPhone portrait    → ZStack + LiquidTabBar
  │                   - iPad / Plus regular → NavigationSplitView + sidebar
- │                   Hosts RootView, OnboardingView, AuditSheet, ChatView,
- │                   NodeDetailView, ClientDetailView, etc.
+ │                   - Mac Catalyst       → +.toolbar with MacToolbarAction
  │
- ├─ DesignSystem     Liquid Glass tokens + components
- │                   (LiquidBackground, LiquidCard, LiquidButton with
- │                    semantic haptic styles, LiquidTabBar with VoiceOver
- │                    labels, LiquidHaptics enum, LiquidGradient,
- │                    LiquidPalette, LiquidMetrics).
+ ├─ DesignSystem       Liquid Glass tokens (LiquidCard, LiquidButton,
+ │                     LiquidTabBar, LiquidGradient, LiquidPalette,
+ │                     LiquidMetrics, LiquidHaptics, RadarChartView,
+ │                     ImpactEffortMatrix).
  │
- ├─ GraphCore        Universal Object Graph (SwiftData + CloudKit private
- │                   DB with fallback chain: App Group + CloudKit →
- │                   App Group local → CloudKit only → local). Node,
- │                   Edge, FocusSessionRecord models. Schema is the
- │                   shared truth across every module.
- │                   Also: SpotlightIndexer (Core Spotlight wrapper).
+ ├─ GraphCore          SwiftData + CloudKit private DB. Node / Edge /
+ │                     Project / Lead / Deliverable / Invoice models,
+ │                     SpotlightIndexer, SharedSnapshotWriter (App
+ │                     Group columns), WatchConnectivityBridge,
+ │                     CockpitWidgetFormatter, WatchKPIFormatter,
+ │                     SalesVelocityCalculator, ProjectLifecycleHeuristic,
+ │                     MINDTelemetry, MINDPreferences.
  │
- ├─ Intelligence     On-device summarization via FoundationModels
- │                   (LanguageModelSession), NaturalLanguage for tagging
- │                   and embeddings, Anthropic Messages API for cloud
- │                   reasoning. Keychain wrapper APIKeyStore.
+ ├─ Intelligence       Anthropic Messages API (cloud), FoundationModels
+ │                     on-device summarisation, NaturalLanguage embedding.
  │
- ├─ AuditKit         Probe orchestration (14 parallel HTTP/DNS probes),
- │                   ClaudeSynthesizer (parseResponse exposed nonisolated
- │                   for testability), AuditController, exporters
- │                   (PDF, JSON, Markdown), ClaudeCodeBriefBuilder.
+ ├─ AuditKit           14-probe orchestrator, ClaudeSynthesizer (parse
+ │                     nonisolated for testability), AuditController,
+ │                     exporters (PDF / JSON / Markdown), ROIEstimator,
+ │                     ClaudeCodeBriefBuilder, ClientPortalKit
+ │                     integration.
  │
- ├─ VisualKit        OpenAI GPT Image 2 client + key store, three-board
- │                   composer, VisualBoardKey URL→filename normalizer.
+ ├─ VisualKit          GPT Image 2 client + key store + board composer
+ │                     + RedesignMockupGenerator + VisualBoardKey.
  │
- ├─ FocusKit         FocusController (singleton @Observable @MainActor),
- │                   ActivityKit Live Activity + Dynamic Island.
+ ├─ ClientPortalKit    HTML generator + PortalWriter (atomic write),
+ │                     200 KB page-weight ceiling locked by tests.
  │
- ├─ Notes            SwiftData @Query view, search field, semantic
- │                   recall via NLEmbedding cosine similarity.
+ ├─ LiveBroadcastKit   Real-time broadcast writer + reader + sample
+ │                     HTML for the audit live link.
  │
- ├─ Chat             "Ask MIND" — cloud chat with graph context injection.
+ ├─ BattleKit          CompetitorLookup + BattleController + BattleReport.
  │
- ├─ Capture          QuickCaptureSheet + voice (SFSpeech on-device).
+ ├─ OutreachKit        OutreachPromptBuilder + OutreachEmailGenerator +
+ │                     mailto URL builder + OutreachSheet.
  │
- ├─ Settings         MINDPreferences (@Observable), API key fields,
- │                   model picker, About (runtime version), iCloud
- │                   sync indicator, Danger Zone.
+ ├─ FollowUpKit        FollowUpSequence + FollowUpStore (JSON) +
+ │                     FollowUpScheduler (UN notifications) + deep link.
  │
- └─ MINDIntents      AppShortcutsProvider — CaptureIntent + AskMindIntent
-                     + RunAuditIntent, surfaced in Siri, Spotlight,
-                     Shortcuts, Action Button. (Local module name is
-                     MINDIntents to avoid colliding with the Apple
-                     framework `AppIntents`.)
-```
+ ├─ InvoiceKit         Invoice value type + InvoicePDFRenderer +
+ │                     InvoiceStripeLinkBuilder + InvoiceStore (numbering).
+ │
+ ├─ NotionKit          NotionTokenStore + NotionPageBuilder + NotionClient.
+ │
+ ├─ LinearKit          LinearTokenStore + LinearIssueBuilder + LinearClient.
+ │
+ ├─ VoiceCloneKit      ElevenLabsTokenStore + ElevenLabsClient (voices,
+ │                     synthesis), VoiceSampleRecorder + AuditPitchAudioStore.
+ │
+ ├─ WatchCaptureKit    Watch dictation queue substrate (Codable record,
+ │                     transcript assembler, node builder, actor queue).
+ │
+ ├─ VisionSpatialKit   Vision Pro substrate + immersive AuditTheater
+ │                     (gated `#if os(visionOS)`).
+ │
+ ├─ SwarmKit           SEO swarm prompt builder + zone catalog (>200
+ │                     zones) + exporter + on-disk store.
+ │
+ ├─ ProjectHealthKit   Vercel + GitHub + Lighthouse clients, cache,
+ │                     Keychain stores.
+ │
+ ├─ BootstrapKit       Bulk-import planner + repo summary + template
+ │                     library.
+ │
+ ├─ Settings           MINDPreferences (@Observable), API key fields,
+ │                     About + Beta + Danger Zone + iCloud indicator +
+ │                     Mac Apparence section + voice-clone section.
+ │
+ └─ MINDIntents        AppShortcutsProvider — RunAuditIntent +
+                       CaptureIntent + AskMINDIntent, surfaced in Siri /
+                       Spotlight / Shortcuts / Action Button.
 
-Everything is a `Node` in a single typed graph. Modules are just views
-and intents on top of that graph. Adding a new module never touches the
-data layer.
+Targets:
+- MIND (app, iPhone + iPad + Mac Catalyst)
+- MINDWidgets (iOS appExtension)
+- MINDShareExtension (iOS appExtension, vCard + URL + text)
+- MINDPushService (iOS appExtension, APNs decorator)
+- MINDWatch (watchOS 11, single-app layout)
+- MINDTests (unit suite, 1083 tests)
+```
 
 ## Local development
 
-Requirements on macOS (Apple Silicon, M1+):
-
 ```bash
-# Xcode 26.x from the Mac App Store
+# Xcode 26.x
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 sudo xcodebuild -license accept
 
-# Tooling
 brew install tuist xcbeautify gh
 gh auth login
 
-# Repo
 git clone https://github.com/MaestroMed/matter_hub.git
 cd matter_hub/mind
 
-# Fetch SPM deps (Sentry pinned 8.40.1)
+# Resolve SPM externals (Sentry pinned 8.40.1)
 tuist install
 
-# Generate the Xcode project
-tuist generate              # opens MIND.xcworkspace in Xcode
+# Generate the Xcode project + workspace
+tuist generate              # opens MIND.xcworkspace
 
-# Or build from CLI (mirrors the CI workflow exactly)
+# Build for the Simulator
 xcodebuild \
   -project MIND.xcodeproj \
   -scheme MIND \
@@ -150,7 +193,15 @@ xcodebuild \
   -skipPackagePluginValidation \
   CODE_SIGNING_ALLOWED=NO build | xcbeautify
 
-# Run the test suite
+# Build for Mac Catalyst
+xcodebuild \
+  -project MIND.xcodeproj \
+  -scheme MIND \
+  -destination 'platform=macOS,variant=Mac Catalyst' \
+  -skipPackagePluginValidation \
+  CODE_SIGNING_ALLOWED=NO build | xcbeautify
+
+# Run the full test suite (1083 tests)
 xcodebuild test \
   -project MIND.xcodeproj \
   -scheme MIND \
@@ -160,130 +211,38 @@ xcodebuild test \
   CODE_SIGNING_ALLOWED=NO 2>&1 | xcbeautify
 ```
 
-## Project structure
+## App Store submission
 
-```
-mind/
-├── App/                  Main iOS app target (RootView, HomeView, sheets)
-│   ├── Sources/          SwiftUI files (RootView, AuditSheet, ChatView, …)
-│   └── Resources/        Assets.xcassets, PrivacyInfo.xcprivacy
-├── Modules/              Tuist module targets (one per feature area)
-│   ├── DesignSystem/Sources/
-│   ├── GraphCore/Sources/
-│   ├── …
-│   └── AuditKit/Sources/
-├── Widgets/              WidgetKit extension target
-├── Tests/Sources/        MINDTests unit suite (82 tests)
-├── Tuist/                Tuist 4 config (Package.swift for SPM externals)
-├── tools/                Self-contained helper scripts
-│   └── generate_app_icons.swift
-├── fastlane/             Match + Fastfile for TestFlight deploys
-└── Project.swift         Tuist project manifest
-```
+The 1.0.0 submission package lives under `mind/AppStore/`:
 
-## Deploying to TestFlight
+- `description.{fr,en}.md` — full App Store description (FR + EN)
+- `promotional_text.{fr,en}.md` — 170-char punchline
+- `release_notes_1.0.0.{fr,en}.md` — "What's new" copy
+- `keywords.{fr,en}.txt` — comma-separated keyword string
+- `support_url.txt` / `privacy_url.txt` — required links
+- `categories.txt` / `age_rating.txt` / `pricing.txt`
+- `fr-FR/` + `en-US/` — `fastlane deliver` directory layout
+  (mirrors the top-level Mehdi-facing drafts as one-file-per-key)
+- `README.md` — package contents + lane references
 
-The pipeline is wired (see `.github/workflows/ios.yml` and
-`fastlane/Fastfile`) but cannot run until the Apple-side artifacts
-exist. Do the five Apple steps first, then drop the secrets into
-GitHub.
-
-### 1. Apple Developer Program
-
-Active membership on https://developer.apple.com/account. The active
-account must have **App Manager** or higher role in the team that owns
-`app.mind.ios`.
-
-### 2. App ID + iCloud Container
-
-On https://developer.apple.com/account/resources:
-
-- **Identifiers → App IDs → +** : create `app.mind.ios`.
-  - Description: `MIND`
-  - Bundle ID: Explicit, `app.mind.ios`
-  - Capabilities: enable **iCloud** and **Push Notifications** (CloudKit
-    needs both), plus **Background Modes** (Audio + Background processing
-    are already declared in `MIND-Info.plist`).
-- **Identifiers → iCloud Containers → +** : create `iCloud.app.mind.ios`.
-- Back on the App ID, edit iCloud → **Edit** → tick the new container.
-
-The container ID must match exactly the one in
-`GraphCore/Sources/GraphContainer.swift` (`cloudKitDatabase:
-.private("iCloud.app.mind.ios")`) and in `App/MIND.entitlements`.
-
-### 3. App Store Connect listing
-
-On https://appstoreconnect.apple.com:
-
-- **My Apps → +** : create a new iOS app.
-  - Name: `MIND`
-  - Bundle ID: `app.mind.ios` (picks up the App ID from step 2)
-  - SKU: `MIND`
-  - Primary language: French or English
-
-### 4. App Store Connect API key
-
-On https://appstoreconnect.apple.com/access/integrations/api:
-
-- **Generate API Key** with **App Manager** role.
-- Download the `.p8` file — you get exactly one chance.
-- Note the **Key ID** (10 chars) and the **Issuer ID** (UUID at the top).
-
-These become `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_CONTENT`.
-
-### 5. Match certificate repo
-
-`fastlane match` stores signing certificates in an encrypted git repo so
-CI can resign builds without a Mac.
-
-- Create a **private** repo, e.g. `MaestroMed/mind-certificates`.
-- Generate a fine-grained GitHub PAT with read+write on that repo only.
-- `MATCH_GIT_URL` is `https://x:<TOKEN>@github.com/MaestroMed/mind-certificates`.
-- `MATCH_PASSWORD` is any long passphrase you pick.
+Lanes (defined in `mind/fastlane/Fastfile`):
 
 ```bash
-cd matter_hub/mind
-bundle install
-bundle exec fastlane match appstore   # creates the certs, pushes them encrypted
+# Build + upload a TestFlight build
+bundle exec fastlane beta
+
+# Sync App Store listing copy (no binary upload)
+bundle exec fastlane sync_metadata
 ```
 
-### 6. GitHub Secrets
+Required CI env vars: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_CONTENT`,
+`MATCH_GIT_URL`, `MATCH_PASSWORD`, `APPLE_ID`, `DEVELOPMENT_TEAM`,
+`ITC_TEAM_ID`, optional `TESTFLIGHT_GROUPS`.
 
-Repo → **Settings → Secrets and variables → Actions → New repository
-secret**.
-
-| Secret              | Value                                                         |
-|---------------------|---------------------------------------------------------------|
-| `APPLE_ID`          | Your Apple ID email (the developer account)                   |
-| `DEVELOPMENT_TEAM`  | 10-char Team ID from developer.apple.com / membership page    |
-| `ITC_TEAM_ID`       | Numeric App Store Connect team ID (step 3)                    |
-| `MATCH_GIT_URL`     | `https://x:<TOKEN>@github.com/MaestroMed/mind-certificates`   |
-| `MATCH_PASSWORD`    | The passphrase you used with `match` in step 5                |
-| `ASC_KEY_ID`        | 10-char API key ID (step 4)                                   |
-| `ASC_ISSUER_ID`     | UUID issuer ID (step 4)                                       |
-| `ASC_KEY_CONTENT`   | Full `.p8` contents incl. `-----BEGIN PRIVATE KEY-----` lines |
-
-### 7. First TestFlight build
-
-Once all secrets are in place:
-
-- GitHub → **Actions → MIND iOS → Run workflow**
-- Set `deploy = true`, branch `claude/new-iphone-project-YFDF7` (or `main`)
-- Wait ~8–12 min: build → archive → match → upload → ASC processing
-- Open TestFlight on your iPhone → new build appears within a few minutes
-
-## API keys
-
-All stored in the iOS Keychain under separate service identifiers:
-
-| Provider  | Keychain service        | Used by                          |
-|-----------|-------------------------|----------------------------------|
-| Anthropic | `app.mind.ios.anthropic`| Chat, ClaudeSynthesizer, brief   |
-| OpenAI    | `app.mind.ios.openai`   | VisualKit (GPT Image 2 boards)   |
-| Sentry    | UserDefaults (DSN only) | Opt-in crash + perf telemetry    |
-
-Set them inside the app on first run via the onboarding flow, or
-anytime later via Settings.
+The first TestFlight delivery also needs the Apple-side artifacts
+documented in the legacy README sections below (App ID, iCloud
+container, API key, Match cert repo). See git history for the full
+five-step walk-through.
 
 ## Privacy
 
@@ -292,155 +251,142 @@ manifest at `App/Resources/PrivacyInfo.xcprivacy` declares:
 
 - `NSPrivacyTracking = false`
 - No tracking domains
-- Crash + Performance + Other Diagnostic data — only when the user
-  explicitly enables Sentry by saving a DSN in Settings
-- Required Reason APIs: UserDefaults, FileTimestamp, DiskSpace,
-  SystemBootTime (Sentry's profiling needs this last one)
+- Data collected (opt-in / on-device only):
+  - Crash Data + Performance Data + Other Diagnostic — Sentry,
+    only when the user has saved a DSN
+  - Health — on-device only, never leaves the device
+  - Audio Data — one-time voice sample, sent to ElevenLabs only when
+    the user explicitly taps "Cloner ma voix"
+  - Name / Email / Phone — prospect contact info, stays in the
+    user's private CloudKit zone; never POSTed anywhere
+- Required Reason APIs: UserDefaults (CA92.1), FileTimestamp (C617.1),
+  DiskSpace (E174.1), SystemBootTime (35F9.1)
 
-Notes, captures, focus sessions, clients, and audits live in the
-user's private CloudKit zone. Nothing leaves the device except the
-URLs and audit content the user explicitly submits to Anthropic /
-OpenAI / Google PageSpeed.
+Notes, leads, projects, audits, invoices live in the user's private
+CloudKit zone. Nothing leaves the device except the URLs / audit
+content / voice sample / outbound mailto the user explicitly submits
+to Anthropic / OpenAI / Google PageSpeed / ElevenLabs / their email
+client.
 
-## Beta status
+## API keys
 
-MIND is in **public TestFlight beta** (v0.20+, up to 50 external
-testers).
+All stored in the iOS Keychain under separate service identifiers:
 
-- **Join**: open `https://testflight.apple.com/join/<PLACEHOLDER>` on
-  an iPhone (Mehdi fills in the real public link in App Store Connect
-  → TestFlight → Public Link). Install the TestFlight app first if
-  you don't have it.
-- **In-app entry points**:
-  - HomeView shows a one-time, dismissible welcome banner on first
-    launch when the running binary is pre-1.0 (auto-hides on the
-    1.0.0 release).
-  - Settings → Beta has "Send feedback via TestFlight" and "Join the
-    beta" rows on pre-1.0 builds.
-  - Settings → About shows a small `BETA` capsule.
-- **Build identification**: `SettingsView.isBetaBuild` returns true
-  whenever `CFBundleShortVersionString` is strictly less than `1.0.0`.
-  Malformed / fallback version strings default to `true` (safer to
-  surface the beta UI in a dev / preview bundle than to silently hide
-  it). 12 tests in `Tests/Sources/BetaBuildTests.swift` lock the
-  contract.
+| Provider   | Keychain service                | Used by                              |
+|------------|---------------------------------|--------------------------------------|
+| Anthropic  | `app.mind.ios.anthropic`        | Chat, ClaudeSynthesizer, brief gen   |
+| OpenAI     | `app.mind.ios.openai`           | VisualKit (GPT Image 2 boards)       |
+| Notion     | `app.mind.ios.notion`           | NotionClient                         |
+| Linear     | `app.mind.ios.linear`           | LinearClient                         |
+| ElevenLabs | `app.mind.ios.elevenlabs`       | VoiceCloneKit (voice clone + TTS)    |
+| Vercel     | `app.mind.ios.vercel`           | ProjectHealthKit                     |
+| GitHub     | `app.mind.ios.github`           | ProjectHealthKit                     |
+| Sentry     | UserDefaults (DSN only)         | Opt-in crash + perf telemetry        |
+
+Set them inside the app via Settings → the matching section. The voice
+clone has its own first-time flow (`VoiceCloneSetupSheet`).
+
+## Roadmap
+
+### 1.x backlog (post-1.0)
+
+- **1.1** — Notion sync bidirectional (read-back the page after a
+  manual edit so updates flow back into the Node)
+- **1.2** — Discord bot (per-project channel echoing leads + audits +
+  invoices)
+- **1.3** — Stripe Subscription handling (recurring billing on top of
+  the existing one-shot link builder)
+- **1.4** — Multi-account support (toggle Numelite / personal /
+  client-team scopes via a SceneStorage segmentation)
+- **1.5** — Vision Pro runtime install + destinations flip (the
+  α.19 substrate is ready; install the visionOS runtime and run the
+  immersive theater on real hardware)
+- **1.6** — UI Automation snapshots via `fastlane snapshot` to
+  publish App Store screenshots per locale × device matrix
+- **1.7** — On-device LLM inference (Llama 3 on Foundation Models
+  pipeline) for offline audit synthesis
+- **1.8** — RAG semantic search v2 over the full lead + audit corpus
+- **1.9** — Live Activities for follow-up sequences (next-step
+  countdown on the Lock Screen)
+- **1.10** — Shared graphs (real-time collab for studio + client)
+
+### 1.0 series (shipped)
+
+See `mind/ULTRAPLAN.md` "Shipped — 1.0 series" section for the full
+α.1 → α.20 history. Headline: pivot from second-brain to Cockpit
+Studio, 13 modules, Apple Watch + Vision Pro substrate, ElevenLabs
+voice clone, Mac Catalyst polish, 1083+ tests.
 
 ## Reporting bugs
 
 Two paths, in order of preference:
 
 1. **TestFlight → Send feedback** (built-in). Tap the `Send feedback`
-   row in Settings → Beta or the `Donner ton feedback` button on the
-   HomeView banner. iOS routes the tap to the TestFlight in-app
-   feedback flow with the screenshot + device info auto-attached. The
-   feedback shows up under App Store Connect → TestFlight → Feedback,
-   triaged the same day.
+   row in Settings → Beta. iOS routes the tap to the TestFlight
+   in-app feedback flow with the screenshot + device info
+   auto-attached. The feedback shows up under App Store Connect →
+   TestFlight → Feedback, triaged the same day.
 2. **GitHub issue** at `MaestroMed/matter_hub` if you want to attach
    a longer repro, link to a CI log, or reference another commit.
-   Include the version + build numbers from Settings → About so we can
-   bisect quickly.
+   Include the version + build numbers from Settings → About.
 
-Telemetry breadcrumbs (`beta.banner.dismissed`, `beta.feedback.opened`,
-`beta.join.opened`) flow through `MINDTelemetry` → Sentry on opt-in
-builds, so we can see at a glance whether the beta UI is being used.
+Telemetry breadcrumbs flow through `MINDTelemetry` → Sentry on
+opt-in builds.
 
-## Roadmap
+## Project structure
 
-- **Phase 0** ✅ CI pipeline + scaffold
-- **Phase 1** ✅ All modules linked
-- **Phase 2** ✅ Deployment target bumped to iOS 26
-- **Phase 3** ✅ Foundation Models on-device summarization
-- **Phase 4** ✅ LiquidTabBar navigation
-- **Phase 5** ✅ App Intents surfaced for Siri / Spotlight / Action Button
-- **Phase 6** ✅ Widgets + Live Activities + Dynamic Island
-- **Phase 7** ⏳ First TestFlight build (Mehdi handles Apple side)
-- **Phase 8** ⏳ Verify iCloud sync between both iPhones
-- **Phase 9** ✅ Focus Timer history + weekly stats
-- **Phase 10** ✅ Ambient mode dashboard
-- **Phase 11** ✅ Habits / Journal / Goals scaffold
-- **ULTRAPLAN A** ✅ Resume carousel
-- **ULTRAPLAN B** ✅ Audit ultra-complet (14 probes)
-- **ULTRAPLAN C** ✅ Beautiful audit report presentation
-- **ULTRAPLAN D** ✅ Multi-format export (PDF / Markdown / JSON / Hyperlink)
-- **ULTRAPLAN E** ✅ Visual concept boards (GPT Image 2)
-- **ULTRAPLAN F** ✅ Claude Code SOTA brief generator
-- **Polish** ✅ Sentry (opt-in), onboarding, Spotlight, haptics,
-  NavigationSplitView, AppIcon, privacy manifest, danger zone,
-  iCloud indicator, demo audits
-- **Phase ∞** ⏳ Apple Watch + Mac + Vision Pro clients reading the
-  same CloudKit graph
+```
+mind/
+├── App/                  Main app target (RootView, HomeView, sheets, MINDApp)
+│   ├── Sources/          SwiftUI files
+│   └── Resources/        Assets.xcassets, PrivacyInfo.xcprivacy,
+│                          Localizable.xcstrings
+├── Modules/              Tuist module targets (one per feature area)
+│   ├── DesignSystem/
+│   ├── GraphCore/
+│   ├── AuditKit/
+│   ├── VisualKit/
+│   ├── ClientPortalKit/
+│   ├── LiveBroadcastKit/
+│   ├── BattleKit/
+│   ├── OutreachKit/
+│   ├── FollowUpKit/
+│   ├── InvoiceKit/
+│   ├── NotionKit/
+│   ├── LinearKit/
+│   ├── VoiceCloneKit/
+│   ├── WatchCaptureKit/
+│   ├── VisionSpatialKit/
+│   ├── SwarmKit/
+│   ├── ProjectHealthKit/
+│   ├── BootstrapKit/
+│   ├── Settings/
+│   └── MINDIntents/
+├── Widgets/              MINDWidgets target (5 widget surfaces)
+├── ShareExtension/       MINDShareExtension target (vCard + URL + text)
+├── PushExtension/        MINDPushService target (APNs decorator)
+├── Watch/                MINDWatch target (watchOS 11 single-app layout)
+├── Tests/Sources/        MINDTests (1083 tests)
+├── Tuist/                Tuist 4 config + ProjectDescriptionHelpers
+├── tools/                Helper scripts (icon generator, Cloudflare worker, …)
+├── fastlane/             Appfile, Fastfile (:beta + :sync_metadata), Matchfile
+├── AppStore/             App Store submission package (FR + EN)
+├── screenshots/          Per-version vision-verify PNGs
+├── CHANGELOG.md          Per-version changelog
+├── RELEASE_1.0.0.md      Suggested git tag command for the 1.0 release
+├── README.md             ← you are here
+├── ULTRAPLAN.md          Per-version roadmap (1.x backlog + shipped log)
+└── Project.swift         Tuist project manifest
+```
 
-## ClientPortalKit (v0.21)
+## Phases (legacy)
 
-One-tap premium HTML export for any completed audit. A new
-"Générer Client Portal" row in the AuditSheet ExportSheet calls
-`ClientPortalBuilder.generateSite(for:brand:)`, writes a
-self-contained `index.html` (inline CSS + JS, no framework, ~26 KB)
-to `~/Documents/client-portals/<slug>-<date>/` via the
-`PortalWriter` actor, then surfaces a success bottom sheet with
-"Open in Files" + "Share folder" CTAs. Drop the folder onto Vercel
-or Cloudflare Pages and the client has a beautiful audit URL in 30
-seconds.
+The phases below were the pre-pivot scaffolding. They are kept here
+because the iteration agent still references them in commit
+messages. The current iteration model is the `v1.0-alpha.x` ladder
+(see ULTRAPLAN.md) capped by this 1.0.0 release.
 
-The HTML aesthetic: Liquid Glass — full-viewport hero with parallax
-gradient (iris → navy → black), six SVG circular gauges animated on
-scroll via `IntersectionObserver`, scroll-snap timeline for
-strategic bets, alert-style hidden-risk cards, full-bleed pitch
-quote with consultant byline. Respects `prefers-color-scheme` and
-`prefers-reduced-motion`. Hard page-weight ceiling locked at 200 KB
-by the test suite so no future template addition can silently bloat
-the export.
-
-## Lead Scoring (v0.27)
-
-Every client / prospect Node gets a **lead score 0–100** the moment
-the Clients tab renders. The score answers a single question Mehdi
-asks every morning: *which prospect should I call next?*
-
-Three sub-scores feed the total:
-
-* **ICP fit (0–40)** — does this prospect look like the kind of
-  client Mehdi closes? Industry tags (`saasB2B`, `fintech`),
-  hostnames on the known-SaaS allowlist (`stripe.com`,
-  `linear.app`, …), and whether an audit is already attached all
-  push the number up.
-* **Buying signals (0–40)** — is there tangible pain that justifies
-  a call right now? Audit overall scores in the 60–85 sweet spot for
-  consulting (+20), low security / performance scores as pain
-  triggers (+10, capped), and free-text keywords like "funding",
-  "hiring", "launch" in the recent notes (+10).
-* **Engagement (0–20)** — has Mehdi touched the node lately? Reads
-  `lastAccessedAt`: ≤7 days +20, ≤30 days +10, > 30 days or never
-  opened 0.
-
-The total clamps to 0–100 and projects onto three temperatures via
-`LeadTemperature.from`: 🔥 hot 80+, ☀️ warm 50–79, ❄️ cold < 50.
-Each ClientCard sprouts a colour-coded `LeadScoreBadge` in the top
-right; tapping the badge opens the breakdown modal that shows the
-three sub-scores as gradient bars plus the verbatim reasoning
-bullets ("ICP : SaaS B2B (+20)", "Audit score 72 — sweet spot
-consulting (+20)", "Consulté il y a ≤ 7 jours (+20)").
-
-The Clients tab now sorts by score desc by default, with a
-segmented control to switch to recent or alphabetical when needed.
-The Home screen gained a "Top leads 🔥" card listing the three
-hottest non-completed prospects with their score badge; tap the row
-to jump into NodeDetailView, tap the badge to see the breakdown.
-
-Two scoring paths live behind the same `LeadScore` value type:
-
-* `LeadScorer.heuristic(node:)` — pure, deterministic, < 50µs per
-  node. Safe to run on every render, no caching required.
-* `LeadScorer.aiEnhanced(node:cloud:)` — optional cloud round-trip
-  that asks Claude to re-rank the prospect against the full text of
-  the attached notes / audit. Falls back to the heuristic on any
-  failure so the UI never spins forever. v0.27.1 will persist the
-  AI-enhanced result in a `leadScoreCache` JSON field so it survives
-  launches.
-
-Telemetry surfaces three breadcrumbs on critical paths:
-`lead.score.computed`, `lead.score.breakdown.opened`, and
-`lead.topLeads.opened`. Locked by 18 pure tests in `LeadScorerTests`
-covering empty input, clamps at 0 and 100, sweet-spot detection,
-engagement boundaries, the `LeadTemperature.from` band table, and
-determinism for identical input.
+- Phase 0 – 11 ✅ Scaffold → modules → Watch → Vision Pro substrate
+- Phase 7 ⏳ First TestFlight delivery (Mehdi runs the lane)
+- Phase 8 ⏳ Verify iCloud sync between both iPhones once on TestFlight
+- Phase ∞ ⏳ Vision Pro runtime install + immersive theater on device

@@ -23,7 +23,14 @@ let appTarget: Target = .target(
     infoPlist: .extendingDefault(with: [
         "UILaunchScreen": ["UIColorName": "LaunchBackground"],
         "CFBundleDisplayName": "MIND",
-        "CFBundleShortVersionString": "0.1.0",
+        // v1.0.0 — TestFlight-ready release. App-version bumped from
+        // 0.1.0 (the pre-alpha placeholder kept through the α-series)
+        // to the marketing 1.0.0 string Apple reviewers + the App Store
+        // catalogue expect. CFBundleVersion stays "1" — Fastlane's
+        // :beta lane (`increment_build_number_in_xcodeproj`) is what
+        // ratchets the build number on every CI submission so we don't
+        // burn build numbers locally.
+        "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
         // v1.0-alpha.12 — Mac Catalyst category. Listed under
         // "Productivity" on the Mac App Store + macOS About panel
@@ -36,9 +43,19 @@ let appTarget: Target = .target(
         // taps "Cloner ma voix"; on tap, the WAV bytes leave the
         // device only to the ElevenLabs API. No background recording.
         "NSMicrophoneUsageDescription": "MIND enregistre un échantillon de ta voix une fois pour générer ensuite tes pitches audio dans ta voix via ElevenLabs.",
-        "NSSpeechRecognitionUsageDescription": "MIND transcribes your voice locally so you can capture thoughts hands-free.",
-        "NSCameraUsageDescription": "MIND scans documents and images so they become part of your second brain.",
-        "NSPhotoLibraryUsageDescription": "MIND can pull photos to enrich your knowledge graph.",
+        // v1.0.0 — French copy. Watch capture + on-device dictation only;
+        // the transcription stays local (SFSpeechRecognizer's
+        // `requiresOnDeviceRecognition = true`).
+        "NSSpeechRecognitionUsageDescription": "MIND transcrit ta voix localement pour capturer une idée sans toucher l'écran. La transcription reste sur ton appareil.",
+        "NSCameraUsageDescription": "MIND scanne des documents et des photos pour les transformer en notes dans ton graphe.",
+        "NSPhotoLibraryUsageDescription": "MIND lit les photos que tu choisis pour les transformer en notes via OCR. Aucun accès en arrière-plan.",
+        // v1.0.0 — Contacts is only used by the Share Extension to
+        // parse vCards via `CNContactVCardSerialization` (pure
+        // deserialisation, no Contacts store read). Apple still wants
+        // the key declared when the framework is linked, so we ship a
+        // narrow FR description that matches what the user sees on the
+        // "Add to MIND" share sheet.
+        "NSContactsUsageDescription": "MIND lit le vCard que tu partages depuis l'app Contacts pour créer une fiche lead. Aucun accès au reste de ton carnet d'adresses.",
         // v0.8 — Calendar (EventKit) integration. Both keys are required
         // on iOS 17+: the system prompts with the FullAccess string when
         // we call `requestFullAccessToEvents()`, and falls back to the
@@ -273,7 +290,7 @@ let widgetTarget: Target = .target(
         // Must match the parent app's version to satisfy
         // embeddedBinaryValidationUtility — Xcode flags a mismatch
         // when CFBundleShortVersionString differs from the host app.
-        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
         "NSExtension": [
             "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
@@ -306,7 +323,7 @@ let shareExtensionTarget: Target = .target(
     deploymentTargets: .iOS("26.0"),
     infoPlist: .extendingDefault(with: [
         "CFBundleDisplayName": "MIND",
-        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
         "NSExtension": [
             "NSExtensionPointIdentifier": "com.apple.share-services",
@@ -350,7 +367,7 @@ let pushExtensionTarget: Target = .target(
     deploymentTargets: .iOS("26.0"),
     infoPlist: .extendingDefault(with: [
         "CFBundleDisplayName": "MIND Push",
-        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
         "NSExtension": [
             "NSExtensionPointIdentifier": "com.apple.usernotifications.service",
@@ -382,7 +399,7 @@ let watchTarget: Target = .target(
     deploymentTargets: .watchOS("11.0"),
     infoPlist: .extendingDefault(with: [
         "CFBundleDisplayName": "MIND",
-        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
         "WKApplication": .boolean(true),
         "WKWatchOnly": .boolean(false),

@@ -414,7 +414,7 @@ struct MINDApp: App {
             options.enableNetworkBreadcrumbs = true
             // App-side identifier so Sentry's UI shows the right env.
             options.environment = "production"
-            options.releaseName = "MIND@0.1.0"
+            options.releaseName = "MIND@1.0.0"
         }
 
         // Plug MINDTelemetry into Sentry now that the SDK is up. Any
@@ -436,7 +436,7 @@ struct MINDApp: App {
             MINDTelemetry.breadcrumb(
                 "App launched",
                 category: "lifecycle",
-                data: ["release": "MIND@0.1.0"]
+                data: ["release": "MIND@1.0.0"]
             )
         }
     }

@@ -1,25 +1,171 @@
-# MIND — ULTRAPLAN v2 (50 versions)
+# MIND — ULTRAPLAN
 
-> ⚠️ **MIND a pivoté (2026-05-20).** Le projet n'est plus un second-
-> brain : c'est désormais un **cockpit Studio** pour l'agence Numelite
-> — outil interne pour piloter sites clients, leads, projets et
-> factures. Voir `v1.0-alpha.*` pour le nouveau scope. Les entrées du
-> chapitre 3+ ci-dessous sont **préservées pour archéologie** ; la
-> roadmap réelle vit désormais dans les versions `v1.0-alpha.x`.
+> 🎉 **MIND 1.0.0 — Cockpit Numelite — TestFlight ready 2026-05-20.**
+> Première release publique. La série α (α.1 → α.20) est livrée,
+> 1083+ tests passent, builds verts sur iOS Simulator + iOS device
+> generic + Mac Catalyst. Voir `mind/AppStore/`, `mind/CHANGELOG.md`
+> et `mind/RELEASE_1.0.0.md` pour la submission package.
 
-# v1.0-alpha.* — Cockpit Studio rebuild
+## Status
 
-The Numelite cockpit needs its own data spine: `Project` (long-lived
-client engagement), `Lead` (inbound webhook from the deployed site),
-`Deliverable` (shipped page / audit / asset). Wave A pivoted the UI,
-Wave B (v1.0-alpha.2) lands the SwiftData models, Wave C+ rewrites
-the SwiftUI surfaces (Home / Projects / Pipeline) to consume them.
+| Version            | Date       | Status |
+|--------------------|------------|--------|
+| v1.0.0             | 2026-05-20 | ✅ — TestFlight ready, App Store submission package drafted |
+| v1.0-alpha.20      | 2026-05-20 | ✅ — Privacy manifest extended (audio + contact PII), Info.plist FR, Fastlane :beta + :sync_metadata lanes, App Store package, Mac Catalyst + iOS device generic builds verified, README rewritten |
+| v1.0-alpha.19      | 2026-05-20 | ✅ — Vision Pro spatial cockpit substrate + surface |
+| v1.0-alpha.18      | 2026-05-20 | ✅ — ElevenLabs voice clone for pitch audio |
+| v1.0-alpha.17      | 2026-05-20 | ✅ — Apple Watch companion (3-tab) |
+| v1.0-alpha.16      | 2026-05-20 | ✅ — iOS 26 Lock Screen widgets + StandBy |
+| v1.0-alpha.15      | 2026-05-20 | ✅ — Mac Catalyst polish (build + UI) |
+| v1.0-alpha.14      | 2026-05-20 | ✅ — APNs Notification Service Extension |
+| v1.0-alpha.1 → .13 | 2026-05-20 | ✅ — Cockpit Studio rebuild waves A → E |
+| v0.2 → v0.30       | 2026-05-20 | ✅ — Second-brain era (pre-pivot) |
+
+## 1.x backlog (post-1.0 ideas)
+
+Capture only — no commitment. Items reshuffle as Numelite usage
+patterns settle.
+
+- **1.1** — Notion sync **bidirectional**. Today's NotionClient is
+  one-way (MIND → Notion). Add a delta-fetch reader that pulls back
+  manual edits made in Notion so updates flow back into the Node
+  (last-write-wins on `node.updatedAt`).
+- **1.2** — Discord bot. Self-hosted on Cloudflare Workers, one
+  channel per `Project`, echoes leads + audits + invoice events.
+  Reuses the existing webhook substrate from the lead inbox.
+- **1.3** — Stripe Subscription handling. Today InvoiceKit ships
+  one-shot payment links via `InvoiceStripeLinkBuilder`. Add a
+  `Subscription` value type + builder for recurring (monthly /
+  annual) billing on top of the same Keychain-stored Stripe key.
+- **1.4** — Multi-account support. SceneStorage segmentation between
+  Numelite scope, personal scope, and per-client team scopes.
+  Today everything lives in one private CloudKit zone — add a
+  zone-per-scope addressing under the same container.
+- **1.5** — visionOS runtime install + destinations flip. The α.19
+  substrate (`VisionSpatialKit`) is ready; install the visionOS 26.5
+  runtime via Xcode → Settings → Platforms, then add `.visionOS` to
+  every module's destinations + audit every UIKit reach for
+  `#if !os(visionOS)` gating. See `mind/MIND_BLOCKER_visionos_runtime.md`.
+- **1.6** — UI Automation snapshots via `fastlane snapshot`. Generates
+  App Store screenshots per locale × device matrix
+  (6.7" iPhone / 6.1" iPhone / 12.9" iPad / 13" iPad / Mac Catalyst).
+  Today the `:sync_metadata` lane skips screenshots; this turns it on.
+- **1.7** — Live Activities for follow-up sequences. Already shipped
+  for audits + focus; extend FollowUpKit so the next-step countdown
+  surfaces on the Lock Screen + Dynamic Island.
+- **1.8** — Custom audit playbooks. Today the 14 probes are fixed;
+  add a `PlaybookKit` so Mehdi can compose / save / share playbooks
+  (e.g. "e-commerce ultra", "SaaS B2B starter").
+- **1.9** — RAG semantic search v2. Today's `NLEmbedding` cosine
+  search is per-Node; v2 indexes the full lead + audit + note corpus
+  with a multi-stage retrieval + re-rank.
+- **1.10** — Audit alerts (change detection). Re-run an audit on
+  schedule, diff against the last `AuditReport`, push a Lock Screen
+  notification when a score moves by > 10 pts or a security header
+  disappears.
+- **1.11** — Local LLM inference (Llama 3 on Foundation Models
+  pipeline). Today Intelligence has a FoundationModels reach;
+  extend it to run the full audit synthesis offline when Anthropic
+  is unreachable.
+- **1.12** — Continuous voice transcription background. Today
+  WatchCaptureKit is the substrate for wrist dictation; v1.12 turns
+  on a low-power background mode so a long dictation streams in
+  near-real-time to the iPhone.
+- **1.13** — Multi-account / shared graphs (real-time collab) for
+  studio + client. Two CloudKit shared zones — one for active
+  engagement, one for the read-only audit history. Companion to 1.4.
+- **1.14** — Public profile / portfolio. Mehdi's audit history
+  surfaces a public Numelite profile (opt-in) with anonymised
+  before/after mockups + ROI estimates as social proof.
+- **1.15** — Plugin system. Today every integration (Notion, Linear,
+  Vercel, GitHub, ElevenLabs) is a hand-crafted Kit. Open a
+  manifest-driven plugin spec so third-party integrations can hook
+  in without forking the binary.
+
+---
+
+## Shipped — 1.0 series
+
+The α series rebuilt MIND from second-brain to Cockpit Studio,
+shipped Apple Watch + Vision Pro substrate + ElevenLabs voice
+clone + Mac Catalyst polish + APNs lead notifications, and capped
+at 1083+ tests on the three destinations (iOS Sim / iOS device /
+Mac Catalyst). Each α version's detail is preserved verbatim below
+for archaeology.
+
+### v1.0.0 ✅ — Cockpit Numelite, TestFlight ready
+
+Shipped 2026-05-20:
+
+- `Project.swift` — `CFBundleShortVersionString` bumped from
+  `0.1.0` to `1.0.0` across the 5 targets (app + widgets + share +
+  push + watch). `MINDApp.swift` Sentry `releaseName` follows.
+- `App/Resources/PrivacyInfo.xcprivacy` extended with 4 new
+  `NSPrivacyCollectedDataType` entries: `AudioData` (ElevenLabs
+  voice sample, opt-in, sent only on explicit tap), `Name` +
+  `EmailAddress` + `PhoneNumber` (lead contact info, stays in the
+  user's private CloudKit zone, never POSTed anywhere). Existing 4
+  Required Reason API entries (`UserDefaults`, `FileTimestamp`,
+  `DiskSpace`, `SystemBootTime`) and 4 data types (crash / perf /
+  diagnostic / health) verified intact.
+- `Project.swift` Info.plist — `NSSpeechRecognitionUsageDescription`,
+  `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`
+  translated to FR. New `NSContactsUsageDescription` (FR) added for
+  the `CNContactVCardSerialization` reach in the Share Extension.
+- `App/MIND.entitlements` — `aps-environment` flipped from
+  `development` to `production` so the Notification Service
+  Extension fires on TestFlight.
+- `fastlane/Fastfile` — `:beta` lane upgraded with TestFlight
+  changelog read from `mind/AppStore/release_notes_<version>.fr.md`
+  + optional `TESTFLIGHT_GROUPS` env distribution. New
+  `:sync_metadata` lane wraps `fastlane deliver` to push the App
+  Store listing copy without a binary upload.
+- `fastlane/Matchfile` — bundle ID list extended to include the 4
+  embedded extensions (`widgets`, `shareextension`, `pushservice`,
+  `watchkitapp`) so Match fetches profiles for every signed slice.
+- `AppStore/` — full submission package. Top-level `*.fr.md` /
+  `*.en.md` for Mehdi to skim + edit (description, promotional_text,
+  release_notes_1.0.0, keywords, support_url, privacy_url,
+  categories, age_rating, pricing). Mirror under `fr-FR/` + `en-US/`
+  in the `fastlane deliver` convention (one-file-per-key `.txt`)
+  plus the global `copyright.txt`, `primary_category.txt`,
+  `secondary_category.txt`. `README.md` documents both layouts +
+  the two lanes.
+- `README.md` — full rewrite. Status block, the 17 shipped surfaces,
+  current architecture (13 modules + 5 targets), local development,
+  App Store submission section, privacy declaration, API key map,
+  1.x backlog + 1.0 shipped summary, project structure.
+- `CHANGELOG.md` — new file. Per-version log capping at 1.0.
+- `RELEASE_1.0.0.md` — new file. Suggested
+  `git tag -a v1.0.0 -m "MIND 1.0.0 — Cockpit Numelite"` command
+  for Mehdi to fire when he's ready.
+- 3 destinations verified BUILD SUCCEEDED: iOS Simulator (Debug),
+  iOS device generic (Release, signing disabled for verification),
+  Mac Catalyst (Debug). Full test suite green at 1083 tests, 24
+  skipped, 0 failures. Vision verify at `mind/screenshots/v1.0.0.png`
+  — iOS host launches clean with the lead inbox (4 leads: Sarah Ben,
+  Marc Petit, Lucie Aubry, Pierre Loi) + KPI bar (4 leads / 5 actifs
+  / 0 builds / 0 erreurs / 830 €/mo).
+
+### v1.0-alpha.20 ✅ — TestFlight finalisation wave
+
+Shipped 2026-05-20: rolled into the v1.0.0 commit above. Originally
+scoped as the visionOS destinations flip + Project.swift audit
+(`#if !os(visionOS)` gating across UIKit reaches), but the visionOS
+26.5 simulator runtime still isn't installed on Mehdi's M5 Pro so
+the actual flip is deferred to backlog item 1.5. What landed under
+the α.20 banner: every other TestFlight-blocker fixed (privacy
+manifest extended, FR Info.plist, aps-environment=production,
+Fastlane lanes hardened, App Store metadata package drafted,
+README rewritten, CHANGELOG + RELEASE notes filed, cross-platform
+builds + test suite verified). Suite stays at 1083 tests, 24 skipped,
+0 failures.
 
 ### v1.0-alpha.19 ✅ — Vision Pro spatial cockpit (partial: substrate + surface land, runtime install pending)
 
 Shipped 2026-05-20: New `VisionSpatialKit` SwiftUI surface lands on top of the pre-existing v0.25.1 substrate. Six new files under `mind/Modules/VisionSpatialKit/Sources/`: `SpatialRootView` (TabView of three floating Liquid Glass panels — Leads / Projects / Audits), `SpatialLeadsView` (lead inbox column with `.hoverEffect(.lift)` cards on `.ultraThinMaterial` + `glassBackgroundEffect()`), `SpatialProjectsView` (3×2 portfolio gallery with hover-lift tiles), `SpatialAuditTheater` (audit list with a "Présenter en immersion" CTA opening the immersive space), `SpatialAuditTheaterImmersive` (central synthesis panel + half-arc of quick-win cards using `TheaterPlacement` math), `TheaterPlacement` (pure value type computing the half-arc positions — `arcRadiusMeters = 1.6`, `arcHalfAngle = π/3`, `maxPlacements = 8`, symmetric distribution + outer-card vertical rise), and `SpatialTelemetryBridge` (singleton emitting `spatial.app.launched`, `spatial.tab.changed`, `spatial.audit.theater.opened`, `spatial.audit.theater.exited`, `spatial.lead.tapped`, `spatial.project.tapped`; the surface methods reach into `SpatialTab` behind `#if os(visionOS)` while the type itself compiles on iOS so the host wires the sink at bootstrap). Every SwiftUI surface is gated `#if os(visionOS)` so the iOS host's compile path stays untouched. `MINDApp.swift` gains `import VisionSpatialKit`, a new `bootstrapSpatialTelemetry()` that routes the bridge sink into `MINDTelemetry.info`, and a `#if os(visionOS)` Scene branch returning the volumetric `WindowGroup` (`SpatialRootView`, `.windowStyle(.volumetric)`, `.defaultSize(width: 1.2, height: 0.8, depth: 0.3, in: .meters)`) plus the `ImmersiveSpace(id: "AuditTheater")` for `SpatialAuditTheaterImmersive`. 13 new keys in `Localizable.xcstrings` (FR + EN): `spatial.tab.{leads,projects,audit}`, `spatial.{leads,projects,audit}.subtitle`, `spatial.audit.theater.{button,exit,synthesis.title}`, `spatial.empty.{leads,projects,audits}`, `spatial.window.title`. 11 new pure-Swift tests across `SpatialAuditTheaterStateTests` (7 — empty input → empty output, single card → centre, two cards → both extremes mirror-symmetric, 5 cards → middle at 0 with consistent step, > 8 clamped to `maxPlacements`, every placement on bounding radius, synthesis panel sits straight ahead) and `SpatialTokenAvailabilityTests` (4 — singleton identity, nil sink is silent no-op, configured sink fires `spatial.app.launched`, theater events carry truncated UUID prefix). Suite at 1083 tests, 24 skipped, 0 failures (was 1072 in v1.0-alpha.18). iOS Simulator build SUCCEEDED. Vision verify at `mind/screenshots/v1.0-alpha.19.png` — host launches clean with the lead inbox + KPI bar populated (4 leads, 5 actifs, 830 €/mo).
 
-**visionOS runtime install pending**: `xcrun simctl list runtimes` reports iOS 26.5 only (no visionOS runtime). The visionOS slice build + the `Project.swift` destination flip (adding `.visionOS` to every module's destinations + auditing every UIKit reach for `#if !os(visionOS)` gating) is the v1.0-alpha.20 scope, documented in `mind/MIND_BLOCKER_visionos_runtime.md`. Acceptance bar today: iOS build SUCCEEDED + 11 new tests passing + 13 visible spatial strings shipped + 6 new sources compiling out on iOS (renderable the moment Mehdi installs the runtime via Xcode → Settings → Components → "visionOS Simulator 26.5").
+**visionOS runtime install pending**: `xcrun simctl list runtimes` reports iOS 26.5 only (no visionOS runtime). The visionOS slice build + the `Project.swift` destination flip (adding `.visionOS` to every module's destinations + auditing every UIKit reach for `#if !os(visionOS)` gating) is the 1.x backlog item 1.5, documented in `mind/MIND_BLOCKER_visionos_runtime.md`.
 
 ### v1.0-alpha.18 ✅ — ElevenLabs voice clone for pitch audio
 
@@ -33,8 +179,6 @@ Shipped 2026-05-20: `FocusKit.ActivityKit` reach wrapped behind `#if !targetEnvi
 
 Shipped 2026-05-20: NSE decorates lead pushes with `<contactName> · <projectName>` titles + 120-char truncated body + `lead.<projectID>` thread grouping; App-side `MINDPushDelegate` adapter handles APNs registration + tap routing into the new `.mindOpenLead` notification + `mind://lead/<UUID>` deep link; Settings → Notifications push surfaces the toggle, device token, and "Tester une notification" CTA.
 
-## v1.0-alpha.15+ — Next ⏳
-
 ### v1.0-alpha.17 ✅ — Apple Watch companion app
 
 Shipped 2026-05-20: New `MINDWatch` watchOS 11 target (single-app layout — no separate WKExtension bundle) bundled under `mind/Watch/`. The Watch app ships a 3-tab vertical-page cockpit (`WatchRootView` → `TabView { … }.tabViewStyle(.verticalPage)`): (1) `WatchLeadInbox` lists the 5 most-recent new leads (contact + message preview, tap → dictation placeholder sheet), (2) `WatchFocusView` surfaces a "Démarrer Focus" CTA → dispatches `focus.start` to the iPhone via `WatchConnectivityBridge` + a Stop button when running, (3) `WatchPortfolioGlance` renders 3 KPI rows (leads today, MRR via `WatchKPIFormatter.compactEUR`, build errors). Every tab reads from the shared App Group (`group.app.mind.ios`, keys `mind.watch.leads` / `mind.watch.portfolio` / `mind.watch.focus.running`) for offline-first reads; live updates ride a new `WatchConnectivityBridge` actor (duplicated between `Modules/GraphCore/Sources/` for the iPhone host and `Watch/Sources/` for the watchOS target — GraphCore can't link into watchOS so the value-type bridge is mirrored bytewise). The iPhone host pushes a fresh `WatchLeadDigest[]` + `WatchPortfolioKPI` snapshot on every `.active` scene phase (top of the existing `refreshWidgetSnapshot()` call chain) and activates the bridge on `App.init`. New pure `WatchKPIFormatter` in GraphCore mirrors the wrist-sized glyph budget (compact EUR `830€`/`1.2k€`/`12k€`/`1M€`, lead count clamp + `99+` cap, transcript preview clip at 60 chars, MM:SS / H:MM:SS elapsed formatter). Watch ships its own `Localizable.xcstrings` with 12 FR/EN keys (`watch.tab.{leads,focus,portfolio}.title`, `watch.focus.{start.button,stop.button,elapsed.format}`, `watch.portfolio.{leads,mrr,errors}`, `watch.lead.dictate`, `watch.empty.{leads,portfolio}`). 24 new tests added (10 `WatchConnectivityBridgeTests` locking the envelope kind raw values, payload round-trips, malformed-envelope nil collapse, and `SnapshotKey` constants; 14 `WatchSnapshotFormatterTests` locking every branch of `WatchKPIFormatter`). Suite at 1053 tests, 0 failures. iPhone iOS build SUCCEEDED (`xcodebuild build -destination 'generic/platform=iOS Simulator'`). Vision verify at `mind/screenshots/v1.0-alpha.17.png` — host launches clean with the lead inbox + KPI bar populated (4 leads, 5 actifs, 830 €/mo) — exactly the surface the Watch portfolio glance mirrors on the wrist.
@@ -45,20 +189,11 @@ Shipped 2026-05-20: New `MINDWatch` watchOS 11 target (single-app layout — no 
 
 Shipped 2026-05-20: Five new widget surfaces ship in `MINDWidgets` reading the cockpit data spine. (1) `CockpitLockScreenWidget` (`.accessoryRectangular` + `.accessoryInline`) reads `Lead` + `Project` straight from `GraphCore.sharedContainer` via the same `AppIntentTimelineProvider` model the legacy `LockScreenWidget` uses, then folds it through the new pure `CockpitWidgetFormatter` namespace (lead count, MRR, contact + project body); taps deep-link to `mind://leads` (new branch in `RootView.onOpenURL` routes to Home). (2) `LeadInboxLockScreenWidget` (`.accessoryRectangular`, 15 min refresh) + (3) `PortfolioMRRLockScreenWidget` (`.accessoryCircular`, compact EUR pill via `WidgetMRRFormatter`) + (4) `DeploymentStatusLockScreenWidget` (`.accessoryInline`, "<Name> ✓"/"<Name> ⚠️" via `WidgetDeploymentFormatter`) read the cross-process `SharedSnapshotWriter` columns (`mind.shared.{leadCount,leadLastContact,totalMRR,criticalProjectName}`) the host App is expected to populate. (5) `StandByDashboardWidget` (`.systemLarge`, 5 min refresh) ships a two-column cockpit (lead inbox left, portfolio KPI right) over a dim iris→sky LG gradient for night-mode readability. All five widget kinds registered in `MINDWidgetsBundle`. New `CockpitWidgetEntry` value type + `CockpitWidgetFormatter` namespace in GraphCore expose pure-Swift APIs locked by 28 new `CockpitWidgetFormatterTests` (lead count clamp / overflow / negative guard, MRR thousand-grouping with non-breaking space, FR singular/plural rectangular header, contact+project body join, MRR fallback on empty inbox, inline brand prefix, deep-link shape, snapshot Equatable). `SharedSnapshotWriter` is nonisolated so the widget timeline providers can read it synchronously without an actor hop; MainActor MINDTelemetry calls are kicked off via fire-and-forget `Task @MainActor` so the `TimelineProvider` completion handlers stay race-free under Swift 6 strict concurrency. Telemetry: `widget.timeline.requested`, `widget.snapshot.refreshed`, `widget.standBy.appeared`, `leads.deepLink.opened`. Suite at 1029 tests, 0 failures. Vision verify at `mind/screenshots/v1.0-alpha.16.png` — host launches clean with the lead inbox + KPI bar populated (4 leads, 5 actifs, 830 €/mo) — exactly the surface the Lock Screen widgets mirror.
 
-- **Watch companion app** ✅ — shipped as v1.0-alpha.17 (see above).
-- **AI Mehdi Voice clone (ElevenLabs)** ✅ — shipped as v1.0-alpha.18.
-- **Vision Pro spatial cockpit** ✅ — shipped as v1.0-alpha.19
-  (substrate + SwiftUI surface + immersive theater land; visionOS
-  runtime install + `Project.swift` destination flip deferred to
-  v1.0-alpha.20, see `mind/MIND_BLOCKER_visionos_runtime.md`).
+<!-- α.17 / α.18 / α.19 ship summaries appear inline above. The
+     residual "next / pending bullets" headers were collapsed at
+     v1.0.0 — everything that was pending shipped. -->
 
-## v1.0-alpha.15+ — Pending bullets ⏳
 
-- **Watch companion app** ✅ — shipped as v1.0-alpha.17.
-- **AI Mehdi Voice clone (ElevenLabs)** ✅ — shipped as v1.0-alpha.18.
-- **Vision Pro spatial cockpit** ✅ — shipped as v1.0-alpha.19
-  (substrate + surface + immersive theater; runtime install pending,
-  flip is v1.0-alpha.20).
 
 ## v1.0-alpha.13 — AI Reply Composer + Sales Velocity + auto-archive ✅
 

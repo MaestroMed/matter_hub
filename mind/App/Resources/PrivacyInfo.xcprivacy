@@ -16,10 +16,15 @@
   Data collected:
     - Crash Data (opt-in via Sentry, not linked, not for tracking)
     - Performance Data (opt-in via Sentry, not linked, not for tracking)
-  Everything else (notes, focus history, audits) stays in the user's
-  private CloudKit zone or on-device. Nothing is sent to Anthropic /
-  OpenAI / PageSpeed except the URLs and audit content the user
-  explicitly submits.
+    - Health (opt-in, on-device only — never leaves device, see v0.9)
+    - Audio Data (one-time voice sample, sent to ElevenLabs only when
+      the user explicitly taps "Cloner ma voix" in Settings; see
+      v1.0-alpha.18, VoiceCloneKit)
+  Everything else (notes, focus history, audits, leads, projects,
+  invoices) stays in the user's private CloudKit zone or on-device.
+  Nothing is sent to Anthropic / OpenAI / PageSpeed / ElevenLabs
+  except the URLs / audit content / voice sample the user explicitly
+  submits.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -86,6 +91,70 @@
         <dict>
             <key>NSPrivacyCollectedDataType</key>
             <string>NSPrivacyCollectedDataTypeHealth</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- v1.0-alpha.18 — ElevenLabs voice clone. MIND records one
+             WAV sample (~10-30 s) when the user opens
+             Settings → Voix clonée and taps "Enregistrer un échantillon".
+             The sample stays on disk in the App Group until the user
+             taps "Cloner ma voix"; on tap, the WAV bytes are POSTed to
+             ElevenLabs' /v1/voices/add endpoint as multipart form data.
+             Strictly opt-in, never linked to identity, never used for
+             tracking. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeAudioData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- v0.21+ — Customer-data / contact info collected for leads
+             stays on-device in the user's private CloudKit zone.
+             Listed for App Store transparency since the AI sales email
+             generator and the lead inbox handle prospect names / emails
+             / phone numbers — but MIND never POSTs them anywhere; the
+             user always controls the outbound mailto / OutreachSheet. -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeName</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePhoneNumber</string>
             <key>NSPrivacyCollectedDataTypeLinked</key>
             <false/>
             <key>NSPrivacyCollectedDataTypeTracking</key>
