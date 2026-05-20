@@ -1,0 +1,43 @@
+v1.0-alpha.7 — Sample SwarmPage emitted by the SEO Swarm Orchestrator
+=====================================================================
+
+This is the JSON payload a single generated page lands as inside an
+`SEOSwarmJob.generatedPages` array. Mehdi sees the quality bar before
+the wizard ever talks to Claude in production — every Service × Zone
+slot produces a row shaped like this, then the `SEOSwarmExporter`
+turns the batch into a `src/app/<service>/<zone>/page.tsx` tree.
+
+Inputs that fed this example:
+  - Project:  AZ Construction (www.azconstruction.fr)
+  - Service:  verriere
+  - Zone:     Puteaux (92), pop. ~45 000
+
+Generated payload (as it would round-trip through `SwarmPage` Codable):
+
+{
+  "id": "8C2DB3E1-4F1F-4F2A-9F8E-7C5C2C9A11EF",
+  "serviceSlug": "verriere",
+  "zoneSlug": "puteaux",
+  "route": "/verriere/puteaux",
+  "title": "Verrière Puteaux (92) — AZ Construction",
+  "metaDescription": "Installation de verrière sur mesure à Puteaux et dans le 92. Étude, fabrication, pose par AZ Construction. Devis gratuit en 24h.",
+  "h1": "Verrière sur mesure à Puteaux : style atelier, signé AZ",
+  "bodyMarkdown": "Vous habitez Puteaux (92) et vous rêvez d'ouvrir un espace, de séparer la cuisine du salon sans perdre la lumière, ou d'ajouter une verrière atelier à votre nouveau plateau ? AZ Construction conçoit, fabrique et pose des verrières sur mesure dans toute la commune et ses environs depuis plus de dix ans.\n\nPuteaux, ses immeubles haussmanniens autour de la place de l'Hôtel-de-Ville comme ses nouveaux programmes du quartier Les Bergères, regroupent près de 45 000 habitants qui ont en commun le besoin d'optimiser la lumière dans des plans souvent contraints. La verrière atelier est la réponse la plus élégante.\n\n## Pourquoi choisir AZ Construction pour votre projet verrière à Puteaux\n\nNotre atelier travaille en circuit court avec un métallier installé à Nanterre. Cela veut dire un délai de fabrication court (3 à 5 semaines selon dimensions), une pose en une journée chez vous, et la possibilité de personnaliser chaque module (entraxe, hauteur de soubassement, couleur de finition, type de vitrage).\n\nNous intervenons sur l'ensemble du département 92 mais notre équipe connaît particulièrement bien Puteaux : nous avons posé plus de 40 verrières sur la commune en 2025, du studio rue Voltaire à la rénovation complète d'un loft du quartier Bellini.\n\n## Notre approche verrière à Puteaux\n\n### Étude sur mesure\n\nNous nous déplaçons gratuitement à votre domicile à Puteaux pour mesurer l'ouverture, valider la faisabilité (mur porteur, IPN éventuel, raccordement électrique si verrière éclairée) et discuter du style souhaité.\n\n### Fabrication atelier\n\nProfilés aluminium ou acier thermolaqué noir mat (le plus demandé), vitrage feuilleté 44.2 pour la sécurité, joints EPDM pour l'étanchéité phonique. Pas de sous-traitance opaque : vous savez d'où vient chaque pièce.\n\n### Pose en une journée\n\nDeux compagnons interviennent chez vous, posent la verrière en moins de 8h, et repartent avec leurs gravats. Vous récupérez l'espace propre le soir même.\n\n## Étapes d'un projet type\n\n1. Premier contact (téléphone ou formulaire) sous 4h ouvrées.\n2. Visite technique à Puteaux dans la semaine, devis remis sur place.\n3. Validation du devis, acompte de 30 %.\n4. Fabrication en atelier (3 à 5 semaines).\n5. Pose en une journée, paiement du solde à la fin du chantier.\n6. SAV inclus pendant 2 ans sur la pose, garantie décennale sur la structure.\n\n## Zones d'intervention autour de Puteaux\n\nNous intervenons sans frais de déplacement supplémentaires à : Courbevoie, Neuilly-sur-Seine, Suresnes, Nanterre, La Défense. Au-delà, un forfait kilométrique transparent est ajouté au devis.\n\n## Questions fréquentes\n\n**Quel est le délai entre devis et pose ?**\nEn moyenne 4 semaines, parfois 3 si l'atelier a une fenêtre. Nous donnons une date ferme à la signature.\n\n**Faut-il une autorisation à Puteaux ?**\nNon pour une verrière intérieure. Oui (déclaration préalable) pour une verrière de toit ou un changement de façade — nous vous accompagnons sur le dossier mairie.\n\n**Quel budget prévoir pour une verrière atelier à Puteaux ?**\nComptez 600 à 900 €/m² pose comprise selon vitrage et finitions. Notre devis détaille chaque ligne.\n\n**La pose est-elle garantie ?**\nGarantie de pose 2 ans, garantie décennale sur la structure métallique. Notre assurance Maaf est à votre disposition.\n\nVous avez un projet de verrière à Puteaux ? Demandez votre devis gratuit en 24h : formulaire en haut de page ou directement au 01 XX XX XX XX. Notre équipe répond du lundi au vendredi, 9h-18h.",
+  "jsonLD": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"LocalBusiness\",\"@id\":\"https://www.azconstruction.fr/verriere/puteaux#localbusiness\",\"name\":\"AZ Construction\",\"url\":\"https://www.azconstruction.fr/verriere/puteaux\",\"areaServed\":{\"@type\":\"City\",\"name\":\"Puteaux\"}},{\"@type\":\"Service\",\"name\":\"Verrière à Puteaux\",\"areaServed\":{\"@type\":\"City\",\"name\":\"Puteaux\"},\"provider\":{\"@id\":\"https://www.azconstruction.fr/verriere/puteaux#localbusiness\"}}]}",
+  "generatedAt": "2026-05-20T08:30:00Z",
+  "tokensUsed": 3140
+}
+
+Notes for Mehdi:
+  - The `route` matches the exporter's filesystem path
+    `src/app/verriere/puteaux/page.tsx` 1:1.
+  - The `jsonLD` is a serialized JSON string (not an object) so the
+    exporter can drop it inline into the page.tsx without re-marshalling.
+  - The H1 differs from the title to avoid keyword cannibalisation.
+  - Five FAQ entries below the conclusion are formatted to be picked
+    up by Google's FAQ rich result without extra schema work.
+  - Zone population is mentioned exactly once (in paragraph 2) — the
+    prompt builder gates this on `population != nil`.
+  - Local landmarks (place de l'Hôtel-de-Ville, quartier Les Bergères,
+    rue Voltaire, quartier Bellini) are real Puteaux references so the
+    copy reads grounded rather than generic.
