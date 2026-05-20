@@ -8635,6 +8635,114 @@
           }
         }
       }
+    },
+    "settings.webhook.section": {
+      "comment": "v1.0-alpha.5 · Settings — Lead Webhook section header.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead Webhook"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead Webhook"
+          }
+        }
+      }
+    },
+    "settings.webhook.subtitle": {
+      "comment": "v1.0-alpha.5 · Settings — Lead Webhook section subtitle, explains the shared HMAC secret.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the HMAC secret your deployed Cloudflare Worker uses to verify inbound /v1/leads POSTs. Stored in the Keychain."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colle le secret HMAC que ton Cloudflare Worker utilise pour vérifier les POST /v1/leads. Stocké dans le Keychain."
+          }
+        }
+      }
+    },
+    "settings.webhook.projects.label": {
+      "comment": "v1.0-alpha.5 · Settings — Lead Webhook section, label above the per-Project copy rows.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy a Project ID"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier un Project ID"
+          }
+        }
+      }
+    },
+    "settings.webhook.projects.empty": {
+      "comment": "v1.0-alpha.5 · Settings — Lead Webhook section, shown when no Projects exist yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a Project from the Cockpit to get a Project ID."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crée un projet depuis le Cockpit pour obtenir un Project ID."
+          }
+        }
+      }
+    },
+    "settings.webhook.copied.title": {
+      "comment": "v1.0-alpha.5 · Settings — Lead Webhook section, title of the toast after copying a Project ID.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project ID copied"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project ID copié"
+          }
+        }
+      }
+    },
+    "settings.webhook.copied.body": {
+      "comment": "v1.0-alpha.5 · Settings — Lead Webhook section, body of the toast after copying. %@ = project name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste %@'s UUID into MIND_PROJECT_ID in your client repo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colle l'UUID de %@ dans MIND_PROJECT_ID de ton repo client."
+          }
+        }
+      }
     }
   }
 }

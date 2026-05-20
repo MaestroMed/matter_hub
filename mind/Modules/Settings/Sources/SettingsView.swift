@@ -65,6 +65,18 @@ public struct SettingsView: View {
     @State private var invoiceTestURL: URL?
     @State private var showInvoiceShare: Bool = false
 
+    // v1.0-alpha.5 — Lead Webhook section. The HMAC secret is the
+    // shared key the deployed Cloudflare Worker uses to verify
+    // inbound `/v1/leads` POSTs (see `mind/tools/cloudflare-worker`).
+    // Stored in `WebhookSecretStore` (Keychain), never UserDefaults.
+    // The Project ID copier surfaces the per-Project UUID Mehdi
+    // pastes into the client site's `MIND_PROJECT_ID` env var.
+    @State private var webhookSecret: String = ""
+    @State private var webhookSecretSaved: Bool = false
+    @State private var showWebhookSecret: Bool = false
+    @State private var webhookProjects: [Project] = []
+    @State private var webhookProjectIDCopiedToast: String?
+
     // Danger-zone confirmation alerts. Two-step UX so the user can't
     // accidentally wipe their second brain by misclicking — the alert
     // is the second tap.
@@ -355,6 +367,11 @@ public struct SettingsView: View {
                     }
                 }
 
+                // v1.0-alpha.5 — Lead Webhook section. Sits just above
+                // the iCloud status so the operator can verify "Worker
+                // wired" right next to "iCloud connected" at a glance.
+                webhookSection
+
                 iCloudSection
 
                 // v0.20 — Beta-only section: lives just above About so a
@@ -407,6 +424,11 @@ public struct SettingsView: View {
                 linearToken = stored
                 linearTokenSaved = true
             }
+            if let stored = WebhookSecretStore.read() {
+                webhookSecret = stored
+                webhookSecretSaved = true
+            }
+            loadWebhookProjects()
             refreshCloudKitStatus()
         }
         .alert(String(localized: "settings.notion.test.done", bundle: .main),
@@ -457,6 +479,20 @@ public struct SettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(dangerZoneToast ?? "")
+        }
+        // v1.0-alpha.5 — Confirmation toast after the operator taps a
+        // "Copier Project ID" row in the Lead Webhook section. Same
+        // shape as the dangerZoneToast above — minimal one-button
+        // OK alert, no haptic on the alert itself (the row tap
+        // already fires `LiquidHaptics.success()`).
+        .alert(String(localized: "settings.webhook.copied.title", bundle: .main),
+               isPresented: Binding(
+                get: { webhookProjectIDCopiedToast != nil },
+                set: { if !$0 { webhookProjectIDCopiedToast = nil } }
+               )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(webhookProjectIDCopiedToast ?? "")
         }
         // v0.31 — System share sheet hosting the freshly-rendered
         // sample invoice PDF so Mehdi can validate the branding
@@ -1077,6 +1113,170 @@ public struct SettingsView: View {
                 data: ["error": String(describing: error)]
             )
         }
+    }
+
+    // MARK: - Lead Webhook (v1.0-alpha.5)
+
+    /// "Lead Webhook" section — paste the HMAC shared secret used by
+    /// the deployed Cloudflare Worker (`mind/tools/cloudflare-worker`)
+    /// to verify inbound `/v1/leads` POSTs, plus a "Copier Project ID"
+    /// row per Project so Mehdi can drop the matching UUID into each
+    /// client site's `MIND_PROJECT_ID` env var without round-tripping
+    /// through the Cockpit list.
+    ///
+    /// Secret persistence shape mirrors the Anthropic / OpenAI /
+    /// Notion / Linear sections: Keychain via `WebhookSecretStore`,
+    /// "Save" → "Saved ✓" CTA, "Clear" secondary, eye toggle on the
+    /// secret field. No round-trip validation — the Worker isn't
+    /// reachable from inside the iOS sandbox without a network call
+    /// the user hasn't consented to; the first real lead POST is the
+    /// canonical "did it work" signal.
+    private var webhookSection: some View {
+        section(localized: "settings.webhook.section") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("settings.webhook.subtitle", bundle: .main)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                webhookSecretField
+
+                HStack(spacing: 8) {
+                    LiquidButton(
+                        title: webhookSecretSaved
+                            ? String(localized: "settings.button.saved", bundle: .main)
+                            : String(localized: "settings.button.save", bundle: .main),
+                        systemImage: webhookSecretSaved ? "checkmark" : "key.fill"
+                    ) {
+                        saveWebhookSecret()
+                    }
+                    .disabled(webhookSecret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    Button(String(localized: "settings.button.clear", bundle: .main)) {
+                        WebhookSecretStore.clear()
+                        webhookSecret = ""
+                        webhookSecretSaved = false
+                        MINDTelemetry.info("webhook.secret.cleared")
+                    }
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+                }
+
+                Divider().background(.white.opacity(0.2))
+
+                Text("settings.webhook.projects.label", bundle: .main)
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+
+                if webhookProjects.isEmpty {
+                    Text("settings.webhook.projects.empty", bundle: .main)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(webhookProjects, id: \.id) { project in
+                            webhookProjectRow(project)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var webhookSecretField: some View {
+        HStack {
+            Group {
+                if showWebhookSecret {
+                    TextField("64-char hex secret", text: $webhookSecret)
+                } else {
+                    SecureField("64-char hex secret", text: $webhookSecret)
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(.system(.body, design: .monospaced))
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: webhookSecret) { _, _ in webhookSecretSaved = false }
+
+            Button {
+                showWebhookSecret.toggle()
+            } label: {
+                Image(systemName: showWebhookSecret ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(LiquidGradient.glassStroke, lineWidth: 1)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func webhookProjectRow(_ project: Project) -> some View {
+        Button {
+            copyWebhookProjectID(project)
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(LiquidPalette.iris.opacity(0.22))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "doc.on.doc.fill")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(LiquidPalette.iris)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(project.name)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(project.id.uuidString)
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                Spacer()
+                Image(systemName: "doc.on.clipboard")
+                    .font(.system(.footnote, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func saveWebhookSecret() {
+        let trimmed = webhookSecret.trimmingCharacters(in: .whitespacesAndNewlines)
+        WebhookSecretStore.save(trimmed)
+        webhookSecretSaved = true
+        LiquidHaptics.success()
+        MINDTelemetry.info("webhook.secret.saved", data: ["length": "\(trimmed.count)"])
+    }
+
+    private func loadWebhookProjects() {
+        let context = ModelContext(GraphCore.sharedContainer)
+        var descriptor = FetchDescriptor<Project>(
+            sortBy: [SortDescriptor(\Project.name, order: .forward)]
+        )
+        descriptor.fetchLimit = 32
+        if let fetched = try? context.fetch(descriptor) {
+            webhookProjects = fetched
+        } else {
+            webhookProjects = []
+        }
+    }
+
+    private func copyWebhookProjectID(_ project: Project) {
+        UIPasteboard.general.string = project.id.uuidString
+        LiquidHaptics.success()
+        MINDTelemetry.info("webhook.projectID.copied", data: ["project": project.slug])
+        let template = String(localized: "settings.webhook.copied.body", bundle: .main)
+        webhookProjectIDCopiedToast = String(format: template, project.name)
     }
 
     // MARK: - iCloud sync indicator

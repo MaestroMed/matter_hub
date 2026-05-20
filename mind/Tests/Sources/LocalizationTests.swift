@@ -482,4 +482,33 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized("command.tab.settings",  lang: "en"), "Settings")
         XCTAssertEqual(localized("command.tab.settings",  lang: "fr"), "Réglages")
     }
+
+    /// v1.0-alpha.5 — Lead Webhook Settings section. The HMAC
+    /// secret field + per-Project copy rows live on the most-
+    /// looked-at surface in MIND (Settings → Lead Webhook is the
+    /// "did I wire it right" canonical check), so every string
+    /// must resolve in both languages — a raw-key fallback there
+    /// would feel like a broken integration, not a translation gap.
+    func test_webhookStrings_resolveBothLanguages() {
+        XCTAssertEqual(localized("settings.webhook.section",         lang: "en"), "Lead Webhook")
+        XCTAssertEqual(localized("settings.webhook.section",         lang: "fr"), "Lead Webhook")
+
+        XCTAssertNotNil(localized("settings.webhook.subtitle",       lang: "en"))
+        XCTAssertNotNil(localized("settings.webhook.subtitle",       lang: "fr"))
+
+        XCTAssertEqual(localized("settings.webhook.projects.label",  lang: "en"), "Copy a Project ID")
+        XCTAssertEqual(localized("settings.webhook.projects.label",  lang: "fr"), "Copier un Project ID")
+
+        XCTAssertNotNil(localized("settings.webhook.projects.empty", lang: "en"))
+        XCTAssertNotNil(localized("settings.webhook.projects.empty", lang: "fr"))
+
+        XCTAssertEqual(localized("settings.webhook.copied.title",    lang: "en"), "Project ID copied")
+        XCTAssertEqual(localized("settings.webhook.copied.title",    lang: "fr"), "Project ID copié")
+
+        // Body uses %@ for the project name — assert the placeholder
+        // survives in both languages so `String(format:)` doesn't
+        // silently drop it on a translation regression.
+        XCTAssertTrue(localized("settings.webhook.copied.body", lang: "en")?.contains("%@") == true)
+        XCTAssertTrue(localized("settings.webhook.copied.body", lang: "fr")?.contains("%@") == true)
+    }
 }
